@@ -1,16 +1,14 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
 	"github.com/spf13/viper"
-	"gorm.io/driver/mysql"
-	"gorm.io/gorm"
 
-	"macaiki/domain"
+	_driver "macaiki/driver"
 	_userHttpDelivery "macaiki/user/delivery/http"
 	_userRepo "macaiki/user/repository/mysql"
 	_userUsecase "macaiki/user/usecase"
@@ -25,6 +23,7 @@ func init() {
 	if viper.GetBool(`debug`) {
 		log.Println("Service Run on DEBUG mode")
 	}
+
 }
 
 func main() {
@@ -33,13 +32,8 @@ func main() {
 	dbUser := viper.GetString(`database.user`)
 	dbPass := viper.GetString(`database.pass`)
 	dbName := viper.GetString(`database.name`)
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s", dbUser, dbPass, dbHost, dbPort, dbName)
 
-	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
-	db.AutoMigrate(&domain.User{})
-	if err != nil {
-		panic(err)
-	}
+	db := _driver.ConnectDB(dbHost, dbPort, dbUser, dbPass, dbName)
 
 	e := echo.New()
 	e.GET("/", func(c echo.Context) error {
@@ -49,8 +43,8 @@ func main() {
 	// middL
 	// e.Use(middL.CORS)
 	userRepo := _userRepo.NewMysqlUserRepository(db)
-
-	userUsecase := _userUsecase.NewUserUsecase(userRepo)
+	validator := validator.New()
+	userUsecase := _userUsecase.NewUserUsecase(userRepo, validator)
 	_userHttpDelivery.NewUserHandler(e, userUsecase)
 
 	log.Fatal(e.Start(viper.GetString("server.address")))
