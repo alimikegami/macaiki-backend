@@ -6,46 +6,43 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
-	"github.com/spf13/viper"
 
+	_config "macaiki/config"
 	_driver "macaiki/driver"
 	_userHttpDelivery "macaiki/user/delivery/http"
 	_userRepo "macaiki/user/repository/mysql"
 	_userUsecase "macaiki/user/usecase"
 )
 
-func init() {
-	viper.SetConfigFile("config.json")
-	if err := viper.ReadInConfig(); err != nil {
-		panic(err)
-	}
-
-	if viper.GetBool(`debug`) {
-		log.Println("Service Run on DEBUG mode")
-	}
-
-}
-
 func main() {
-	dbHost := viper.GetString(`database.host`)
-	dbPort := viper.GetString(`database.port`)
-	dbUser := viper.GetString(`database.user`)
-	dbPass := viper.GetString(`database.pass`)
-	dbName := viper.GetString(`database.name`)
-
-	db := _driver.ConnectDB(dbHost, dbPort, dbUser, dbPass, dbName)
+	config, err := _config.LoadConfig(".")
+	if err != nil {
+		log.Fatal("err", err)
+	}
+	_driver.ConnectDB(
+		config.DBConn,
+		config.DBHost,
+		config.DBPort,
+		config.DBUser,
+		config.DBPass,
+		config.DBName,
+	)
 
 	e := echo.New()
 	e.GET("/", func(c echo.Context) error {
 		return c.String(http.StatusOK, "Hello World!")
 	})
 
-	// middL
-	// e.Use(middL.CORS)
-	userRepo := _userRepo.NewMysqlUserRepository(db)
-	validator := validator.New()
-	userUsecase := _userUsecase.NewUserUsecase(userRepo, validator)
-	_userHttpDelivery.NewUserHandler(e, userUsecase)
+	userRepo := _userRepo.NewMysqlUserRepository(_driver.DB)
+	v := validator.New()
+	userUsecase := _userUsecase.NewUserUsecase(userRepo, v)
 
-	log.Fatal(e.Start(viper.GetString("server.address")))
+	JWTSecret, err := _config.LoadJWTSecret(".")
+	if err != nil {
+		log.Fatal("err", err)
+	}
+
+	_userHttpDelivery.NewUserHandler(e, userUsecase, JWTSecret.Secret)
+
+	log.Fatal(e.Start(":" + config.ServerPort))
 }
