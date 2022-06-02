@@ -1,33 +1,35 @@
 package response
 
-import "net/http"
+import (
+	"macaiki/domain"
+	"net/http"
+
+	"github.com/labstack/echo/v4"
+)
 
 type meta struct {
-	Message string
-	Code    int
+	Message string `json:"message"`
+	Code    int    `json:"code"`
 }
 type baseResponse struct {
 	Meta meta
 	Data interface{}
 }
 
-func SuccessResponse(data interface{}) (int, baseResponse) {
-	meta := meta{
-		Message: "OK",
-		Code:    http.StatusOK,
-	}
-	return http.StatusOK, baseResponse{
-		Meta: meta,
-		Data: data,
-	}
+func SuccessResponse(c echo.Context, data interface{}) error {
+	resp := baseResponse{}
+	resp.Meta.Code = http.StatusOK
+	resp.Meta.Message = "OK"
+	resp.Data = data
+
+	return c.JSON(resp.Meta.Code, resp)
 }
 
-func ErrorResponse(err error, code int) (int, baseResponse) {
-	meta := meta{
-		Message: err.Error(),
-		Code:    code,
-	}
-	return code, baseResponse{
-		Meta: meta,
-	}
+func ErrorResponse(c echo.Context, err error) error {
+	resp := baseResponse{}
+	resp.Meta.Code = domain.GetStatusCode(err)
+	resp.Meta.Message = err.Error()
+	resp.Data = nil
+
+	return c.JSON(resp.Meta.Code, resp)
 }

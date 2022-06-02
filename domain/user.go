@@ -6,11 +6,11 @@ import (
 
 type User struct {
 	gorm.Model
-	Name      string `json:"name"      validate:"required"`
-	Email     string `json:"email"     validate:"required,email"`
-	Password  string `json:"password"  validate:"required,min=6"`
-	Role_ID   int    `json:"role_id"     validate:"required"`
-	Is_banned int    `json:"is_banned" validate:"required"`
+	Name     string `json:"name" validate:"required"`
+	Email    string `json:"email" validate:"required,email"`
+	Password string `json:"password" validate:"required,min=6"`
+	Role     string `json:"role" validate:"required"`
+	IsBanned int    `json:"isBanned" validate:"required"`
 }
 
 type UserUsecase interface {

@@ -3,27 +3,26 @@ package http
 import (
 	"macaiki/domain"
 	"macaiki/user/delivery/http/response"
-	"net/http"
 	"strconv"
 
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 )
-
-type ResponseError struct {
-	Message string `json:"message"`
-}
 
 type UserHandler struct {
 	UserUsecase domain.UserUsecase
+	JWTSecret   string
 }
 
-func NewUserHandler(e *echo.Echo, us domain.UserUsecase) {
+func NewUserHandler(e *echo.Echo, us domain.UserUsecase, JWTSecret string) {
 	handler := &UserHandler{
 		UserUsecase: us,
+		JWTSecret:   JWTSecret,
 	}
+
 	e.POST("/api/v1/login", handler.Login)
 	e.POST("/api/v1/register", handler.Register)
-	e.GET("/api/v1/users", handler.GetAllUsers)
+	e.GET("/api/v1/users", handler.GetAllUsers, middleware.JWT([]byte(JWTSecret)))
 	e.GET("/api/v1/users/:user_id", handler.GetUser)
 	e.PUT("api/v1/users/:user_id", handler.Update)
 	e.DELETE("api/v1/users/:user_id", handler.Delete)
@@ -36,10 +35,10 @@ func (u *UserHandler) Login(c echo.Context) error {
 
 	token, err := u.UserUsecase.Login(loginInfo.Email, loginInfo.Password)
 	if err != nil {
-		return c.JSON(response.ErrorResponse(err, getStatusCode(err)))
+		return response.ErrorResponse(c, err)
 	}
 
-	return c.JSON(response.SuccessResponse(token))
+	return response.SuccessResponse(c, response.ToTokenResponse(token))
 }
 
 func (u *UserHandler) Register(c echo.Context) error {
@@ -48,69 +47,65 @@ func (u *UserHandler) Register(c echo.Context) error {
 
 	user, err := u.UserUsecase.Register(user)
 	if err != nil {
-		return c.JSON(response.ErrorResponse(err, getStatusCode(err)))
+		return response.ErrorResponse(c, err)
 	}
 
-	return c.JSON(response.SuccessResponse(response.ToUserResponse(user)))
+	return response.SuccessResponse(c, response.ToUserResponse(user))
 }
 
 func (u *UserHandler) GetAllUsers(c echo.Context) error {
 	users, err := u.UserUsecase.GetAll()
 	if err != nil {
-		return c.JSON(response.ErrorResponse(err, getStatusCode(err)))
+		return response.ErrorResponse(c, err)
 	}
 
-	return c.JSON(response.SuccessResponse(response.ToListUserResponse(users)))
+	return response.SuccessResponse(c, response.ToListUserResponse(users))
 }
 
 func (u *UserHandler) GetUser(c echo.Context) error {
 	num := c.Param("user_id")
-	user_id, _ := strconv.Atoi(num)
+	user_id, err := strconv.Atoi(num)
+	if err != nil {
+		response.ErrorResponse(c, domain.ErrBadParamInput)
+	}
 
 	user, err := u.UserUsecase.Get(uint(user_id))
 	if err != nil {
-		return c.JSON(response.ErrorResponse(err, getStatusCode(err)))
+		return response.ErrorResponse(c, err)
 	}
 
-	return c.JSON(response.SuccessResponse(response.ToUserResponse(user)))
+	return response.SuccessResponse(c, response.ToUserResponse(user))
 }
 
 func (u *UserHandler) Update(c echo.Context) error {
 	num := c.Param("user_id")
-	user_id, _ := strconv.Atoi(num)
+	user_id, err := strconv.Atoi(num)
+	if err != nil {
+		response.ErrorResponse(c, domain.ErrBadParamInput)
+	}
 
 	user := domain.User{}
 	c.Bind(&user)
 
-	user, err := u.UserUsecase.Update(user, uint(user_id))
+	user, err = u.UserUsecase.Update(user, uint(user_id))
 	if err != nil {
-		return c.JSON(response.ErrorResponse(err, getStatusCode(err)))
+		return response.ErrorResponse(c, err)
 	}
 
-	return c.JSON(response.SuccessResponse(response.ToUserResponse(user)))
+	return response.SuccessResponse(c, response.ToUserResponse(user))
 }
 
 func (u *UserHandler) Delete(c echo.Context) error {
 	num := c.Param("user_id")
-	user_id, _ := strconv.Atoi(num)
+	user_id, err := strconv.Atoi(num)
+	if err != nil {
+		response.ErrorResponse(c, domain.ErrBadParamInput)
+	}
 
 	user, err := u.UserUsecase.Delete(uint(user_id))
 	if err != nil {
-		return c.JSON(response.ErrorResponse(err, getStatusCode(err)))
+		return response.ErrorResponse(c, err)
 	}
 
-	return c.JSON(response.SuccessResponse(response.ToUserResponse(user)))
-}
-
-func getStatusCode(err error) int {
-	switch err {
-	case domain.ErrInternalServerError:
-		return http.StatusInternalServerError
-	case domain.ErrNotFound:
-		return http.StatusNotFound
-	case domain.ErrConflict:
-		return http.StatusConflict
-	default:
-		return http.StatusOK
-	}
+	return response.SuccessResponse(c, response.ToUserResponse(user))
 }
