@@ -49,6 +49,11 @@ func (ur *MysqlUserRepository) Get(id uint) (domain.User, error) {
 }
 
 func (ur *MysqlUserRepository) Update(userDB *domain.User, user domain.User) (domain.User, error) {
+	if user.Password == "" {
+		user.Password = userDB.Password
+	}
+	user.ID = userDB.ID
+
 	res := ur.Db.Model(&userDB).Updates(user)
 	err := res.Error
 	if err != nil {
@@ -59,14 +64,16 @@ func (ur *MysqlUserRepository) Update(userDB *domain.User, user domain.User) (do
 }
 
 func (ur *MysqlUserRepository) Delete(id uint) (domain.User, error) {
-	user := domain.User{}
-
-	res := ur.Db.Delete(&user, "id = ?", id)
-	err := res.Error
+	user, err := ur.Get(id)
 	if err != nil {
 		return domain.User{}, err
 	}
 
+	res := ur.Db.Delete(&user, "id = ?", id)
+	err = res.Error
+	if err != nil {
+		return domain.User{}, err
+	}
 	return user, nil
 }
 

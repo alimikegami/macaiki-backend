@@ -2,11 +2,13 @@ package usercase
 
 import (
 	"errors"
-	"fmt"
+	"log"
 	"macaiki/domain"
 	"macaiki/user/delivery/http/middleware"
+	"macaiki/user/delivery/http/response"
 
 	"github.com/go-playground/validator/v10"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type userUsecase struct {
@@ -23,10 +25,10 @@ func NewUserUsecase(repo domain.UserRepository, validator *validator.Validate) d
 
 func (uu *userUsecase) Login(email, password string) (string, error) {
 	if email == "" {
-		return "", errors.New("Email empty")
+		return "", domain.ErrBadParamInput
 	}
 	if password == "" {
-		return "", errors.New("Password empty")
+		return "", domain.ErrBadParamInput
 	}
 
 	user, err := uu.userRepo.GetByEmail(email)
@@ -34,11 +36,11 @@ func (uu *userUsecase) Login(email, password string) (string, error) {
 		return "", err
 	}
 
-	if user.ID == 0 || user.Password != password {
-		return "", errors.New("Invalid email or password")
+	if user.ID == 0 || !comparePasswords(user.Password, []byte(password)) {
+		return "", domain.ErrLoginFailed
 	}
 
-	token, err := middleware.CreateToken(int(user.ID), user.Role_ID)
+	token, err := middleware.JWTCreateToken(int(user.ID), user.Role)
 	if err != nil {
 		return "", err
 	}
@@ -60,6 +62,7 @@ func (uu *userUsecase) Register(user domain.User) (domain.User, error) {
 		return domain.User{}, domain.ErrEmailAlreadyUsed
 	}
 
+	user.Password = hashAndSalt([]byte(user.Password))
 	user, err = uu.userRepo.Store(user)
 	if err != nil {
 		return domain.User{}, err
@@ -90,8 +93,15 @@ func (uu *userUsecase) Get(id uint) (domain.User, error) {
 	return user, nil
 }
 func (uu *userUsecase) Update(user domain.User, id uint) (domain.User, error) {
-	fmt.Println(user)
+	userUpdate := response.ToUserUpdate(user)
+	if err := uu.validator.Struct(userUpdate); err != nil {
+		return domain.User{}, err
+	}
+	if len(userUpdate.Password) != 0 && len(userUpdate.Password) < 6 {
+		return domain.User{}, errors.New("password at least 6 characters")
+	}
 	userDB, err := uu.userRepo.Get(id)
+
 	if err != nil {
 		return domain.User{}, err
 	}
@@ -108,7 +118,6 @@ func (uu *userUsecase) Update(user domain.User, id uint) (domain.User, error) {
 			return domain.User{}, domain.ErrEmailAlreadyUsed
 		}
 	}
-
 	userDB, err = uu.userRepo.Update(&userDB, user)
 	if err != nil {
 		return domain.User{}, err
@@ -130,4 +139,33 @@ func (uu *userUsecase) Delete(id uint) (domain.User, error) {
 		return domain.User{}, err
 	}
 	return res, nil
+}
+
+func hashAndSalt(pwd []byte) string {
+
+	// Use GenerateFromPassword to hash & salt pwd.
+	// MinCost is just an integer constant provided by the bcrypt
+	// package along with DefaultCost & MaxCost.
+	// The cost can be any value you want provided it isn't lower
+	// than the MinCost (4)
+	hash, err := bcrypt.GenerateFromPassword(pwd, bcrypt.MinCost)
+	if err != nil {
+		log.Println("err", err)
+	}
+	// GenerateFromPassword returns a byte slice so we need to
+	// convert the bytes to a string and return it
+	return string(hash)
+}
+
+func comparePasswords(hashedPwd string, plainPwd []byte) bool {
+	// Since we'll be getting the hashed password from the DB it
+	// will be a string so we'll need to convert it to a byte slice
+	byteHash := []byte(hashedPwd)
+	err := bcrypt.CompareHashAndPassword(byteHash, plainPwd)
+	if err != nil {
+		log.Println("err", err)
+		return false
+	}
+
+	return true
 }
