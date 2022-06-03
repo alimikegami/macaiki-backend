@@ -5,7 +5,7 @@ import (
 	"log"
 	"macaiki/domain"
 	"macaiki/user/delivery/http/middleware"
-	"macaiki/user/delivery/http/response"
+	"macaiki/user/delivery/http/request"
 
 	"github.com/go-playground/validator/v10"
 	"golang.org/x/crypto/bcrypt"
@@ -93,7 +93,7 @@ func (uu *userUsecase) Get(id uint) (domain.User, error) {
 	return user, nil
 }
 func (uu *userUsecase) Update(user domain.User, id uint) (domain.User, error) {
-	userUpdate := response.ToUserUpdate(user)
+	userUpdate := request.ToUserUpdateRequest(user)
 	if err := uu.validator.Struct(userUpdate); err != nil {
 		return domain.User{}, err
 	}
