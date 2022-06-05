@@ -1,7 +1,6 @@
 package mysql
 
 import (
-	"fmt"
 	"macaiki/domain"
 
 	"gorm.io/gorm"
@@ -40,8 +39,9 @@ func (ur *MysqlUserRepository) Store(user domain.User) (domain.User, error) {
 func (ur *MysqlUserRepository) Get(id uint) (domain.User, error) {
 	user := domain.User{}
 
-	res := ur.Db.Find(&user, id)
+	res := ur.Db.Preload("Followers").Find(&user, id)
 	err := res.Error
+
 	if err != nil {
 		return domain.User{}, err
 	}
@@ -92,7 +92,6 @@ func (ur *MysqlUserRepository) GetByEmail(email string) (domain.User, error) {
 
 func (ur *MysqlUserRepository) StoreFollower(user, user_follower domain.User) (domain.User, error) {
 	err := ur.Db.Model(&user).Association("Followers").Append(&user_follower)
-	fmt.Println(user)
 	if err != nil {
 		return domain.User{}, err
 	}
@@ -100,17 +99,15 @@ func (ur *MysqlUserRepository) StoreFollower(user, user_follower domain.User) (d
 	return user, nil
 }
 
-func (ur *MysqlUserRepository) GetFollower(user domain.User) ([]domain.User, error) {
-	res := ur.Db.Preload("Followers").Find(&user)
+func (ur *MysqlUserRepository) GetFollowing(user domain.User) ([]domain.User, error) {
+	users := []domain.User{}
+
+	res := ur.Db.Raw("SELECT * FROM `users` LEFT JOIN `user_followers` `Followers` ON `users`.`id` = `Followers`.`user_id` WHERE `Followers`.`follower_id` = ?", user.ID).Scan(&users)
 	err := res.Error
 
 	if err != nil {
 		return []domain.User{}, err
 	}
 
-	return user.Followers, nil
+	return users, nil
 }
-
-// func (ur *MysqlUserRepository) GetFollowing(user domain.User) ([]domain.User, error) {
-// 	res := ur.Db.Raw("SELECT name, age FROM users WHERE name = ?", "Antonio").Scan(&result)
-// }

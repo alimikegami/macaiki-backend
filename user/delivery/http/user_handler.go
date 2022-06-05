@@ -73,12 +73,12 @@ func (u *UserHandler) GetUser(c echo.Context) error {
 		response.ErrorResponse(c, domain.ErrBadParamInput)
 	}
 
-	user, err := u.UserUsecase.Get(uint(user_id))
+	user, followings, err := u.UserUsecase.Get(uint(user_id))
 	if err != nil {
 		return response.ErrorResponse(c, err)
 	}
 
-	return response.SuccessResponse(c, response.ToUserResponse(user))
+	return response.SuccessResponse(c, response.ToUserDetailResponse(user, followings))
 }
 
 func (u *UserHandler) Update(c echo.Context) error {
@@ -123,6 +123,8 @@ func (u *UserHandler) Follow(c echo.Context) error {
 
 	follower_id, _ := _middL.ExtractTokenUser(c)
 	user, err := u.UserUsecase.Follow(uint(user_id), uint(follower_id))
-
+	if err != nil {
+		return response.ErrorResponse(c, err)
+	}
 	return response.SuccessResponse(c, response.ToUserResponse(user))
 }

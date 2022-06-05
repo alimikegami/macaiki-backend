@@ -6,19 +6,31 @@ import (
 )
 
 type UserResponse struct {
-	ID        uint                `json:"ID"`
-	Name      string              `json:"name"`
-	Email     string              `json:"email"`
-	IsBanned  int                 `json:"isBanned"`
-	CreatedAt time.Time           `json:"createdAt"`
-	UpdatedAt time.Time           `json:"updatedAt"`
-	Followers []FollowersResponse `json:"followers"`
+	ID        uint      `json:"ID"`
+	Username  string    `json:"username"`
+	Email     string    `json:"email"`
+	IsBanned  int       `json:"isBanned"`
+	CreatedAt time.Time `json:"createdAt"`
+	UpdatedAt time.Time `json:"updatedAt"`
+}
+
+type UserDetailResponse struct {
+	ID              uint                `json:"ID"`
+	Username        string              `json:"username"`
+	Email           string              `json:"email"`
+	IsBanned        int                 `json:"isBanned"`
+	CreatedAt       time.Time           `json:"createdAt"`
+	UpdatedAt       time.Time           `json:"updatedAt"`
+	TotalFollowers  int                 `json:"totalFollowers"`
+	TotalFollowings int                 `json:"totalFollowing"`
+	Followers       []FollowersResponse `json:"followers"`
+	Followings      []FollowersResponse `json:"followings"`
 }
 
 type FollowersResponse struct {
-	ID    uint   `json:"ID"`
-	Name  string `json:"name"`
-	Email string `json:"email"`
+	ID       uint   `json:"ID"`
+	Username string `json:"name"`
+	Email    string `json:"email"`
 }
 
 type Token struct {
@@ -28,12 +40,26 @@ type Token struct {
 func ToUserResponse(user domain.User) UserResponse {
 	return UserResponse{
 		ID:        user.ID,
-		Name:      user.Username,
+		Username:  user.Username,
 		Email:     user.Email,
 		IsBanned:  user.IsBanned,
 		CreatedAt: user.CreatedAt,
 		UpdatedAt: user.UpdatedAt,
-		Followers: ToListFollowerResponse(user.Followers),
+	}
+}
+
+func ToUserDetailResponse(user domain.User, followings []domain.User) UserDetailResponse {
+	return UserDetailResponse{
+		ID:              user.ID,
+		Username:        user.Username,
+		Email:           user.Email,
+		IsBanned:        user.IsBanned,
+		CreatedAt:       user.CreatedAt,
+		UpdatedAt:       user.UpdatedAt,
+		TotalFollowers:  len(user.Followers),
+		TotalFollowings: len(followings),
+		Followers:       ToListFollowerResponse(user.Followers),
+		Followings:      ToListFollowerResponse(followings),
 	}
 }
 
