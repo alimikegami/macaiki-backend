@@ -1,6 +1,7 @@
 package mysql
 
 import (
+	"fmt"
 	"macaiki/domain"
 
 	"gorm.io/gorm"
@@ -88,3 +89,28 @@ func (ur *MysqlUserRepository) GetByEmail(email string) (domain.User, error) {
 
 	return user, nil
 }
+
+func (ur *MysqlUserRepository) StoreFollower(user, user_follower domain.User) (domain.User, error) {
+	err := ur.Db.Model(&user).Association("Followers").Append(&user_follower)
+	fmt.Println(user)
+	if err != nil {
+		return domain.User{}, err
+	}
+
+	return user, nil
+}
+
+func (ur *MysqlUserRepository) GetFollower(user domain.User) ([]domain.User, error) {
+	res := ur.Db.Preload("Followers").Find(&user)
+	err := res.Error
+
+	if err != nil {
+		return []domain.User{}, err
+	}
+
+	return user.Followers, nil
+}
+
+// func (ur *MysqlUserRepository) GetFollowing(user domain.User) ([]domain.User, error) {
+// 	res := ur.Db.Raw("SELECT name, age FROM users WHERE name = ?", "Antonio").Scan(&result)
+// }

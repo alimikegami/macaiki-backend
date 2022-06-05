@@ -12,7 +12,7 @@ type UserUpdateRequest struct {
 
 func ToUserUpdateRequest(user domain.User) UserUpdateRequest {
 	return UserUpdateRequest{
-		Name:      user.Name,
+		Name:      user.Username,
 		Email:     user.Email,
 		Password:  user.Password,
 		Role:      user.Role,

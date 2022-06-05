@@ -6,11 +6,12 @@ import (
 
 type User struct {
 	gorm.Model
-	Name     string `json:"name" validate:"required"`
-	Email    string `json:"email" validate:"required,email"`
-	Password string `json:"password" validate:"required,min=6"`
-	Role     string `json:"role" validate:"required"`
-	IsBanned int    `json:"isBanned" validate:"required"`
+	Username  string `json:"username" validate:"required"`
+	Email     string `json:"email" validate:"required,email"`
+	Password  string `json:"password" validate:"required,min=6"`
+	Role      string `json:"role" validate:"required"`
+	IsBanned  int    `json:"isBanned" validate:"required"`
+	Followers []User `json:"followers" gorm:"many2many:user_followers"`
 }
 
 type UserUsecase interface {
@@ -20,6 +21,7 @@ type UserUsecase interface {
 	Get(id uint) (User, error)
 	Update(user User, id uint) (User, error)
 	Delete(id uint) (User, error)
+	Follow(user_id, user_follower_id uint) (User, error)
 }
 
 type UserRepository interface {
@@ -29,4 +31,8 @@ type UserRepository interface {
 	Update(userDB *User, user User) (User, error)
 	Delete(id uint) (User, error)
 	GetByEmail(email string) (User, error)
+
+	StoreFollower(user, user_follower User) (User, error)
+	GetFollower(user User) ([]User, error)
+	// GetFollowing(user User) ([]User, error)
 }

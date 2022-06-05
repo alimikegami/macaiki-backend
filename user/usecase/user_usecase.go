@@ -2,6 +2,7 @@ package usercase
 
 import (
 	"errors"
+	"fmt"
 	"log"
 	"macaiki/domain"
 	"macaiki/user/delivery/http/middleware"
@@ -49,7 +50,6 @@ func (uu *userUsecase) Login(email, password string) (string, error) {
 }
 
 func (uu *userUsecase) Register(user domain.User) (domain.User, error) {
-
 	if err := uu.validator.Struct(user); err != nil {
 		return domain.User{}, domain.ErrBadParamInput
 	}
@@ -81,7 +81,12 @@ func (uu *userUsecase) GetAll() ([]domain.User, error) {
 }
 
 func (uu *userUsecase) Get(id uint) (domain.User, error) {
+
 	user, err := uu.userRepo.Get(id)
+
+	followers, err := uu.userRepo.GetFollower(user)
+	fmt.Println("hai")
+	fmt.Println(followers)
 
 	if err != nil {
 		return domain.User{}, err
@@ -135,6 +140,30 @@ func (uu *userUsecase) Delete(id uint) (domain.User, error) {
 	}
 
 	res, err := uu.userRepo.Delete(id)
+	if err != nil {
+		return domain.User{}, err
+	}
+	return res, nil
+}
+
+func (uu *userUsecase) Follow(user_id, user_follower_id uint) (domain.User, error) {
+	user, err := uu.userRepo.Get(user_id)
+	if err != nil {
+		return domain.User{}, err
+	}
+	if user.ID == 0 {
+		return domain.User{}, domain.ErrNotFound
+	}
+
+	user_follower, err := uu.userRepo.Get(user_follower_id)
+	if err != nil {
+		return domain.User{}, err
+	}
+	if user.ID == 0 {
+		return domain.User{}, domain.ErrNotFound
+	}
+
+	res, err := uu.userRepo.StoreFollower(user, user_follower)
 	if err != nil {
 		return domain.User{}, err
 	}

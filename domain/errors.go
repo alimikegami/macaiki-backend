@@ -14,11 +14,11 @@ var (
 	ErrConflict = errors.New("Your Item already exist")
 	// ErrBadParamInput will throw if the given request-body or params is not valid
 	ErrBadParamInput = errors.New("Given Param is not valid")
-
+	// ErrBadParamInput will throw if the email already used
 	ErrEmailAlreadyUsed = errors.New("Email already used")
-
+	// ErrForbidden will throw if the authorization is fail
 	ErrForbidden = errors.New("Forbidden")
-
+	// ErrLoginFailed will throw if the email & password invalid
 	ErrLoginFailed = errors.New("Invalid Email or Password")
 )
 
