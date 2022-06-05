@@ -166,7 +166,31 @@ func (uu *userUsecase) Follow(user_id, user_follower_id uint) (domain.User, erro
 	}
 
 	// save to database
-	res, err := uu.userRepo.StoreFollower(user, user_follower)
+	res, err := uu.userRepo.Follow(user, user_follower)
+	if err != nil {
+		return domain.User{}, domain.ErrInternalServerError
+	}
+	return res, nil
+}
+
+func (uu *userUsecase) Unfollow(user_id, user_follower_id uint) (domain.User, error) {
+	user, err := uu.userRepo.Get(user_id)
+	if err != nil {
+		return domain.User{}, domain.ErrInternalServerError
+	}
+	if user.ID == 0 {
+		return domain.User{}, domain.ErrNotFound
+	}
+
+	user_follower, err := uu.userRepo.Get(user_follower_id)
+	if err != nil {
+		return domain.User{}, domain.ErrInternalServerError
+	}
+	if user_follower.ID == 0 {
+		return domain.User{}, domain.ErrNotFound
+	}
+
+	res, err := uu.userRepo.Unfollow(user, user_follower)
 	if err != nil {
 		return domain.User{}, domain.ErrInternalServerError
 	}

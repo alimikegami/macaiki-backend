@@ -22,6 +22,7 @@ type UserUsecase interface {
 	Update(user User, id uint) (User, error)
 	Delete(id uint) (User, error)
 	Follow(user_id, user_follower_id uint) (User, error)
+	Unfollow(user_id, user_follower_id uint) (User, error)
 }
 
 type UserRepository interface {
@@ -32,6 +33,7 @@ type UserRepository interface {
 	Delete(id uint) (User, error)
 	GetByEmail(email string) (User, error)
 
-	StoreFollower(user, user_follower User) (User, error)
+	Follow(user, user_follower User) (User, error)
+	Unfollow(user, user_follower User) (User, error)
 	GetFollowing(user User) ([]User, error)
 }
