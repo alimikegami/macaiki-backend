@@ -7,6 +7,8 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+
+	_middL "macaiki/user/delivery/http/middleware"
 )
 
 type UserHandler struct {
@@ -26,6 +28,9 @@ func NewUserHandler(e *echo.Echo, us domain.UserUsecase, JWTSecret string) {
 	e.GET("/api/v1/users/:user_id", handler.GetUser)
 	e.PUT("api/v1/users/:user_id", handler.Update)
 	e.DELETE("api/v1/users/:user_id", handler.Delete)
+
+	e.POST("api/v1/users/:user_id/follow", handler.Follow, middleware.JWT([]byte(JWTSecret)))
+	e.POST("api/v1/users/:user_id/unfollow", handler.Unfollow, middleware.JWT([]byte(JWTSecret)))
 }
 
 func (u *UserHandler) Login(c echo.Context) error {
@@ -69,12 +74,12 @@ func (u *UserHandler) GetUser(c echo.Context) error {
 		response.ErrorResponse(c, domain.ErrBadParamInput)
 	}
 
-	user, err := u.UserUsecase.Get(uint(user_id))
+	user, followings, err := u.UserUsecase.Get(uint(user_id))
 	if err != nil {
 		return response.ErrorResponse(c, err)
 	}
 
-	return response.SuccessResponse(c, response.ToUserResponse(user))
+	return response.SuccessResponse(c, response.ToUserDetailResponse(user, followings))
 }
 
 func (u *UserHandler) Update(c echo.Context) error {
@@ -107,5 +112,35 @@ func (u *UserHandler) Delete(c echo.Context) error {
 		return response.ErrorResponse(c, err)
 	}
 
+	return response.SuccessResponse(c, response.ToUserResponse(user))
+}
+
+func (u *UserHandler) Follow(c echo.Context) error {
+	num := c.Param("user_id")
+	user_id, err := strconv.Atoi(num)
+	if err != nil {
+		response.ErrorResponse(c, domain.ErrBadParamInput)
+	}
+
+	follower_id, _ := _middL.ExtractTokenUser(c)
+	user, err := u.UserUsecase.Follow(uint(user_id), uint(follower_id))
+	if err != nil {
+		return response.ErrorResponse(c, err)
+	}
+	return response.SuccessResponse(c, response.ToUserResponse(user))
+}
+
+func (u *UserHandler) Unfollow(c echo.Context) error {
+	num := c.Param("user_id")
+	user_id, err := strconv.Atoi(num)
+	if err != nil {
+		response.ErrorResponse(c, domain.ErrBadParamInput)
+	}
+
+	follower_id, _ := _middL.ExtractTokenUser(c)
+	user, err := u.UserUsecase.Unfollow(uint(user_id), uint(follower_id))
+	if err != nil {
+		return response.ErrorResponse(c, err)
+	}
 	return response.SuccessResponse(c, response.ToUserResponse(user))
 }
