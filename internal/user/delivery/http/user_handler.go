@@ -1,8 +1,8 @@
 package http
 
 import (
-	"macaiki/domain"
-	"macaiki/user/delivery/http/response"
+	"macaiki/internal/domain"
+	"macaiki/internal/user/delivery/http/response"
 	"strconv"
 
 	"github.com/labstack/echo/v4"

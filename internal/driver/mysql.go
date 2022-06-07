@@ -3,7 +3,7 @@ package driver
 import (
 	"fmt"
 	"log"
-	"macaiki/domain"
+	"macaiki/internal/domain"
 
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -33,5 +33,6 @@ func ConnectDB(driver, host, port, username, password, name string) {
 func InitialMigration(DB *gorm.DB) {
 	DB.AutoMigrate(
 		&domain.User{},
+		&domain.Thread{},
 	)
 }

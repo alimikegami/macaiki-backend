@@ -1,7 +1,7 @@
 package mysql
 
 import (
-	"macaiki/domain"
+	"macaiki/internal/domain"
 
 	"gorm.io/gorm"
 )
