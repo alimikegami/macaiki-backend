@@ -7,43 +7,59 @@ import (
 
 type UserResponse struct {
 	ID        uint      `json:"ID"`
-	Name      string    `json:"name"`
+	Username  string    `json:"username"`
 	Email     string    `json:"email"`
 	IsBanned  int       `json:"isBanned"`
 	CreatedAt time.Time `json:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt"`
 }
 
+type UserDetailResponse struct {
+	ID              uint                `json:"ID"`
+	Username        string              `json:"username"`
+	Email           string              `json:"email"`
+	IsBanned        int                 `json:"isBanned"`
+	CreatedAt       time.Time           `json:"createdAt"`
+	UpdatedAt       time.Time           `json:"updatedAt"`
+	TotalFollowers  int                 `json:"totalFollowers"`
+	TotalFollowings int                 `json:"totalFollowing"`
+	Followers       []FollowersResponse `json:"followers"`
+	Followings      []FollowersResponse `json:"followings"`
+}
+
+type FollowersResponse struct {
+	ID       uint   `json:"ID"`
+	Username string `json:"name"`
+	Email    string `json:"email"`
+}
+
 type Token struct {
 	Token string `json:"token"`
-}
-
-type UserUpdate struct {
-	Name      string `json:"name"      validate:"required"`
-	Email     string `json:"email"     validate:"required,email"`
-	Password  string
-	Role      string `json:"role"     validate:"required"`
-	Is_banned int    `json:"isBanned" validate:"required"`
-}
-
-func ToUserUpdate(user domain.User) UserUpdate {
-	return UserUpdate{
-		Name:      user.Name,
-		Email:     user.Email,
-		Password:  user.Password,
-		Role:      user.Role,
-		Is_banned: user.IsBanned,
-	}
 }
 
 func ToUserResponse(user domain.User) UserResponse {
 	return UserResponse{
 		ID:        user.ID,
-		Name:      user.Name,
+		Username:  user.Username,
 		Email:     user.Email,
 		IsBanned:  user.IsBanned,
 		CreatedAt: user.CreatedAt,
 		UpdatedAt: user.UpdatedAt,
+	}
+}
+
+func ToUserDetailResponse(user domain.User, followings []domain.User) UserDetailResponse {
+	return UserDetailResponse{
+		ID:              user.ID,
+		Username:        user.Username,
+		Email:           user.Email,
+		IsBanned:        user.IsBanned,
+		CreatedAt:       user.CreatedAt,
+		UpdatedAt:       user.UpdatedAt,
+		TotalFollowers:  len(user.Followers),
+		TotalFollowings: len(followings),
+		Followers:       ToListFollowerResponse(user.Followers),
+		Followings:      ToListFollowerResponse(followings),
 	}
 }
 
@@ -55,6 +71,21 @@ func ToListUserResponse(users []domain.User) []UserResponse {
 	}
 
 	return usersResponse
+}
+
+func ToListFollowerResponse(followers []domain.User) []FollowersResponse {
+	followersResponse := []FollowersResponse{}
+
+	for _, val := range followers {
+		temp := FollowersResponse{
+			val.ID,
+			val.Username,
+			val.Email,
+		}
+		followersResponse = append(followersResponse, temp)
+	}
+
+	return followersResponse
 }
 
 func ToTokenResponse(token string) Token {
