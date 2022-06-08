@@ -7,7 +7,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
 
-	_config "macaiki/internal/config"
+	_config "macaiki/config"
 	_driver "macaiki/internal/driver"
 	_threadHttpDelivery "macaiki/internal/thread/delivery/http"
 	_threadRepo "macaiki/internal/thread/repository/mysql"
