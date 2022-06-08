@@ -2,7 +2,7 @@ package middleware
 
 import (
 	"log"
-	"macaiki/internal/config"
+	"macaiki/config"
 	"time"
 
 	"github.com/golang-jwt/jwt"
