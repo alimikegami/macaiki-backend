@@ -23,7 +23,7 @@ type JWTSecret struct {
 
 func LoadConfig(path string) (config Config, err error) {
 	viper.AddConfigPath(path)
-	viper.SetConfigFile("../../.env")
+	viper.SetConfigFile(".env")
 
 	viper.AutomaticEnv()
 
@@ -37,7 +37,7 @@ func LoadConfig(path string) (config Config, err error) {
 
 func LoadJWTSecret(path string) (secret JWTSecret, err error) {
 	viper.AddConfigPath(path)
-	viper.SetConfigFile("../../.env")
+	viper.SetConfigFile(".env")
 
 	viper.AutomaticEnv()
 
