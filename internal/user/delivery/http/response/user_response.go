@@ -1,7 +1,7 @@
 package response
 
 import (
-	"macaiki/domain"
+	"macaiki/internal/domain"
 	"time"
 )
 

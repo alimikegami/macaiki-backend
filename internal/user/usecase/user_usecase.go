@@ -3,9 +3,9 @@ package usercase
 import (
 	"errors"
 	"log"
-	"macaiki/domain"
-	"macaiki/user/delivery/http/middleware"
-	"macaiki/user/delivery/http/request"
+	"macaiki/internal/domain"
+	"macaiki/internal/user/delivery/http/middleware"
+	"macaiki/internal/user/delivery/http/request"
 
 	"github.com/go-playground/validator/v10"
 	"golang.org/x/crypto/bcrypt"
