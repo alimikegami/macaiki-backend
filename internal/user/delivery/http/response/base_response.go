@@ -1,7 +1,7 @@
 package response
 
 import (
-	"macaiki/domain"
+	"macaiki/internal/domain"
 	"net/http"
 
 	"github.com/labstack/echo/v4"

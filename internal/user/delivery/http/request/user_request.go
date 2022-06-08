@@ -1,6 +1,6 @@
 package request
 
-import "macaiki/domain"
+import "macaiki/internal/domain"
 
 type UserUpdateRequest struct {
 	Name      string `json:"name"      validate:"required"`

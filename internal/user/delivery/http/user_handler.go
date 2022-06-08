@@ -1,14 +1,14 @@
 package http
 
 import (
-	"macaiki/domain"
-	"macaiki/user/delivery/http/response"
+	"macaiki/internal/domain"
+	"macaiki/internal/user/delivery/http/response"
 	"strconv"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 
-	_middL "macaiki/user/delivery/http/middleware"
+	_middL "macaiki/internal/user/delivery/http/middleware"
 )
 
 type UserHandler struct {
