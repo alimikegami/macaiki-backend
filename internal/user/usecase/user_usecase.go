@@ -3,9 +3,9 @@ package usercase
 import (
 	"errors"
 	"log"
-	"macaiki/domain"
-	"macaiki/user/delivery/http/middleware"
-	"macaiki/user/delivery/http/request"
+	"macaiki/internal/domain"
+	"macaiki/internal/user/delivery/http/middleware"
+	"macaiki/internal/user/dto"
 
 	"github.com/go-playground/validator/v10"
 	"golang.org/x/crypto/bcrypt"
@@ -95,7 +95,7 @@ func (uu *userUsecase) Get(id uint) (domain.User, []domain.User, error) {
 	return user, followings, nil
 }
 func (uu *userUsecase) Update(user domain.User, id uint) (domain.User, error) {
-	userUpdate := request.ToUserUpdateRequest(user)
+	userUpdate := dto.ToUserUpdateRequest(user)
 	if err := uu.validator.Struct(userUpdate); err != nil {
 		return domain.User{}, domain.ErrBadParamInput
 	}

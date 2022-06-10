@@ -8,10 +8,13 @@ import (
 	"github.com/labstack/echo/v4"
 
 	_config "macaiki/config"
-	_driver "macaiki/driver"
-	_userHttpDelivery "macaiki/user/delivery/http"
-	_userRepo "macaiki/user/repository/mysql"
-	_userUsecase "macaiki/user/usecase"
+	_driver "macaiki/internal/driver"
+	_threadHttpDelivery "macaiki/internal/thread/delivery/http"
+	_threadRepo "macaiki/internal/thread/repository/mysql"
+	_threadUsecase "macaiki/internal/thread/usecase"
+	_userHttpDelivery "macaiki/internal/user/delivery/http"
+	_userRepo "macaiki/internal/user/repository/mysql"
+	_userUsecase "macaiki/internal/user/usecase"
 )
 
 func main() {
@@ -44,5 +47,8 @@ func main() {
 
 	_userHttpDelivery.NewUserHandler(e, userUsecase, JWTSecret.Secret)
 
+	threadRepo := _threadRepo.CreateNewThreadRepository(_driver.DB)
+	threadUseCase := _threadUsecase.CreateNewThreadUseCase(threadRepo)
+	_ = _threadHttpDelivery.CreateNewThreadHandler(e, threadUseCase)
 	log.Fatal(e.Start(":" + config.ServerPort))
 }

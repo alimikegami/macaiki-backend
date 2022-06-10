@@ -1,14 +1,15 @@
 package http
 
 import (
-	"macaiki/domain"
-	"macaiki/user/delivery/http/response"
+	"macaiki/internal/domain"
+	"macaiki/internal/user/dto"
+	"macaiki/pkg/response"
 	"strconv"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 
-	_middL "macaiki/user/delivery/http/middleware"
+	_middL "macaiki/internal/user/delivery/http/middleware"
 )
 
 type UserHandler struct {
@@ -43,7 +44,7 @@ func (u *UserHandler) Login(c echo.Context) error {
 		return response.ErrorResponse(c, err)
 	}
 
-	return response.SuccessResponse(c, response.ToTokenResponse(token))
+	return response.SuccessResponse(c, dto.ToTokenResponse(token))
 }
 
 func (u *UserHandler) Register(c echo.Context) error {
@@ -55,7 +56,7 @@ func (u *UserHandler) Register(c echo.Context) error {
 		return response.ErrorResponse(c, err)
 	}
 
-	return response.SuccessResponse(c, response.ToUserResponse(user))
+	return response.SuccessResponse(c, dto.ToUserResponse(user))
 }
 
 func (u *UserHandler) GetAllUsers(c echo.Context) error {
@@ -64,7 +65,7 @@ func (u *UserHandler) GetAllUsers(c echo.Context) error {
 		return response.ErrorResponse(c, err)
 	}
 
-	return response.SuccessResponse(c, response.ToListUserResponse(users))
+	return response.SuccessResponse(c, dto.ToListUserResponse(users))
 }
 
 func (u *UserHandler) GetUser(c echo.Context) error {
@@ -79,7 +80,7 @@ func (u *UserHandler) GetUser(c echo.Context) error {
 		return response.ErrorResponse(c, err)
 	}
 
-	return response.SuccessResponse(c, response.ToUserDetailResponse(user, followings))
+	return response.SuccessResponse(c, dto.ToUserDetailResponse(user, followings))
 }
 
 func (u *UserHandler) Update(c echo.Context) error {
@@ -97,7 +98,7 @@ func (u *UserHandler) Update(c echo.Context) error {
 		return response.ErrorResponse(c, err)
 	}
 
-	return response.SuccessResponse(c, response.ToUserResponse(user))
+	return response.SuccessResponse(c, dto.ToUserResponse(user))
 }
 
 func (u *UserHandler) Delete(c echo.Context) error {
@@ -112,7 +113,7 @@ func (u *UserHandler) Delete(c echo.Context) error {
 		return response.ErrorResponse(c, err)
 	}
 
-	return response.SuccessResponse(c, response.ToUserResponse(user))
+	return response.SuccessResponse(c, dto.ToUserResponse(user))
 }
 
 func (u *UserHandler) Follow(c echo.Context) error {
@@ -127,7 +128,7 @@ func (u *UserHandler) Follow(c echo.Context) error {
 	if err != nil {
 		return response.ErrorResponse(c, err)
 	}
-	return response.SuccessResponse(c, response.ToUserResponse(user))
+	return response.SuccessResponse(c, dto.ToUserResponse(user))
 }
 
 func (u *UserHandler) Unfollow(c echo.Context) error {
@@ -142,5 +143,5 @@ func (u *UserHandler) Unfollow(c echo.Context) error {
 	if err != nil {
 		return response.ErrorResponse(c, err)
 	}
-	return response.SuccessResponse(c, response.ToUserResponse(user))
+	return response.SuccessResponse(c, dto.ToUserResponse(user))
 }
