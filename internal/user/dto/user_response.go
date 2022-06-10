@@ -10,6 +10,7 @@ type UserResponse struct {
 	Username  string    `json:"username"`
 	Email     string    `json:"email"`
 	IsBanned  int       `json:"isBanned"`
+	ImageUrl  string    `json:"imageUrl"`
 	CreatedAt time.Time `json:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt"`
 }
@@ -19,6 +20,7 @@ type UserDetailResponse struct {
 	Username        string              `json:"username"`
 	Email           string              `json:"email"`
 	IsBanned        int                 `json:"isBanned"`
+	ImageUrl        string              `json:"imageUrl"`
 	CreatedAt       time.Time           `json:"createdAt"`
 	UpdatedAt       time.Time           `json:"updatedAt"`
 	TotalFollowers  int                 `json:"totalFollowers"`
@@ -43,6 +45,7 @@ func ToUserResponse(user domain.User) UserResponse {
 		Username:  user.Username,
 		Email:     user.Email,
 		IsBanned:  user.IsBanned,
+		ImageUrl:  user.ImageUrl,
 		CreatedAt: user.CreatedAt,
 		UpdatedAt: user.UpdatedAt,
 	}
@@ -54,6 +57,7 @@ func ToUserDetailResponse(user domain.User, followings []domain.User) UserDetail
 		Username:        user.Username,
 		Email:           user.Email,
 		IsBanned:        user.IsBanned,
+		ImageUrl:        user.ImageUrl,
 		CreatedAt:       user.CreatedAt,
 		UpdatedAt:       user.UpdatedAt,
 		TotalFollowers:  len(user.Followers),

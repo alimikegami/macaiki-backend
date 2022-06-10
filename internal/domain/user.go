@@ -11,6 +11,7 @@ type User struct {
 	Password  string `json:"password" validate:"required,min=6"`
 	Role      string `json:"role" validate:"required"`
 	IsBanned  int    `json:"isBanned" validate:"required"`
+	ImageUrl  string `json:"imageUrl"`
 	Followers []User `json:"followers" gorm:"many2many:user_followers"`
 }
 

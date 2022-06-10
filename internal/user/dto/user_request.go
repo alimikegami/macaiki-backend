@@ -7,6 +7,7 @@ type UserUpdateRequest struct {
 	Email     string `json:"email"     validate:"required,email"`
 	Password  string
 	Role      string `json:"role"     validate:"required"`
+	ImageUrl  string `json:"imageUrl"`
 	Is_banned int    `json:"isBanned" validate:"required"`
 }
 
