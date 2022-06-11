@@ -19,7 +19,7 @@ func NewReportCategoryUsecase(rcRepo domain.ReportCategoryRepository, validator 
 func (rcu *ReportCategoryUsecaseImpl) GetAllReportCategory() ([]dto.ReportCategoryResponse, error) {
 	reportCategories, err := rcu.rcRepo.GetAllReportCategory()
 	if err != nil {
-		return []dto.ReportCategoryResponse{}, err
+		return []dto.ReportCategoryResponse{}, domain.ErrInternalServerError
 	}
 
 	dtoReportCategories := []dto.ReportCategoryResponse{}
@@ -28,4 +28,16 @@ func (rcu *ReportCategoryUsecaseImpl) GetAllReportCategory() ([]dto.ReportCatego
 	}
 
 	return dtoReportCategories, nil
+}
+
+func (rcu *ReportCategoryUsecaseImpl) GetReportCategory(id uint) (dto.ReportCategoryResponse, error) {
+	reportCategory, err := rcu.rcRepo.GetReportCategory(id)
+	if err != nil {
+		return dto.ReportCategoryResponse{}, domain.ErrInternalServerError
+	}
+	if reportCategory.ID == 0 {
+		return dto.ReportCategoryResponse{}, domain.ErrNotFound
+	}
+
+	return dto.ReportCategoryResponse{ID: reportCategory.ID, Name: reportCategory.Name}, nil
 }

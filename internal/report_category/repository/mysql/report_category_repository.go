@@ -25,3 +25,15 @@ func (rcr *ReportCategoryRepositoryImpl) GetAllReportCategory() ([]domain.Report
 
 	return reportCategories, nil
 }
+
+func (rcr *ReportCategoryRepositoryImpl) GetReportCategory(id uint) (domain.ReportCategory, error) {
+	reportCategory := domain.ReportCategory{}
+
+	tx := rcr.db.Find(&reportCategory, id)
+	err := tx.Error
+	if err != nil {
+		return domain.ReportCategory{}, err
+	}
+
+	return reportCategory, nil
+}

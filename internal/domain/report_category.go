@@ -9,8 +9,10 @@ type ReportCategory struct {
 
 type ReportCategoryUsecase interface {
 	GetAllReportCategory() ([]dto.ReportCategoryResponse, error)
+	GetReportCategory(id uint) (dto.ReportCategoryResponse, error)
 }
 
 type ReportCategoryRepository interface {
 	GetAllReportCategory() ([]ReportCategory, error)
+	GetReportCategory(id uint) (ReportCategory, error)
 }
