@@ -9,6 +9,9 @@ import (
 
 	_config "macaiki/config"
 	_driver "macaiki/internal/driver"
+	_reportCategoryHttpDeliver "macaiki/internal/report_category/delivery/http"
+	_reportCategoryRepo "macaiki/internal/report_category/repository/mysql"
+	_reportCategoryUsecase "macaiki/internal/report_category/usecase"
 	_threadHttpDelivery "macaiki/internal/thread/delivery/http"
 	_threadRepo "macaiki/internal/thread/repository/mysql"
 	_threadUsecase "macaiki/internal/thread/usecase"
@@ -35,20 +38,26 @@ func main() {
 	e.GET("/", func(c echo.Context) error {
 		return c.String(http.StatusOK, "Hello World!")
 	})
-
-	userRepo := _userRepo.NewMysqlUserRepository(_driver.DB)
 	v := validator.New()
-	userUsecase := _userUsecase.NewUserUsecase(userRepo, v)
 
+	// setup User
+	userRepo := _userRepo.NewMysqlUserRepository(_driver.DB)
+	userUsecase := _userUsecase.NewUserUsecase(userRepo, v)
 	JWTSecret, err := _config.LoadJWTSecret(".")
 	if err != nil {
 		log.Fatal("err", err)
 	}
-
 	_userHttpDelivery.NewUserHandler(e, userUsecase, JWTSecret.Secret)
 
+	// setup Thread
 	threadRepo := _threadRepo.CreateNewThreadRepository(_driver.DB)
 	threadUseCase := _threadUsecase.CreateNewThreadUseCase(threadRepo)
 	_ = _threadHttpDelivery.CreateNewThreadHandler(e, threadUseCase)
+
+	// setup Report Category
+	reportCategoryRepo := _reportCategoryRepo.NewReportCategoryRepository(_driver.DB)
+	reportCategoryUsecase := _reportCategoryUsecase.NewReportCategoryUsecase(reportCategoryRepo, v)
+	_reportCategoryHttpDeliver.NewReportCategoryHandler(e, reportCategoryUsecase)
+
 	log.Fatal(e.Start(":" + config.ServerPort))
 }
