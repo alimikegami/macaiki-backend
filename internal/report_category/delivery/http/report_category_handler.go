@@ -15,8 +15,8 @@ type ReportCategoryHandler struct {
 func NewReportCategoryHandler(e *echo.Echo, rcUsecase domain.ReportCategoryUsecase) {
 	rcHandler := ReportCategoryHandler{rcUsecase}
 
-	e.GET("/api/v1/report_categories", rcHandler.GetAllReportCategories)
-	e.GET("/api/v1/report_categories/:report_category_id", rcHandler.GetReportCategory)
+	e.GET("/api/v1/report-categories", rcHandler.GetAllReportCategories)
+	e.GET("/api/v1/report-categories/:reportCategoryID", rcHandler.GetReportCategory)
 }
 
 func (rcHandler *ReportCategoryHandler) GetAllReportCategories(c echo.Context) error {
@@ -29,7 +29,7 @@ func (rcHandler *ReportCategoryHandler) GetAllReportCategories(c echo.Context) e
 }
 
 func (rcHandler *ReportCategoryHandler) GetReportCategory(c echo.Context) error {
-	id, err := strconv.Atoi(c.Param("report_category_id"))
+	id, err := strconv.Atoi(c.Param("reportCategoryID"))
 	if err != nil {
 		return response.ErrorResponse(c, domain.ErrBadParamInput)
 	}
