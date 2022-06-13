@@ -1,7 +1,7 @@
 package dto
 
 type ThreadRequest struct {
-	Title   string
-	Body    string
-	TopicID uint
+	Title   string `json:"title"`
+	Body    string `json:"body"`
+	TopicID uint   `json:"topicID"`
 }
