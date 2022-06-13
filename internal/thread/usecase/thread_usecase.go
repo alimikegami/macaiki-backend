@@ -44,6 +44,7 @@ func (tuc *ThreadUseCaseImpl) DeleteThread(threadID uint) error {
 }
 
 func (tuc *ThreadUseCaseImpl) UpdateThread(thread dto.ThreadRequest, threadID uint, userID uint) (dto.ThreadResponse, error) {
+	// TODO: add validation logic to make sure the only user that can update a thread is the user who created the thread
 	threadEntity := domain.Thread{
 		Title:   thread.Title,
 		Body:    thread.Body,
