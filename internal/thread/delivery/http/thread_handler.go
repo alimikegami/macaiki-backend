@@ -5,7 +5,6 @@ import (
 	"macaiki/internal/domain"
 	"macaiki/internal/thread/dto"
 	"macaiki/pkg/response"
-	"net/http"
 	"strconv"
 
 	"github.com/labstack/echo/v4"
