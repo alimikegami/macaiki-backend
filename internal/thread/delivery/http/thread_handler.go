@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"macaiki/internal/domain"
 	"macaiki/internal/thread/dto"
+	"macaiki/pkg/response"
 	"net/http"
 	"strconv"
 
@@ -19,6 +20,16 @@ type Response struct {
 	Status  string      `json:"status"`
 	Data    interface{} `json:"data"`
 	Message interface{} `json:"message"`
+}
+
+func (th *ThreadHandler) GetThreads(c echo.Context) error {
+	res, err := th.tu.GetThreads()
+	if err != nil {
+		fmt.Println(err)
+		return response.ErrorResponse(c, err)
+	}
+
+	return response.SuccessResponse(c, res)
 }
 
 func (th *ThreadHandler) CreateThread(c echo.Context) error {
@@ -77,6 +88,7 @@ func (th *ThreadHandler) DeleteThread(c echo.Context) error {
 func CreateNewThreadHandler(e *echo.Echo, tu domain.ThreadUseCase) *ThreadHandler {
 	threadHandler := &ThreadHandler{router: e, tu: tu}
 	threadHandler.router.POST("/api/v1/threads", threadHandler.CreateThread)
-	threadHandler.router.DELETE("/api/v1/thrads/:threadID", threadHandler.DeleteThread)
+	threadHandler.router.DELETE("/api/v1/threads/:threadID", threadHandler.DeleteThread)
+	threadHandler.router.GET("/api/v1/threads", threadHandler.GetThreads)
 	return threadHandler
 }

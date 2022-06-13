@@ -14,6 +14,17 @@ func CreateNewThreadRepository(db *gorm.DB) domain.ThreadRepository {
 	return &ThreadRepositoryImpl{db: db}
 }
 
+func (tr *ThreadRepositoryImpl) GetThreads() ([]domain.Thread, error) {
+	var threads []domain.Thread
+	res := tr.db.Find(&threads)
+
+	if res.Error != nil {
+		return []domain.Thread{}, res.Error
+	}
+
+	return threads, nil
+}
+
 func (tr *ThreadRepositoryImpl) CreateThread(thread domain.Thread) error {
 	res := tr.db.Create(&thread)
 	if res.Error != nil {
