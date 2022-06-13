@@ -18,12 +18,14 @@ type Thread struct {
 type ThreadUseCase interface {
 	CreateThread(thread dto.ThreadRequest, userID uint) (dto.ThreadResponse, error)
 	DeleteThread(threadID uint) error
+	GetThreads() ([]dto.ThreadResponse, error)
 	UpdateThread(thread dto.ThreadRequest, threadID uint, userID uint) (dto.ThreadResponse, error)
 }
 
 type ThreadRepository interface {
 	CreateThread(thread Thread) (Thread, error)
 	DeleteThread(threadID uint) error
+	GetThreads() ([]Thread, error)
 	UpdateThread(threadID uint, thread Thread) error
 	GetThreadByID(threadID uint) (Thread, error)
 }

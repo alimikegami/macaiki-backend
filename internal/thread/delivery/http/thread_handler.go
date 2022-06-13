@@ -5,6 +5,7 @@ import (
 	"macaiki/internal/domain"
 	"macaiki/internal/thread/dto"
 	"macaiki/pkg/response"
+	"net/http"
 	"strconv"
 
 	"github.com/labstack/echo/v4"
@@ -13,6 +14,16 @@ import (
 type ThreadHandler struct {
 	router *echo.Echo
 	tu     domain.ThreadUseCase
+}
+
+func (th *ThreadHandler) GetThreads(c echo.Context) error {
+	res, err := th.tu.GetThreads()
+	if err != nil {
+		fmt.Println(err)
+		return response.ErrorResponse(c, err)
+	}
+
+	return response.SuccessResponse(c, res)
 }
 
 func (th *ThreadHandler) CreateThread(c echo.Context) error {
@@ -73,6 +84,7 @@ func CreateNewThreadHandler(e *echo.Echo, tu domain.ThreadUseCase) *ThreadHandle
 	threadHandler := &ThreadHandler{router: e, tu: tu}
 	threadHandler.router.POST("/api/v1/threads", threadHandler.CreateThread)
 	threadHandler.router.DELETE("/api/v1/threads/:threadID", threadHandler.DeleteThread)
+	threadHandler.router.GET("/api/v1/threads", threadHandler.GetThreads)
 	threadHandler.router.PUT("/api/v1/threads/:threadID", threadHandler.UpdateThread)
 	return threadHandler
 }
