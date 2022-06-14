@@ -1,29 +1,35 @@
 package domain
 
 import (
+	"macaiki/internal/user/dto"
+
 	"gorm.io/gorm"
 )
 
 type User struct {
 	gorm.Model
-	Username  string `json:"username" validate:"required"`
-	Email     string `json:"email" validate:"required,email"`
-	Password  string `json:"password" validate:"required,min=6"`
-	Role      string `json:"role" validate:"required"`
-	IsBanned  int    `json:"isBanned" validate:"required"`
-	ImageUrl  string `json:"imageUrl"`
-	Followers []User `json:"followers" gorm:"many2many:user_followers"`
+	Email              string `gorm:"uniqueIndex"`
+	Username           string `gorm:"uniqueIndex"`
+	Password           string
+	Name               string
+	ProfileImageUrl    string
+	BackgroundImageUrl string
+	Bio                string
+	Proffesion         string
+	Role               string
+	IsBanned           bool
+	Followers          []User `gorm:"many2many:user_followers"`
 }
 
 type UserUsecase interface {
-	Login(email, password string) (string, error)
-	Register(user User) (User, error)
-	GetAll() ([]User, error)
-	Get(id uint) (User, []User, error)
-	Update(user User, id uint) (User, error)
-	Delete(id uint) (User, error)
-	Follow(user_id, user_follower_id uint) (User, error)
-	Unfollow(user_id, user_follower_id uint) (User, error)
+	Login(email, password string) (dto.LoginResponse, error)
+	Register(user dto.UserRequest) (dto.UserResponse, error)
+	GetAll() ([]dto.UserResponse, error)
+	Get(id uint) (dto.UserDetailResponse, error)
+	Update(userUpdate dto.UpdateUserRequest, id uint) (dto.UserResponse, error)
+	Delete(id uint) error
+	Follow(user_id, user_follower_id uint) error
+	Unfollow(user_id, user_follower_id uint) error
 }
 
 type UserRepository interface {

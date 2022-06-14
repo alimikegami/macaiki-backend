@@ -20,6 +20,12 @@ var (
 	ErrForbidden = errors.New("Forbidden")
 	// ErrLoginFailed will throw if the email & password invalid
 	ErrLoginFailed = errors.New("Invalid Email or Password")
+
+	ErrEmailRequired = errors.New("A Email is Required")
+
+	ErrPasswordRequired = errors.New("A Password is Required")
+
+	ErrPasswordDontMatch = errors.New("Password don't match")
 )
 
 // unfinished
@@ -34,6 +40,10 @@ func GetStatusCode(err error) int {
 	case ErrBadParamInput:
 		return http.StatusBadRequest
 	case ErrEmailAlreadyUsed:
+		return http.StatusBadRequest
+	case ErrEmailRequired:
+		return http.StatusBadRequest
+	case ErrPasswordDontMatch:
 		return http.StatusBadRequest
 	case ErrForbidden:
 		return http.StatusForbidden

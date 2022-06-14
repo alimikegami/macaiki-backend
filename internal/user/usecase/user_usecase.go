@@ -1,9 +1,9 @@
 package usercase
 
 import (
-	"errors"
 	"log"
 	"macaiki/internal/domain"
+	"macaiki/internal/user/delivery/http/helper"
 	"macaiki/internal/user/delivery/http/middleware"
 	"macaiki/internal/user/dto"
 
@@ -23,178 +23,203 @@ func NewUserUsecase(repo domain.UserRepository, validator *validator.Validate) d
 	}
 }
 
-func (uu *userUsecase) Login(email, password string) (string, error) {
+func (uu *userUsecase) Login(email, password string) (dto.LoginResponse, error) {
 	if email == "" {
-		return "", domain.ErrBadParamInput
+		return dto.LoginResponse{}, domain.ErrBadParamInput
 	}
 	if password == "" {
-		return "", domain.ErrBadParamInput
+		return dto.LoginResponse{}, domain.ErrBadParamInput
 	}
 
 	user, err := uu.userRepo.GetByEmail(email)
 	if err != nil {
-		return "", domain.ErrInternalServerError
+		return dto.LoginResponse{}, domain.ErrInternalServerError
 	}
 
 	if user.ID == 0 || !comparePasswords(user.Password, []byte(password)) {
-		return "", domain.ErrLoginFailed
+		return dto.LoginResponse{}, domain.ErrLoginFailed
 	}
 
 	token, err := middleware.JWTCreateToken(int(user.ID), user.Role)
 	if err != nil {
-		return "", err
+		return dto.LoginResponse{}, err
 	}
 
-	return token, nil
+	return helper.ToLoginResponse(token), nil
 }
 
-func (uu *userUsecase) Register(user domain.User) (domain.User, error) {
+func (uu *userUsecase) Register(user dto.UserRequest) (dto.UserResponse, error) {
+	// TO DO : error handling for existing username
 	if err := uu.validator.Struct(user); err != nil {
-		return domain.User{}, domain.ErrBadParamInput
+		return dto.UserResponse{}, domain.ErrBadParamInput
 	}
 
 	userEmail, err := uu.userRepo.GetByEmail(user.Email)
 	if err != nil {
-		return domain.User{}, domain.ErrInternalServerError
+		return dto.UserResponse{}, domain.ErrInternalServerError
 	}
+
 	if userEmail.ID != 0 {
-		return domain.User{}, domain.ErrEmailAlreadyUsed
+		return dto.UserResponse{}, domain.ErrEmailAlreadyUsed
 	}
 
-	user.Password = hashAndSalt([]byte(user.Password))
-	user, err = uu.userRepo.Store(user)
+	if user.Password != user.PasswordConfirmation {
+		return dto.UserResponse{}, domain.ErrPasswordDontMatch
+	}
+
+	userEntity := domain.User{
+		Email:    user.Email,
+		Username: user.Username,
+		Password: hashAndSalt([]byte(user.Password)),
+		Role:     "User",
+		Name:     user.Username,
+		IsBanned: false,
+	}
+
+	userEntity, err = uu.userRepo.Store(userEntity)
 	if err != nil {
-		return domain.User{}, err
+		return dto.UserResponse{}, err
 	}
 
-	return user, nil
+	return helper.DomainUserToUserResponse(userEntity), nil
 }
 
-func (uu *userUsecase) GetAll() ([]domain.User, error) {
+func (uu *userUsecase) GetAll() ([]dto.UserResponse, error) {
 	users, err := uu.userRepo.GetAll()
 	if err != nil {
-		return []domain.User{}, domain.ErrInternalServerError
+		return []dto.UserResponse{}, domain.ErrInternalServerError
 	}
 
-	return users, err
+	return helper.DomainUserToListUserResponse(users), err
 }
 
-func (uu *userUsecase) Get(id uint) (domain.User, []domain.User, error) {
-	user, err := uu.userRepo.Get(id)
+func (uu *userUsecase) Get(id uint) (dto.UserDetailResponse, error) {
+	userEntity, err := uu.userRepo.Get(id)
 	if err != nil {
-		return domain.User{}, []domain.User{}, domain.ErrInternalServerError
+		return dto.UserDetailResponse{}, domain.ErrInternalServerError
 	}
-	if user.ID == 0 {
-		return domain.User{}, []domain.User{}, domain.ErrNotFound
+	if userEntity.ID == 0 {
+		return dto.UserDetailResponse{}, domain.ErrNotFound
 	}
 
-	followings, err := uu.userRepo.GetFollowing(user)
+	followings, err := uu.userRepo.GetFollowing(userEntity)
 	if err != nil {
-		return domain.User{}, []domain.User{}, domain.ErrInternalServerError
+		return dto.UserDetailResponse{}, domain.ErrInternalServerError
 	}
-	return user, followings, nil
+	return helper.DomainUserToUserDetailResponse(userEntity, followings), nil
 }
-func (uu *userUsecase) Update(user domain.User, id uint) (domain.User, error) {
-	userUpdate := dto.ToUserUpdateRequest(user)
-	if err := uu.validator.Struct(userUpdate); err != nil {
-		return domain.User{}, domain.ErrBadParamInput
+func (uu *userUsecase) Update(user dto.UpdateUserRequest, id uint) (dto.UserResponse, error) {
+	if err := uu.validator.Struct(user); err != nil {
+		return dto.UserResponse{}, domain.ErrBadParamInput
 	}
-	if len(userUpdate.Password) != 0 && len(userUpdate.Password) < 6 {
-		return domain.User{}, errors.New("password at least 6 characters")
-	}
+	// if len(userUpdate.Password) != 0 && len(userUpdate.Password) < 6 {
+	// 	return dto.UserResponse{}, errors.New("password at least 6 characters")
+	// }
 
 	userDB, err := uu.userRepo.Get(id)
 	if err != nil {
-		return domain.User{}, domain.ErrInternalServerError
+		return dto.UserResponse{}, domain.ErrInternalServerError
 	}
 	if userDB.ID == 0 {
-		return domain.User{}, domain.ErrNotFound
+		return dto.UserResponse{}, domain.ErrNotFound
 	}
 
 	if userDB.Email != user.Email {
 		userEmail, err := uu.userRepo.GetByEmail(user.Email)
 		if err != nil {
-			return domain.User{}, domain.ErrInternalServerError
+			return dto.UserResponse{}, domain.ErrInternalServerError
 		}
 		if userEmail.ID != 0 {
-			return domain.User{}, domain.ErrEmailAlreadyUsed
+			return dto.UserResponse{}, domain.ErrEmailAlreadyUsed
 		}
 	}
-	userDB, err = uu.userRepo.Update(&userDB, user)
+
+	userEntity := domain.User{
+		Email:              user.Email,
+		Username:           user.Username,
+		Name:               user.Name,
+		ProfileImageUrl:    user.ProfileImageUrl,
+		BackgroundImageUrl: user.BackgroundImageUrl,
+		Bio:                user.Bio,
+		Proffesion:         user.Proffesion,
+		Role:               user.Role,
+		IsBanned:           user.IsBanned,
+	}
+	userDB, err = uu.userRepo.Update(&userDB, userEntity)
 	if err != nil {
-		return domain.User{}, domain.ErrInternalServerError
+		return dto.UserResponse{}, domain.ErrInternalServerError
 	}
 
-	return userDB, nil
+	return helper.DomainUserToUserResponse(userDB), nil
 }
-func (uu *userUsecase) Delete(id uint) (domain.User, error) {
+func (uu *userUsecase) Delete(id uint) error {
 	user, err := uu.userRepo.Get(id)
 	if err != nil {
-		return domain.User{}, domain.ErrInternalServerError
+		return domain.ErrInternalServerError
 	}
 	if user.ID == 0 {
-		return domain.User{}, domain.ErrNotFound
+		return domain.ErrNotFound
 	}
 
-	res, err := uu.userRepo.Delete(id)
+	_, err = uu.userRepo.Delete(id)
 	if err != nil {
-		return domain.User{}, domain.ErrInternalServerError
+		return domain.ErrInternalServerError
 	}
-	return res, nil
+	return nil
 }
 
-func (uu *userUsecase) Follow(user_id, user_follower_id uint) (domain.User, error) {
+func (uu *userUsecase) Follow(user_id, user_follower_id uint) error {
 	user, err := uu.userRepo.Get(user_id)
 	if err != nil {
-		return domain.User{}, domain.ErrInternalServerError
+		return domain.ErrInternalServerError
 	}
 	if user.ID == 0 {
-		return domain.User{}, domain.ErrNotFound
+		return domain.ErrNotFound
 	}
 
 	user_follower, err := uu.userRepo.Get(user_follower_id)
 	if err != nil {
-		return domain.User{}, domain.ErrInternalServerError
+		return domain.ErrInternalServerError
 	}
 	if user_follower.ID == 0 {
-		return domain.User{}, domain.ErrNotFound
+		return domain.ErrNotFound
 	}
 
 	// if follow self account throw error bad param input
 	if user.ID == user_follower.ID {
-		return domain.User{}, domain.ErrBadParamInput
+		return domain.ErrBadParamInput
 	}
 
 	// save to database
-	res, err := uu.userRepo.Follow(user, user_follower)
+	_, err = uu.userRepo.Follow(user, user_follower)
 	if err != nil {
-		return domain.User{}, domain.ErrInternalServerError
+		return domain.ErrInternalServerError
 	}
-	return res, nil
+	return nil
 }
 
-func (uu *userUsecase) Unfollow(user_id, user_follower_id uint) (domain.User, error) {
+func (uu *userUsecase) Unfollow(user_id, user_follower_id uint) error {
 	user, err := uu.userRepo.Get(user_id)
 	if err != nil {
-		return domain.User{}, domain.ErrInternalServerError
+		return domain.ErrInternalServerError
 	}
 	if user.ID == 0 {
-		return domain.User{}, domain.ErrNotFound
+		return domain.ErrNotFound
 	}
 
 	user_follower, err := uu.userRepo.Get(user_follower_id)
 	if err != nil {
-		return domain.User{}, domain.ErrInternalServerError
+		return domain.ErrInternalServerError
 	}
 	if user_follower.ID == 0 {
-		return domain.User{}, domain.ErrNotFound
+		return domain.ErrNotFound
 	}
 
-	res, err := uu.userRepo.Unfollow(user, user_follower)
+	_, err = uu.userRepo.Unfollow(user, user_follower)
 	if err != nil {
-		return domain.User{}, domain.ErrInternalServerError
+		return domain.ErrInternalServerError
 	}
-	return res, nil
+	return nil
 }
 
 func hashAndSalt(pwd []byte) string {
