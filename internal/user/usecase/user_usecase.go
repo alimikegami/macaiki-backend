@@ -31,21 +31,21 @@ func (uu *userUsecase) Login(email, password string) (dto.LoginResponse, error) 
 		return dto.LoginResponse{}, domain.ErrBadParamInput
 	}
 
-	user, err := uu.userRepo.GetByEmail(email)
+	userEntity, err := uu.userRepo.GetByEmail(email)
 	if err != nil {
 		return dto.LoginResponse{}, domain.ErrInternalServerError
 	}
 
-	if user.ID == 0 || !comparePasswords(user.Password, []byte(password)) {
+	if userEntity.ID == 0 || !comparePasswords(userEntity.Password, []byte(password)) {
 		return dto.LoginResponse{}, domain.ErrLoginFailed
 	}
 
-	token, err := middleware.JWTCreateToken(int(user.ID), user.Role)
+	token, err := middleware.JWTCreateToken(int(userEntity.ID), userEntity.Role)
 	if err != nil {
 		return dto.LoginResponse{}, err
 	}
 
-	return helper.ToLoginResponse(token), nil
+	return helper.ToLoginResponse(userEntity.ID, token), nil
 }
 
 func (uu *userUsecase) Register(user dto.UserRequest) (dto.UserResponse, error) {
@@ -102,19 +102,25 @@ func (uu *userUsecase) Get(id uint) (dto.UserDetailResponse, error) {
 		return dto.UserDetailResponse{}, domain.ErrNotFound
 	}
 
-	followings, err := uu.userRepo.GetFollowing(userEntity)
+	totalFollowing, err := uu.userRepo.GetFollowingNumber(id)
 	if err != nil {
 		return dto.UserDetailResponse{}, domain.ErrInternalServerError
 	}
-	return helper.DomainUserToUserDetailResponse(userEntity, followings), nil
+
+	totalFollower, err := uu.userRepo.GetFollowerNumber(id)
+	if err != nil {
+		return dto.UserDetailResponse{}, domain.ErrInternalServerError
+	}
+
+	if err != nil {
+		return dto.UserDetailResponse{}, domain.ErrInternalServerError
+	}
+	return helper.DomainUserToUserDetailResponse(userEntity, totalFollowing, totalFollower), nil
 }
 func (uu *userUsecase) Update(user dto.UpdateUserRequest, id uint) (dto.UserResponse, error) {
 	if err := uu.validator.Struct(user); err != nil {
 		return dto.UserResponse{}, domain.ErrBadParamInput
 	}
-	// if len(userUpdate.Password) != 0 && len(userUpdate.Password) < 6 {
-	// 	return dto.UserResponse{}, errors.New("password at least 6 characters")
-	// }
 
 	userDB, err := uu.userRepo.Get(id)
 	if err != nil {
@@ -153,11 +159,11 @@ func (uu *userUsecase) Update(user dto.UpdateUserRequest, id uint) (dto.UserResp
 	return helper.DomainUserToUserResponse(userDB), nil
 }
 func (uu *userUsecase) Delete(id uint) error {
-	user, err := uu.userRepo.Get(id)
+	userEntity, err := uu.userRepo.Get(id)
 	if err != nil {
 		return domain.ErrInternalServerError
 	}
-	if user.ID == 0 {
+	if userEntity.ID == 0 {
 		return domain.ErrNotFound
 	}
 
@@ -166,6 +172,32 @@ func (uu *userUsecase) Delete(id uint) error {
 		return domain.ErrInternalServerError
 	}
 	return nil
+}
+
+func (uu *userUsecase) GetUserFollowers(id uint) ([]dto.UserResponse, error) {
+	userEntity, err := uu.userRepo.Get(id)
+	if err != nil {
+		return []dto.UserResponse{}, domain.ErrInternalServerError
+	}
+	if userEntity.ID == 0 {
+		return []dto.UserResponse{}, domain.ErrNotFound
+	}
+
+	following, err := uu.userRepo.GetFollower(userEntity)
+	return helper.DomainUserToListUserResponse(following), nil
+}
+
+func (uu *userUsecase) GetUserFollowing(id uint) ([]dto.UserResponse, error) {
+	userEntity, err := uu.userRepo.Get(id)
+	if err != nil {
+		return []dto.UserResponse{}, domain.ErrInternalServerError
+	}
+	if userEntity.ID == 0 {
+		return []dto.UserResponse{}, domain.ErrNotFound
+	}
+
+	following, err := uu.userRepo.GetFollowing(userEntity)
+	return helper.DomainUserToListUserResponse(following), nil
 }
 
 func (uu *userUsecase) Follow(user_id, user_follower_id uint) error {

@@ -28,6 +28,9 @@ type UserUsecase interface {
 	Get(id uint) (dto.UserDetailResponse, error)
 	Update(userUpdate dto.UpdateUserRequest, id uint) (dto.UserResponse, error)
 	Delete(id uint) error
+
+	GetUserFollowers(id uint) ([]dto.UserResponse, error)
+	GetUserFollowing(id uint) ([]dto.UserResponse, error)
 	Follow(user_id, user_follower_id uint) error
 	Unfollow(user_id, user_follower_id uint) error
 }
@@ -40,7 +43,10 @@ type UserRepository interface {
 	Delete(id uint) (User, error)
 	GetByEmail(email string) (User, error)
 
+	GetFollowerNumber(id uint) (int, error)
+	GetFollowingNumber(id uint) (int, error)
 	Follow(user, user_follower User) (User, error)
 	Unfollow(user, user_follower User) (User, error)
+	GetFollower(user User) ([]User, error)
 	GetFollowing(user User) ([]User, error)
 }

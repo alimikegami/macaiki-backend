@@ -39,7 +39,7 @@ func (ur *MysqlUserRepository) Store(user domain.User) (domain.User, error) {
 func (ur *MysqlUserRepository) Get(id uint) (domain.User, error) {
 	user := domain.User{}
 
-	res := ur.Db.Preload("Followers").Find(&user, id)
+	res := ur.Db.Find(&user, id)
 	err := res.Error
 
 	if err != nil {
@@ -108,9 +108,41 @@ func (ur *MysqlUserRepository) Unfollow(user, user_follower domain.User) (domain
 	return user, nil
 }
 
-func (ur *MysqlUserRepository) GetFollowing(user domain.User) ([]domain.User, error) {
+func (ur *MysqlUserRepository) GetFollowerNumber(id uint) (int, error) {
+	var count int64
+	res := ur.Db.Table("user_followers").Where("user_id = ?", id).Count(&count)
+	err := res.Error
+	if err != nil {
+		return 0, err
+	}
+	return int(count), nil
+}
+
+func (ur *MysqlUserRepository) GetFollowingNumber(id uint) (int, error) {
+	var count int64
+	res := ur.Db.Table("user_followers").Where("follower_id = ?", id).Count(&count)
+	err := res.Error
+	if err != nil {
+		return 0, err
+	}
+	return int(count), nil
+}
+
+func (ur *MysqlUserRepository) GetFollower(user domain.User) ([]domain.User, error) {
 	users := []domain.User{}
 
+	res := ur.Db.Raw("SELECT * FROM `users` LEFT JOIN `user_followers` `Followers` ON `users`.`id` = `Followers`.`user_id` WHERE `Followers`.`user_id` = ?", user.ID).Scan(&users)
+	err := res.Error
+
+	if err != nil {
+		return []domain.User{}, err
+	}
+
+	return users, nil
+}
+
+func (ur *MysqlUserRepository) GetFollowing(user domain.User) ([]domain.User, error) {
+	users := []domain.User{}
 	res := ur.Db.Raw("SELECT * FROM `users` LEFT JOIN `user_followers` `Followers` ON `users`.`id` = `Followers`.`user_id` WHERE `Followers`.`follower_id` = ?", user.ID).Scan(&users)
 	err := res.Error
 
