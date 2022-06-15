@@ -31,11 +31,9 @@ func NewUserHandler(e *echo.Echo, us domain.UserUsecase, JWTSecret string) {
 	e.DELETE("api/v1/users/:user_id", handler.Delete)
 
 	e.GET("/api/v1/my-profile", handler.GetUserByToken, middleware.JWT([]byte(JWTSecret)))
-	e.GET("/api/v1/my-followers", handler.GetUserFollowersByToken, middleware.JWT([]byte(JWTSecret)))
-	e.GET("/api/v1/my-followings", handler.GetUserFollowingsByToken, middleware.JWT([]byte(JWTSecret)))
 
 	e.GET("api/v1/users/:user_id/followers", handler.GetUserFollowers)
-	e.GET("api/v1/users/:user_id/followings", handler.GetUserFollowings)
+	e.GET("api/v1/users/:user_id/following", handler.GetUserFollowing)
 	e.GET("api/v1/users/:user_id/follow", handler.Follow, middleware.JWT([]byte(JWTSecret)))
 	e.GET("api/v1/users/:user_id/unfollow", handler.Unfollow, middleware.JWT([]byte(JWTSecret)))
 }
@@ -148,34 +146,12 @@ func (u *UserHandler) GetUserFollowers(c echo.Context) error {
 	return response.SuccessResponse(c, followers)
 }
 
-func (u *UserHandler) GetUserFollowings(c echo.Context) error {
+func (u *UserHandler) GetUserFollowing(c echo.Context) error {
 	num := c.Param("user_id")
 	user_id, err := strconv.Atoi(num)
 	if err != nil {
 		return response.ErrorResponse(c, domain.ErrBadParamInput)
 	}
-
-	followers, err := u.UserUsecase.GetUserFollowing(uint(user_id))
-	if err != nil {
-		return response.ErrorResponse(c, err)
-	}
-
-	return response.SuccessResponse(c, followers)
-}
-
-func (u *UserHandler) GetUserFollowersByToken(c echo.Context) error {
-	user_id, _ := _middL.ExtractTokenUser(c)
-
-	followers, err := u.UserUsecase.GetUserFollowers(uint(user_id))
-	if err != nil {
-		return response.ErrorResponse(c, err)
-	}
-
-	return response.SuccessResponse(c, followers)
-}
-
-func (u *UserHandler) GetUserFollowingsByToken(c echo.Context) error {
-	user_id, _ := _middL.ExtractTokenUser(c)
 
 	followers, err := u.UserUsecase.GetUserFollowing(uint(user_id))
 	if err != nil {
