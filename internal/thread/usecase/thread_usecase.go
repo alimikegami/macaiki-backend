@@ -1,16 +1,23 @@
 package usecase
 
 import (
+	"fmt"
 	"macaiki/internal/domain"
 	"macaiki/internal/thread/dto"
+
+	cloudstorage "macaiki/pkg/cloud_storage"
+	"mime/multipart"
+
+	"github.com/aws/aws-sdk-go/aws"
 )
 
 type ThreadUseCaseImpl struct {
-	tr domain.ThreadRepository
+	tr    domain.ThreadRepository
+	awsS3 *cloudstorage.S3
 }
 
-func CreateNewThreadUseCase(tr domain.ThreadRepository) domain.ThreadUseCase {
-	return &ThreadUseCaseImpl{tr: tr}
+func CreateNewThreadUseCase(tr domain.ThreadRepository, awsS3Instance *cloudstorage.S3) domain.ThreadUseCase {
+	return &ThreadUseCaseImpl{tr: tr, awsS3: awsS3Instance}
 }
 
 func (tuc *ThreadUseCaseImpl) GetThreads() ([]dto.ThreadResponse, error) {
@@ -37,6 +44,28 @@ func (tuc *ThreadUseCaseImpl) GetThreads() ([]dto.ThreadResponse, error) {
 	return threads, nil
 }
 
+func (tuc *ThreadUseCaseImpl) GetThreadByID(threadID uint) (dto.ThreadResponse, error) {
+	var thread dto.ThreadResponse
+	res, err := tuc.tr.GetThreadByID(threadID)
+
+	if err != nil {
+		return dto.ThreadResponse{}, domain.ErrInternalServerError
+	}
+
+	thread = dto.ThreadResponse{
+		ID:        res.ID,
+		Title:     res.Title,
+		Body:      res.Body,
+		TopicID:   res.TopicID,
+		ImageURL:  res.ImageURL,
+		UserID:    res.UserID,
+		CreatedAt: res.CreatedAt,
+		UpdatedAt: res.UpdatedAt,
+	}
+
+	return thread, nil
+}
+
 func (tuc *ThreadUseCaseImpl) CreateThread(thread dto.ThreadRequest, userID uint) (dto.ThreadResponse, error) {
 	threadEntity := domain.Thread{
 		Title:   thread.Title,
@@ -59,6 +88,20 @@ func (tuc *ThreadUseCaseImpl) CreateThread(thread dto.ThreadRequest, userID uint
 		CreatedAt: res.CreatedAt,
 		UpdatedAt: res.UpdatedAt,
 	}, nil
+}
+
+func (tuc *ThreadUseCaseImpl) SetThreadImage(img *multipart.FileHeader, threadID uint) error {
+	result, err := tuc.awsS3.UploadImage("thread", img)
+	if err != nil {
+		fmt.Printf("failed to upload file, %v", err)
+		return err
+	}
+
+	fmt.Printf("file uploaded to, %s\n", aws.StringValue(&result.Location))
+
+	err = tuc.tr.SetThreadImage(aws.StringValue(&result.Location), threadID)
+
+	return err
 }
 
 func (tuc *ThreadUseCaseImpl) DeleteThread(threadID uint) error {

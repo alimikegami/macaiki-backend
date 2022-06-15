@@ -4,9 +4,6 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/go-playground/validator/v10"
-	"github.com/labstack/echo/v4"
-
 	_config "macaiki/config"
 	_driver "macaiki/internal/driver"
 	_reportCategoryHttpDeliver "macaiki/internal/report_category/delivery/http"
@@ -18,6 +15,10 @@ import (
 	_userHttpDelivery "macaiki/internal/user/delivery/http"
 	_userRepo "macaiki/internal/user/repository/mysql"
 	_userUsecase "macaiki/internal/user/usecase"
+	_cloudstorage "macaiki/pkg/cloud_storage"
+
+	"github.com/go-playground/validator/v10"
+	"github.com/labstack/echo/v4"
 )
 
 func main() {
@@ -40,6 +41,7 @@ func main() {
 	})
 	v := validator.New()
 
+	s3Instance := _cloudstorage.CreateNewS3Instance(config.AWSAccessKeyId, config.AWSSecretKey, config.AWSRegion, config.BucketName)
 	// setup User
 	userRepo := _userRepo.NewMysqlUserRepository(_driver.DB)
 	userUsecase := _userUsecase.NewUserUsecase(userRepo, v)
@@ -51,7 +53,7 @@ func main() {
 
 	// setup Thread
 	threadRepo := _threadRepo.CreateNewThreadRepository(_driver.DB)
-	threadUseCase := _threadUsecase.CreateNewThreadUseCase(threadRepo)
+	threadUseCase := _threadUsecase.CreateNewThreadUseCase(threadRepo, s3Instance)
 	_ = _threadHttpDelivery.CreateNewThreadHandler(e, threadUseCase)
 
 	// setup Report Category
