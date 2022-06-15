@@ -35,6 +35,5 @@ type UserDetailResponse struct {
 }
 
 type LoginResponse struct {
-	ID    uint   `json:"ID"`
 	Token string `json:"token"`
 }

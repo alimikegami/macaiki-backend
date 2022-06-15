@@ -45,7 +45,7 @@ func (uu *userUsecase) Login(email, password string) (dto.LoginResponse, error) 
 		return dto.LoginResponse{}, err
 	}
 
-	return helper.ToLoginResponse(userEntity.ID, token), nil
+	return helper.ToLoginResponse(token), nil
 }
 
 func (uu *userUsecase) Register(user dto.UserRequest) (dto.UserResponse, error) {

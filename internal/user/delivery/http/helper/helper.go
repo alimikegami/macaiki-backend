@@ -49,9 +49,8 @@ func DomainUserToListUserResponse(users []domain.User) []dto.UserResponse {
 	return usersResponse
 }
 
-func ToLoginResponse(id uint, token string) dto.LoginResponse {
+func ToLoginResponse(token string) dto.LoginResponse {
 	return dto.LoginResponse{
-		ID:    id,
 		Token: token,
 	}
 }
