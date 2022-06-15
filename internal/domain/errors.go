@@ -21,9 +21,9 @@ var (
 	// ErrLoginFailed will throw if the email & password invalid
 	ErrLoginFailed = errors.New("Invalid Email or Password")
 
-	ErrEmailRequired = errors.New("A Email is Required")
+	ErrEmailRequired = errors.New("Email is Required")
 
-	ErrPasswordRequired = errors.New("A Password is Required")
+	ErrPasswordRequired = errors.New("Password is Required")
 
 	ErrPasswordDontMatch = errors.New("Password don't match")
 )
