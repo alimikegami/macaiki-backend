@@ -3,6 +3,7 @@ package cloudstorage
 import (
 	"fmt"
 	"mime/multipart"
+	"path/filepath"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
@@ -39,13 +40,13 @@ func (s *S3) CreateAWSSession() (*session.Session, error) {
 	return sess, err
 }
 
-func (s *S3) UploadImage(dirName string, img *multipart.FileHeader) (*s3manager.UploadOutput, error) {
+func (s *S3) UploadImage(fileName string, dirName string, img *multipart.FileHeader) (*s3manager.UploadOutput, error) {
 	src, err := img.Open()
 	if err != nil {
 		return nil, err
 	}
 	defer src.Close()
-	fmt.Println(img.Filename)
+
 	sess := session.Must(s.CreateAWSSession())
 
 	// Create an uploader with the session and default options
@@ -54,7 +55,7 @@ func (s *S3) UploadImage(dirName string, img *multipart.FileHeader) (*s3manager.
 	// Upload the file to S3.
 	result, err := uploader.Upload(&s3manager.UploadInput{
 		Bucket: aws.String(s.BucketName),
-		Key:    aws.String(dirName + "/" + img.Filename),
+		Key:    aws.String(dirName + "/" + fileName + filepath.Ext(img.Filename)),
 		Body:   src,
 		ACL:    aws.String("public-read"),
 	})

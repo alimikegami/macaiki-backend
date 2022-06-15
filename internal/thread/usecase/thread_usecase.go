@@ -9,6 +9,7 @@ import (
 	"mime/multipart"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/google/uuid"
 )
 
 type ThreadUseCaseImpl struct {
@@ -91,7 +92,8 @@ func (tuc *ThreadUseCaseImpl) CreateThread(thread dto.ThreadRequest, userID uint
 }
 
 func (tuc *ThreadUseCaseImpl) SetThreadImage(img *multipart.FileHeader, threadID uint) error {
-	result, err := tuc.awsS3.UploadImage("thread", img)
+	uniqueFilename := uuid.New()
+	result, err := tuc.awsS3.UploadImage(uniqueFilename.String(), "thread", img)
 	if err != nil {
 		fmt.Printf("failed to upload file, %v", err)
 		return err
