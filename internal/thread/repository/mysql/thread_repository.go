@@ -2,6 +2,7 @@ package repository
 
 import (
 	"errors"
+	"fmt"
 	"macaiki/internal/domain"
 
 	"gorm.io/gorm"
@@ -24,6 +25,21 @@ func (tr *ThreadRepositoryImpl) GetThreads() ([]domain.Thread, error) {
 	}
 
 	return threads, nil
+}
+
+func (tr *ThreadRepositoryImpl) SetThreadImage(imageURL string, threadID uint) error {
+	fmt.Println(imageURL)
+	res := tr.db.Model(&domain.Thread{}).Where("id = ?", threadID).Update("image_url", imageURL)
+
+	if res.Error != nil {
+		return res.Error
+	}
+
+	if res.RowsAffected < 1 {
+		return errors.New("resource does not exists")
+	}
+
+	return nil
 }
 
 func (tr *ThreadRepositoryImpl) GetThreadByID(threadID uint) (domain.Thread, error) {
