@@ -16,6 +16,14 @@ type Thread struct {
 	TopicID  uint
 }
 
+type ThreadLikes struct {
+	gorm.Model
+	UserID   uint
+	ThreadID uint
+	Thread   Thread
+	User     User
+}
+
 type ThreadUseCase interface {
 	CreateThread(thread dto.ThreadRequest, userID uint) (dto.ThreadResponse, error)
 	DeleteThread(threadID uint) error
@@ -23,6 +31,7 @@ type ThreadUseCase interface {
 	UpdateThread(thread dto.ThreadRequest, threadID uint, userID uint) (dto.ThreadResponse, error)
 	GetThreadByID(threadID uint) (dto.ThreadResponse, error)
 	SetThreadImage(img *multipart.FileHeader, threadID uint) error
+	LikeThread(threadID uint, userID uint) error
 }
 
 type ThreadRepository interface {
@@ -32,4 +41,5 @@ type ThreadRepository interface {
 	UpdateThread(threadID uint, thread Thread) error
 	GetThreadByID(threadID uint) (Thread, error)
 	SetThreadImage(imageURL string, threadID uint) error
+	LikeThread(threadLikes ThreadLikes) error
 }

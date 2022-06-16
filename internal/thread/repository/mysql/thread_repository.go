@@ -84,3 +84,9 @@ func (tr *ThreadRepositoryImpl) UpdateThread(threadID uint, thread domain.Thread
 
 	return nil
 }
+
+func (tr *ThreadRepositoryImpl) LikeThread(threadLikes domain.ThreadLikes) error {
+	res := tr.db.Create(&threadLikes)
+
+	return res.Error
+}

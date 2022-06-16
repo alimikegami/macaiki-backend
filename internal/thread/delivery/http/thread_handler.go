@@ -119,6 +119,23 @@ func (th *ThreadHandler) UpdateThread(c echo.Context) error {
 	return response.SuccessResponse(c, res)
 }
 
+func (th *ThreadHandler) LikeThread(c echo.Context) error {
+	threadID := c.Param("threadID")
+	u64, err := strconv.ParseUint(threadID, 10, 32)
+	if err != nil {
+		fmt.Println(err)
+		return response.ErrorResponse(c, err)
+	}
+	threadIDUint := uint(u64)
+
+	err = th.tu.LikeThread(threadIDUint, 1)
+	if err != nil {
+		fmt.Println(err)
+		return response.ErrorResponse(c, err)
+	}
+	return response.SuccessResponse(c, nil)
+}
+
 func CreateNewThreadHandler(e *echo.Echo, tu domain.ThreadUseCase) *ThreadHandler {
 	threadHandler := &ThreadHandler{router: e, tu: tu}
 	threadHandler.router.POST("/api/v1/threads", threadHandler.CreateThread)
@@ -127,5 +144,6 @@ func CreateNewThreadHandler(e *echo.Echo, tu domain.ThreadUseCase) *ThreadHandle
 	threadHandler.router.GET("/api/v1/threads/:threadID", threadHandler.GetThreadByID)
 	threadHandler.router.PUT("/api/v1/threads/:threadID", threadHandler.UpdateThread)
 	threadHandler.router.PUT("/api/v1/threads/:threadID/images", threadHandler.SetThreadImage)
+	threadHandler.router.POST("/api/v1/threads/:threadID/likes", threadHandler.LikeThread)
 	return threadHandler
 }
