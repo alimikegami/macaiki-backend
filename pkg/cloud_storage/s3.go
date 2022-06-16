@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 )
 
@@ -61,4 +62,27 @@ func (s *S3) UploadImage(fileName string, dirName string, img *multipart.FileHea
 	})
 
 	return result, err
+}
+
+func (s *S3) DeleteImage(fileName string, dirName string) error {
+	sess := session.Must(s.CreateAWSSession())
+	svc := s3.New(sess)
+
+	_, err := svc.DeleteObject(&s3.DeleteObjectInput{
+		Bucket: aws.String(s.BucketName),
+		Key:    aws.String(dirName + "/" + fileName),
+	})
+	if err != nil {
+		return err
+	}
+
+	err = svc.WaitUntilObjectNotExists(&s3.HeadObjectInput{
+		Bucket: aws.String(s.BucketName),
+		Key:    aws.String(dirName + "/" + fileName),
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"macaiki/internal/domain"
 	"macaiki/internal/thread/dto"
+	"path/filepath"
 
 	cloudstorage "macaiki/pkg/cloud_storage"
 	"mime/multipart"
@@ -92,6 +93,20 @@ func (tuc *ThreadUseCaseImpl) CreateThread(thread dto.ThreadRequest, userID uint
 }
 
 func (tuc *ThreadUseCaseImpl) SetThreadImage(img *multipart.FileHeader, threadID uint) error {
+	thread, err := tuc.tr.GetThreadByID(threadID)
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+
+	if thread.ImageURL != "" {
+		err = tuc.awsS3.DeleteImage(thread.ImageURL, "thread")
+		if err != nil {
+			fmt.Println(err)
+			return err
+		}
+	}
+
 	uniqueFilename := uuid.New()
 	result, err := tuc.awsS3.UploadImage(uniqueFilename.String(), "thread", img)
 	if err != nil {
@@ -101,7 +116,7 @@ func (tuc *ThreadUseCaseImpl) SetThreadImage(img *multipart.FileHeader, threadID
 
 	fmt.Printf("file uploaded to, %s\n", aws.StringValue(&result.Location))
 
-	err = tuc.tr.SetThreadImage(aws.StringValue(&result.Location), threadID)
+	err = tuc.tr.SetThreadImage(uniqueFilename.String()+filepath.Ext(img.Filename), threadID)
 
 	return err
 }
