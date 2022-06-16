@@ -2,6 +2,7 @@ package domain
 
 import (
 	"macaiki/internal/user/dto"
+	"mime/multipart"
 
 	"gorm.io/gorm"
 )
@@ -29,6 +30,8 @@ type UserUsecase interface {
 	Update(userUpdate dto.UpdateUserRequest, id uint) (dto.UserResponse, error)
 	Delete(id uint) error
 
+	SetProfileImage(id uint, img *multipart.FileHeader) error
+	SetBackgroundImage(id uint, img *multipart.FileHeader) error
 	GetUserFollowers(id uint) ([]dto.UserResponse, error)
 	GetUserFollowing(id uint) ([]dto.UserResponse, error)
 	Follow(user_id, user_follower_id uint) error
@@ -49,4 +52,5 @@ type UserRepository interface {
 	Unfollow(user, user_follower User) (User, error)
 	GetFollower(user User) ([]User, error)
 	GetFollowing(user User) ([]User, error)
+	SetUserImage(id uint, imageURL string, tableName string) error
 }

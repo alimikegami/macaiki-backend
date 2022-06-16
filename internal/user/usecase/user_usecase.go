@@ -1,25 +1,32 @@
 package usercase
 
 import (
+	"fmt"
 	"log"
 	"macaiki/internal/domain"
 	"macaiki/internal/user/delivery/http/helper"
 	"macaiki/internal/user/delivery/http/middleware"
 	"macaiki/internal/user/dto"
+	cloudstorage "macaiki/pkg/cloud_storage"
+	"mime/multipart"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/go-playground/validator/v10"
+	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
 
 type userUsecase struct {
 	userRepo  domain.UserRepository
 	validator *validator.Validate
+	awsS3     *cloudstorage.S3
 }
 
-func NewUserUsecase(repo domain.UserRepository, validator *validator.Validate) domain.UserUsecase {
+func NewUserUsecase(repo domain.UserRepository, validator *validator.Validate, awsS3Instace *cloudstorage.S3) domain.UserUsecase {
 	return &userUsecase{
 		userRepo:  repo,
 		validator: validator,
+		awsS3:     awsS3Instace,
 	}
 }
 
@@ -184,6 +191,9 @@ func (uu *userUsecase) GetUserFollowers(id uint) ([]dto.UserResponse, error) {
 	}
 
 	following, err := uu.userRepo.GetFollower(userEntity)
+	if err != nil {
+		return []dto.UserResponse{}, domain.ErrInternalServerError
+	}
 	return helper.DomainUserToListUserResponse(following), nil
 }
 
@@ -197,7 +207,40 @@ func (uu *userUsecase) GetUserFollowing(id uint) ([]dto.UserResponse, error) {
 	}
 
 	following, err := uu.userRepo.GetFollowing(userEntity)
+	if err != nil {
+		return []dto.UserResponse{}, domain.ErrInternalServerError
+	}
 	return helper.DomainUserToListUserResponse(following), nil
+}
+
+func (uu *userUsecase) SetProfileImage(id uint, img *multipart.FileHeader) error {
+	uniqueFilename := uuid.New()
+	result, err := uu.awsS3.UploadImage(uniqueFilename.String(), "profile", img)
+	if err != nil {
+		fmt.Printf("failed to upload file, %v", err)
+		return err
+	}
+
+	fmt.Printf("file uploaded to, %s\n", aws.StringValue(&result.Location))
+
+	err = uu.userRepo.SetUserImage(id, aws.StringValue(&result.Location), "profile_image_url")
+
+	return err
+}
+
+func (uu *userUsecase) SetBackgroundImage(id uint, img *multipart.FileHeader) error {
+	uniqueFilename := uuid.New()
+	result, err := uu.awsS3.UploadImage(uniqueFilename.String(), "background", img)
+	if err != nil {
+		fmt.Printf("failed to upload file, %v", err)
+		return err
+	}
+
+	fmt.Printf("file uploaded to, %s\n", aws.StringValue(&result.Location))
+	// fmt.Printf("file uploaded to, %s\n", uniqueFilename.String()+filepath.Ext(img.Filename))
+	err = uu.userRepo.SetUserImage(id, aws.StringValue(&result.Location), "background_image_url")
+
+	return err
 }
 
 func (uu *userUsecase) Follow(user_id, user_follower_id uint) error {

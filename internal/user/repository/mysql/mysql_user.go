@@ -1,6 +1,7 @@
 package mysql
 
 import (
+	"errors"
 	"macaiki/internal/domain"
 
 	"gorm.io/gorm"
@@ -151,4 +152,18 @@ func (ur *MysqlUserRepository) GetFollowing(user domain.User) ([]domain.User, er
 	}
 
 	return users, nil
+}
+
+func (ur *MysqlUserRepository) SetUserImage(id uint, imageURL string, tableName string) error {
+	res := ur.Db.Model(&domain.User{}).Where("id = ?", id).Update(tableName, imageURL)
+
+	if res.Error != nil {
+		return res.Error
+	}
+
+	if res.RowsAffected < 1 {
+		return errors.New("resource does not exists")
+	}
+
+	return nil
 }
