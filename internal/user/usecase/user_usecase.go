@@ -213,34 +213,44 @@ func (uu *userUsecase) GetUserFollowing(id uint) ([]dto.UserResponse, error) {
 	return helper.DomainUserToListUserResponse(following), nil
 }
 
-func (uu *userUsecase) SetProfileImage(id uint, img *multipart.FileHeader) error {
+func (uu *userUsecase) SetProfileImage(id uint, img *multipart.FileHeader) (string, error) {
 	uniqueFilename := uuid.New()
 	result, err := uu.awsS3.UploadImage(uniqueFilename.String(), "profile", img)
 	if err != nil {
 		fmt.Printf("failed to upload file, %v", err)
-		return err
+		return "", err
 	}
 
-	fmt.Printf("file uploaded to, %s\n", aws.StringValue(&result.Location))
+	imageURL := aws.StringValue(&result.Location)
+	fmt.Printf("file uploaded to, %s\n", imageURL)
 
-	err = uu.userRepo.SetUserImage(id, aws.StringValue(&result.Location), "profile_image_url")
+	err = uu.userRepo.SetUserImage(id, imageURL, "profile_image_url")
+	if err != nil {
+		fmt.Println("failed to save url on database")
+		return "", err
+	}
 
-	return err
+	return imageURL, err
 }
 
-func (uu *userUsecase) SetBackgroundImage(id uint, img *multipart.FileHeader) error {
+func (uu *userUsecase) SetBackgroundImage(id uint, img *multipart.FileHeader) (string, error) {
 	uniqueFilename := uuid.New()
 	result, err := uu.awsS3.UploadImage(uniqueFilename.String(), "background", img)
 	if err != nil {
 		fmt.Printf("failed to upload file, %v", err)
-		return err
+		return "", err
 	}
 
-	fmt.Printf("file uploaded to, %s\n", aws.StringValue(&result.Location))
+	imageURL := aws.StringValue(&result.Location)
+	fmt.Printf("file uploaded to, %s\n", imageURL)
 	// fmt.Printf("file uploaded to, %s\n", uniqueFilename.String()+filepath.Ext(img.Filename))
-	err = uu.userRepo.SetUserImage(id, aws.StringValue(&result.Location), "background_image_url")
+	err = uu.userRepo.SetUserImage(id, imageURL, "background_image_url")
+	if err != nil {
+		fmt.Println("failed to save url on database")
+		return "", err
+	}
 
-	return err
+	return imageURL, err
 }
 
 func (uu *userUsecase) Follow(user_id, user_follower_id uint) error {

@@ -30,8 +30,8 @@ type UserUsecase interface {
 	Update(userUpdate dto.UpdateUserRequest, id uint) (dto.UserResponse, error)
 	Delete(id uint) error
 
-	SetProfileImage(id uint, img *multipart.FileHeader) error
-	SetBackgroundImage(id uint, img *multipart.FileHeader) error
+	SetProfileImage(id uint, img *multipart.FileHeader) (string, error)
+	SetBackgroundImage(id uint, img *multipart.FileHeader) (string, error)
 	GetUserFollowers(id uint) ([]dto.UserResponse, error)
 	GetUserFollowing(id uint) ([]dto.UserResponse, error)
 	Follow(user_id, user_follower_id uint) error
