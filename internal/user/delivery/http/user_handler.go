@@ -57,12 +57,12 @@ func (u *UserHandler) Register(c echo.Context) error {
 	user := dto.UserRequest{}
 	c.Bind(&user)
 
-	res, err := u.UserUsecase.Register(user)
+	err := u.UserUsecase.Register(user)
 	if err != nil {
 		return response.ErrorResponse(c, err)
 	}
 
-	return response.SuccessResponse(c, res)
+	return response.SuccessResponse(c, nil)
 }
 
 func (u *UserHandler) GetAllUsers(c echo.Context) error {

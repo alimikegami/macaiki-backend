@@ -24,7 +24,7 @@ type User struct {
 
 type UserUsecase interface {
 	Login(email, password string) (dto.LoginResponse, error)
-	Register(user dto.UserRequest) (dto.UserResponse, error)
+	Register(user dto.UserRequest) error
 	GetAll() ([]dto.UserResponse, error)
 	Get(id uint) (dto.UserDetailResponse, error)
 	Update(userUpdate dto.UpdateUserRequest, id uint) (dto.UserResponse, error)
@@ -40,7 +40,7 @@ type UserUsecase interface {
 
 type UserRepository interface {
 	GetAll() ([]User, error)
-	Store(user User) (User, error)
+	Store(user User) error
 	Get(id uint) (User, error)
 	Update(userDB *User, user User) (User, error)
 	Delete(id uint) (User, error)

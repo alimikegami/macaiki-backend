@@ -27,14 +27,14 @@ func (ur *MysqlUserRepository) GetAll() ([]domain.User, error) {
 	return users, nil
 }
 
-func (ur *MysqlUserRepository) Store(user domain.User) (domain.User, error) {
+func (ur *MysqlUserRepository) Store(user domain.User) error {
 	res := ur.Db.Create(&user)
 	err := res.Error
 	if err != nil {
-		return domain.User{}, err
+		return err
 	}
 
-	return user, nil
+	return nil
 }
 
 func (ur *MysqlUserRepository) Get(id uint) (domain.User, error) {

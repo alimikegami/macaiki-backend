@@ -55,23 +55,23 @@ func (uu *userUsecase) Login(email, password string) (dto.LoginResponse, error) 
 	return helper.ToLoginResponse(token), nil
 }
 
-func (uu *userUsecase) Register(user dto.UserRequest) (dto.UserResponse, error) {
+func (uu *userUsecase) Register(user dto.UserRequest) error {
 	// TO DO : error handling for existing username
 	if err := uu.validator.Struct(user); err != nil {
-		return dto.UserResponse{}, domain.ErrBadParamInput
+		return domain.ErrBadParamInput
 	}
 
 	userEmail, err := uu.userRepo.GetByEmail(user.Email)
 	if err != nil {
-		return dto.UserResponse{}, domain.ErrInternalServerError
+		return domain.ErrInternalServerError
 	}
 
 	if userEmail.ID != 0 {
-		return dto.UserResponse{}, domain.ErrEmailAlreadyUsed
+		return domain.ErrEmailAlreadyUsed
 	}
 
 	if user.Password != user.PasswordConfirmation {
-		return dto.UserResponse{}, domain.ErrPasswordDontMatch
+		return domain.ErrPasswordDontMatch
 	}
 
 	userEntity := domain.User{
@@ -83,12 +83,12 @@ func (uu *userUsecase) Register(user dto.UserRequest) (dto.UserResponse, error) 
 		IsBanned: false,
 	}
 
-	userEntity, err = uu.userRepo.Store(userEntity)
+	err = uu.userRepo.Store(userEntity)
 	if err != nil {
-		return dto.UserResponse{}, err
+		return err
 	}
 
-	return helper.DomainUserToUserResponse(userEntity), nil
+	return nil
 }
 
 func (uu *userUsecase) GetAll() ([]dto.UserResponse, error) {
