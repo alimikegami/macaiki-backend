@@ -4,8 +4,8 @@ import (
 	"log"
 	"macaiki/internal/domain"
 	"macaiki/internal/user/delivery/http/helper"
-	"macaiki/internal/user/delivery/http/middleware"
 	"macaiki/internal/user/dto"
+	"macaiki/pkg/middleware"
 
 	"github.com/go-playground/validator/v10"
 	"golang.org/x/crypto/bcrypt"
