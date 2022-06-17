@@ -145,12 +145,14 @@ func (u *UserHandler) SetProfileImage(c echo.Context) error {
 		return response.ErrorResponse(c, err)
 	}
 
-	err = u.UserUsecase.SetProfileImage(uint(userID), img)
+	url, err := u.UserUsecase.SetProfileImage(uint(userID), img)
 	if err != nil {
 		return response.ErrorResponse(c, err)
 	}
 
-	return response.SuccessResponse(c, nil)
+	return response.SuccessResponse(c, map[string]string{
+		"profileImageUrl": url,
+	})
 }
 
 func (u *UserHandler) SetBackgroundImage(c echo.Context) error {
@@ -165,12 +167,14 @@ func (u *UserHandler) SetBackgroundImage(c echo.Context) error {
 		return response.ErrorResponse(c, err)
 	}
 
-	err = u.UserUsecase.SetBackgroundImage(uint(userID), img)
+	url, err := u.UserUsecase.SetBackgroundImage(uint(userID), img)
 	if err != nil {
 		return response.ErrorResponse(c, err)
 	}
 
-	return response.SuccessResponse(c, nil)
+	return response.SuccessResponse(c, map[string]string{
+		"backgroundImageUrl": url,
+	})
 }
 
 func (u *UserHandler) GetUserFollowers(c echo.Context) error {
