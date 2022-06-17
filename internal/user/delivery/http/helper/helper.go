@@ -8,15 +8,18 @@ import (
 // Response
 func DomainUserToUserResponse(user domain.User) dto.UserResponse {
 	return dto.UserResponse{
-		ID:              user.ID,
-		Email:           user.Email,
-		Username:        user.Username,
-		Name:            user.Name,
-		ProfileImageUrl: user.ProfileImageUrl,
-		Role:            user.Role,
-		IsBanned:        user.IsBanned,
-		CreatedAt:       user.CreatedAt,
-		UpdatedAt:       user.UpdatedAt,
+		ID:                 user.ID,
+		Email:              user.Email,
+		Username:           user.Username,
+		Name:               user.Name,
+		ProfileImageUrl:    user.ProfileImageUrl,
+		BackgroundImageUrl: user.BackgroundImageUrl,
+		Bio:                user.Bio,
+		Proffesion:         user.Proffesion,
+		Role:               user.Role,
+		IsBanned:           user.IsBanned,
+		CreatedAt:          user.CreatedAt,
+		UpdatedAt:          user.UpdatedAt,
 	}
 }
 
@@ -49,9 +52,8 @@ func DomainUserToListUserResponse(users []domain.User) []dto.UserResponse {
 	return usersResponse
 }
 
-func ToLoginResponse(id uint, token string) dto.LoginResponse {
+func ToLoginResponse(token string) dto.LoginResponse {
 	return dto.LoginResponse{
-		ID:    id,
 		Token: token,
 	}
 }

@@ -5,15 +5,19 @@ import (
 )
 
 type UserResponse struct {
-	ID              uint      `json:"ID"`
-	Email           string    `json:"email"`
-	Username        string    `json:"username"`
-	Name            string    `json:"name"`
-	ProfileImageUrl string    `json:"profileImageURL"`
-	Role            string    `json:"role"`
-	IsBanned        bool      `json:"isBanned"`
-	CreatedAt       time.Time `json:"createdAt"`
-	UpdatedAt       time.Time `json:"updatedAt"`
+	ID                 uint      `json:"ID"`
+	Email              string    `json:"email"`
+	Username           string    `json:"username"`
+	Name               string    `json:"name"`
+	ImageUrl           string    `json:"imageUrl"`
+	ProfileImageUrl    string    `json:"profileImageURL"`
+	BackgroundImageUrl string    `json:"backgroundImageURL"`
+	Bio                string    `json:"bio"`
+	Proffesion         string    `json:"proffesion"`
+	Role               string    `json:"role"`
+	IsBanned           bool      `json:"isBanned"`
+	CreatedAt          time.Time `json:"createdAt"`
+	UpdatedAt          time.Time `json:"updatedAt"`
 }
 
 type UserDetailResponse struct {
@@ -35,6 +39,5 @@ type UserDetailResponse struct {
 }
 
 type LoginResponse struct {
-	ID    uint   `json:"ID"`
 	Token string `json:"token"`
 }

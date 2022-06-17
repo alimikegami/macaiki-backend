@@ -44,7 +44,7 @@ func main() {
 	s3Instance := _cloudstorage.CreateNewS3Instance(config.AWSAccessKeyId, config.AWSSecretKey, config.AWSRegion, config.BucketName)
 	// setup User
 	userRepo := _userRepo.NewMysqlUserRepository(_driver.DB)
-	userUsecase := _userUsecase.NewUserUsecase(userRepo, v)
+	userUsecase := _userUsecase.NewUserUsecase(userRepo, v, s3Instance)
 	JWTSecret, err := _config.LoadJWTSecret(".")
 	if err != nil {
 		log.Fatal("err", err)

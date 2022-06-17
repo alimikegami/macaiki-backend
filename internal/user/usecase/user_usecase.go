@@ -1,25 +1,31 @@
 package usercase
 
 import (
+	"fmt"
 	"log"
 	"macaiki/internal/domain"
 	"macaiki/internal/user/delivery/http/helper"
 	"macaiki/internal/user/dto"
+	cloudstorage "macaiki/pkg/cloud_storage"
+	"mime/multipart"
 	"macaiki/pkg/middleware"
-
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/go-playground/validator/v10"
+	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
 
 type userUsecase struct {
 	userRepo  domain.UserRepository
 	validator *validator.Validate
+	awsS3     *cloudstorage.S3
 }
 
-func NewUserUsecase(repo domain.UserRepository, validator *validator.Validate) domain.UserUsecase {
+func NewUserUsecase(repo domain.UserRepository, validator *validator.Validate, awsS3Instace *cloudstorage.S3) domain.UserUsecase {
 	return &userUsecase{
 		userRepo:  repo,
 		validator: validator,
+		awsS3:     awsS3Instace,
 	}
 }
 
@@ -45,26 +51,26 @@ func (uu *userUsecase) Login(email, password string) (dto.LoginResponse, error) 
 		return dto.LoginResponse{}, err
 	}
 
-	return helper.ToLoginResponse(userEntity.ID, token), nil
+	return helper.ToLoginResponse(token), nil
 }
 
-func (uu *userUsecase) Register(user dto.UserRequest) (dto.UserResponse, error) {
+func (uu *userUsecase) Register(user dto.UserRequest) error {
 	// TO DO : error handling for existing username
 	if err := uu.validator.Struct(user); err != nil {
-		return dto.UserResponse{}, domain.ErrBadParamInput
+		return domain.ErrBadParamInput
 	}
 
 	userEmail, err := uu.userRepo.GetByEmail(user.Email)
 	if err != nil {
-		return dto.UserResponse{}, domain.ErrInternalServerError
+		return domain.ErrInternalServerError
 	}
 
 	if userEmail.ID != 0 {
-		return dto.UserResponse{}, domain.ErrEmailAlreadyUsed
+		return domain.ErrEmailAlreadyUsed
 	}
 
 	if user.Password != user.PasswordConfirmation {
-		return dto.UserResponse{}, domain.ErrPasswordDontMatch
+		return domain.ErrPasswordDontMatch
 	}
 
 	userEntity := domain.User{
@@ -76,12 +82,12 @@ func (uu *userUsecase) Register(user dto.UserRequest) (dto.UserResponse, error) 
 		IsBanned: false,
 	}
 
-	userEntity, err = uu.userRepo.Store(userEntity)
+	err = uu.userRepo.Store(userEntity)
 	if err != nil {
-		return dto.UserResponse{}, err
+		return err
 	}
 
-	return helper.DomainUserToUserResponse(userEntity), nil
+	return nil
 }
 
 func (uu *userUsecase) GetAll() ([]dto.UserResponse, error) {
@@ -184,6 +190,9 @@ func (uu *userUsecase) GetUserFollowers(id uint) ([]dto.UserResponse, error) {
 	}
 
 	following, err := uu.userRepo.GetFollower(userEntity)
+	if err != nil {
+		return []dto.UserResponse{}, domain.ErrInternalServerError
+	}
 	return helper.DomainUserToListUserResponse(following), nil
 }
 
@@ -197,7 +206,50 @@ func (uu *userUsecase) GetUserFollowing(id uint) ([]dto.UserResponse, error) {
 	}
 
 	following, err := uu.userRepo.GetFollowing(userEntity)
+	if err != nil {
+		return []dto.UserResponse{}, domain.ErrInternalServerError
+	}
 	return helper.DomainUserToListUserResponse(following), nil
+}
+
+func (uu *userUsecase) SetProfileImage(id uint, img *multipart.FileHeader) (string, error) {
+	uniqueFilename := uuid.New()
+	result, err := uu.awsS3.UploadImage(uniqueFilename.String(), "profile", img)
+	if err != nil {
+		fmt.Printf("failed to upload file, %v", err)
+		return "", err
+	}
+
+	imageURL := aws.StringValue(&result.Location)
+	fmt.Printf("file uploaded to, %s\n", imageURL)
+
+	err = uu.userRepo.SetUserImage(id, imageURL, "profile_image_url")
+	if err != nil {
+		fmt.Println("failed to save url on database")
+		return "", err
+	}
+
+	return imageURL, err
+}
+
+func (uu *userUsecase) SetBackgroundImage(id uint, img *multipart.FileHeader) (string, error) {
+	uniqueFilename := uuid.New()
+	result, err := uu.awsS3.UploadImage(uniqueFilename.String(), "background", img)
+	if err != nil {
+		fmt.Printf("failed to upload file, %v", err)
+		return "", err
+	}
+
+	imageURL := aws.StringValue(&result.Location)
+	fmt.Printf("file uploaded to, %s\n", imageURL)
+	// fmt.Printf("file uploaded to, %s\n", uniqueFilename.String()+filepath.Ext(img.Filename))
+	err = uu.userRepo.SetUserImage(id, imageURL, "background_image_url")
+	if err != nil {
+		fmt.Println("failed to save url on database")
+		return "", err
+	}
+
+	return imageURL, err
 }
 
 func (uu *userUsecase) Follow(user_id, user_follower_id uint) error {
