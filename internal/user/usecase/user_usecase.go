@@ -5,11 +5,10 @@ import (
 	"log"
 	"macaiki/internal/domain"
 	"macaiki/internal/user/delivery/http/helper"
-	"macaiki/internal/user/delivery/http/middleware"
 	"macaiki/internal/user/dto"
 	cloudstorage "macaiki/pkg/cloud_storage"
 	"mime/multipart"
-
+	"macaiki/pkg/middleware"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"

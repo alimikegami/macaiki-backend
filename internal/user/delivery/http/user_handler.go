@@ -9,7 +9,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 
-	_middL "macaiki/internal/user/delivery/http/middleware"
+	_middL "macaiki/pkg/middleware"
 )
 
 type UserHandler struct {
