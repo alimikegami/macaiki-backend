@@ -14,3 +14,15 @@ type ThreadResponse struct {
 	CreatedAt time.Time `json:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt"`
 }
+
+type ThreadResponseWithLikesCount struct {
+	ID         uint      `json:"ID"`
+	Title      string    `json:"title"`
+	Body       string    `json:"body"`
+	TopicID    uint      `json:"topicID"`
+	ImageURL   string    `json:"imageURL"`
+	UserID     uint      `json:"userID"`
+	CreatedAt  time.Time `json:"createdAt"`
+	UpdatedAt  time.Time `json:"updatedAt"`
+	LikesCount int       `json:"likesCount"`
+}

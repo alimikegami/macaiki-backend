@@ -90,3 +90,14 @@ func (tr *ThreadRepositoryImpl) LikeThread(threadLikes domain.ThreadLikes) error
 
 	return res.Error
 }
+
+func (tr *ThreadRepositoryImpl) GetTrendingThreads() ([]domain.ThreadWithLikesCount, error) {
+	var threads []domain.ThreadWithLikesCount
+
+	res := tr.db.Raw("SELECT * FROM threads t LEFT JOIN (SELECT thread_id, COUNT(*) AS likes_count FROM thread_likes tl WHERE DATEDIFF(NOW(), tl.created_at) < 7  GROUP BY thread_id) AS t2 ON t.id = t2.thread_id ORDER BY likes_count DESC;").Scan(&threads)
+	if res.Error != nil {
+		return []domain.ThreadWithLikesCount{}, res.Error
+	}
+
+	return threads, nil
+}

@@ -157,3 +157,28 @@ func (tuc *ThreadUseCaseImpl) LikeThread(threadID uint, userID uint) error {
 
 	return err
 }
+
+func (tuc *ThreadUseCaseImpl) GetTrendingThreads() ([]dto.ThreadResponseWithLikesCount, error) {
+	var threads []dto.ThreadResponseWithLikesCount
+	res, err := tuc.tr.GetTrendingThreads()
+
+	if err != nil {
+		return []dto.ThreadResponseWithLikesCount{}, domain.ErrInternalServerError
+	}
+
+	for _, thread := range res {
+		threads = append(threads, dto.ThreadResponseWithLikesCount{
+			ID:         thread.ID,
+			Title:      thread.Title,
+			Body:       thread.Body,
+			TopicID:    thread.TopicID,
+			ImageURL:   thread.ImageURL,
+			UserID:     thread.UserID,
+			CreatedAt:  thread.CreatedAt,
+			UpdatedAt:  thread.UpdatedAt,
+			LikesCount: thread.LikesCount,
+		})
+	}
+
+	return threads, nil
+}
