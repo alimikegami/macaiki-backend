@@ -15,6 +15,11 @@ type Config struct {
 	DBUser string `mapstructure:"DB_USERNAME"`
 	DBPass string `mapstructure:"DB_PASSWORD"`
 	DBName string `mapstructure:"DB_NAME"`
+
+	AWSRegion      string `mapstructure:"AWS_REGION"`
+	AWSAccessKeyId string `mapstructure:"AWS_ACCESS_KEY_ID"`
+	AWSSecretKey   string `mapstructure:"AWS_SECRET_ACCESS_KEY"`
+	BucketName     string `mapstructure:"BUCKET_NAME"`
 }
 
 type JWTSecret struct {
