@@ -147,3 +147,13 @@ func (tuc *ThreadUseCaseImpl) UpdateThread(thread dto.ThreadRequest, threadID ui
 
 	return threadResponse, err
 }
+
+func (tuc *ThreadUseCaseImpl) LikeThread(threadID uint, userID uint) error {
+	threadLikes := domain.ThreadLikes{
+		ThreadID: threadID,
+		UserID:   userID,
+	}
+	err := tuc.tr.LikeThread(threadLikes)
+
+	return err
+}
