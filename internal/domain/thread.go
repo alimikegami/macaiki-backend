@@ -9,11 +9,11 @@ import (
 
 type Thread struct {
 	gorm.Model
-	Title    string
-	Body     string
-	ImageURL string
-	UserID   uint
-	TopicID  uint
+	Title       string
+	Body        string
+	ImageURL    string
+	UserID      uint
+	CommunityID uint
 }
 
 type ThreadLikes struct {
@@ -30,8 +30,9 @@ type ThreadFollower struct {
 	UserID   uint
 }
 
-type ThreadWithLikesCount struct {
+type ThreadWithDetails struct {
 	Thread
+	User
 	LikesCount int
 }
 
@@ -43,7 +44,9 @@ type ThreadUseCase interface {
 	GetThreadByID(threadID uint) (dto.ThreadResponse, error)
 	SetThreadImage(img *multipart.FileHeader, threadID uint) error
 	LikeThread(threadID uint, userID uint) error
-	GetTrendingThreads() ([]dto.ThreadResponseWithLikesCount, error)
+	GetTrendingThreads() ([]dto.DetailedThreadResponse, error)
+	GetThreadsFromFollowedCommunity(userID uint) ([]dto.DetailedThreadResponse, error)
+	GetThreadsFromFollowedUsers(userID uint) ([]dto.DetailedThreadResponse, error)
 }
 
 type ThreadRepository interface {
@@ -54,5 +57,7 @@ type ThreadRepository interface {
 	GetThreadByID(threadID uint) (Thread, error)
 	SetThreadImage(imageURL string, threadID uint) error
 	LikeThread(threadLikes ThreadLikes) error
-	GetTrendingThreads() ([]ThreadWithLikesCount, error)
+	GetTrendingThreads() ([]ThreadWithDetails, error)
+	GetThreadsFromFollowedCommunity(userID uint) ([]ThreadWithDetails, error)
+	GetThreadsFromFollowedUsers(userID uint) ([]ThreadWithDetails, error)
 }
