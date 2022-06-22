@@ -42,23 +42,25 @@ func main() {
 	v := validator.New()
 
 	s3Instance := _cloudstorage.CreateNewS3Instance(config.AWSAccessKeyId, config.AWSSecretKey, config.AWSRegion, config.BucketName)
-	// setup User
+	// setup Repo
 	userRepo := _userRepo.NewMysqlUserRepository(_driver.DB)
-	userUsecase := _userUsecase.NewUserUsecase(userRepo, v, s3Instance)
+	reportCategoryRepo := _reportCategoryRepo.NewReportCategoryRepository(_driver.DB)
+	threadRepo := _threadRepo.CreateNewThreadRepository(_driver.DB)
+
+	// setup usecase
+	userUsecase := _userUsecase.NewUserUsecase(userRepo, reportCategoryRepo, v, s3Instance)
+	reportCategoryUsecase := _reportCategoryUsecase.NewReportCategoryUsecase(reportCategoryRepo, v)
+	threadUseCase := _threadUsecase.CreateNewThreadUseCase(threadRepo, s3Instance)
+
+	// setup middleware
 	JWTSecret, err := _config.LoadJWTSecret(".")
 	if err != nil {
 		log.Fatal("err", err)
 	}
+
+	// setup route
 	_userHttpDelivery.NewUserHandler(e, userUsecase, JWTSecret.Secret)
-
-	// setup Thread
-	threadRepo := _threadRepo.CreateNewThreadRepository(_driver.DB)
-	threadUseCase := _threadUsecase.CreateNewThreadUseCase(threadRepo, s3Instance)
 	_ = _threadHttpDelivery.CreateNewThreadHandler(e, threadUseCase)
-
-	// setup Report Category
-	reportCategoryRepo := _reportCategoryRepo.NewReportCategoryRepository(_driver.DB)
-	reportCategoryUsecase := _reportCategoryUsecase.NewReportCategoryUsecase(reportCategoryRepo, v)
 	_reportCategoryHttpDeliver.NewReportCategoryHandler(e, reportCategoryUsecase)
 
 	log.Fatal(e.Start(":" + config.ServerPort))

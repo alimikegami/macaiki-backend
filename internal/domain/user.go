@@ -3,6 +3,7 @@ package domain
 import (
 	"macaiki/internal/user/dto"
 	"mime/multipart"
+	"time"
 
 	"gorm.io/gorm"
 )
@@ -19,7 +20,16 @@ type User struct {
 	Proffesion         string
 	Role               string
 	IsBanned           bool
-	Followers          []User `gorm:"many2many:user_followers"`
+	Followers          []User       `gorm:"many2many:user_followers"`
+	Report             []UserReport `gorm:"foreignKey:UserID"`
+}
+
+type UserReport struct {
+	UserID           uint `gorm:"primaryKey"`
+	ReportedUserID   uint `gorm:"primaryKey"`
+	ReportCategoryID uint
+	CreatedAt        time.Time
+	UpdatedAt        time.Time
 }
 
 type UserUsecase interface {
@@ -34,8 +44,10 @@ type UserUsecase interface {
 	SetBackgroundImage(id uint, img *multipart.FileHeader) (string, error)
 	GetUserFollowers(id uint) ([]dto.UserResponse, error)
 	GetUserFollowing(id uint) ([]dto.UserResponse, error)
-	Follow(user_id, user_follower_id uint) error
-	Unfollow(user_id, user_follower_id uint) error
+	Follow(userID, userFollowerID uint) error
+	Unfollow(userID, userFollowerID uint) error
+
+	Report(userID, userReportedID, ReportCategoryID uint) error
 }
 
 type UserRepository interface {
@@ -48,9 +60,11 @@ type UserRepository interface {
 
 	GetFollowerNumber(id uint) (int, error)
 	GetFollowingNumber(id uint) (int, error)
-	Follow(user, user_follower User) (User, error)
-	Unfollow(user, user_follower User) (User, error)
+	Follow(user, userFollower User) (User, error)
+	Unfollow(user, userFollower User) (User, error)
 	GetFollower(user User) ([]User, error)
 	GetFollowing(user User) ([]User, error)
 	SetUserImage(id uint, imageURL string, tableName string) error
+
+	StoreReport(userReport UserReport) error
 }
