@@ -54,7 +54,7 @@ func main() {
 	// setup Thread
 	threadRepo := _threadRepo.CreateNewThreadRepository(_driver.DB)
 	threadUseCase := _threadUsecase.CreateNewThreadUseCase(threadRepo, s3Instance)
-	_ = _threadHttpDelivery.CreateNewThreadHandler(e, threadUseCase)
+	_ = _threadHttpDelivery.CreateNewThreadHandler(e, threadUseCase, JWTSecret.Secret)
 
 	// setup Report Category
 	reportCategoryRepo := _reportCategoryRepo.NewReportCategoryRepository(_driver.DB)

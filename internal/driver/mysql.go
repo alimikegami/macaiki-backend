@@ -37,5 +37,7 @@ func InitialMigration(DB *gorm.DB) {
 		&domain.ReportCategory{},
 		&domain.ThreadLikes{},
 		&domain.ThreadFollower{},
+		&domain.Community{},
+		&domain.FollowedCommunity{},
 	)
 }

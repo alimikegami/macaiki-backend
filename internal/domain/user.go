@@ -22,6 +22,12 @@ type User struct {
 	Followers          []User `gorm:"many2many:user_followers"`
 }
 
+type FollowedCommunity struct {
+	gorm.Model
+	CommunityID uint
+	UserID      uint
+}
+
 type UserUsecase interface {
 	Login(email, password string) (dto.LoginResponse, error)
 	Register(user dto.UserRequest) error
