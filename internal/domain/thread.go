@@ -24,6 +24,17 @@ type ThreadLikes struct {
 	User     User
 }
 
+type ThreadFollower struct {
+	gorm.Model
+	ThreadID uint
+	UserID   uint
+}
+
+type ThreadWithLikesCount struct {
+	Thread
+	LikesCount int
+}
+
 type ThreadUseCase interface {
 	CreateThread(thread dto.ThreadRequest, userID uint) (dto.ThreadResponse, error)
 	DeleteThread(threadID uint) error
@@ -32,6 +43,7 @@ type ThreadUseCase interface {
 	GetThreadByID(threadID uint) (dto.ThreadResponse, error)
 	SetThreadImage(img *multipart.FileHeader, threadID uint) error
 	LikeThread(threadID uint, userID uint) error
+	GetTrendingThreads() ([]dto.ThreadResponseWithLikesCount, error)
 }
 
 type ThreadRepository interface {
@@ -42,4 +54,5 @@ type ThreadRepository interface {
 	GetThreadByID(threadID uint) (Thread, error)
 	SetThreadImage(imageURL string, threadID uint) error
 	LikeThread(threadLikes ThreadLikes) error
+	GetTrendingThreads() ([]ThreadWithLikesCount, error)
 }

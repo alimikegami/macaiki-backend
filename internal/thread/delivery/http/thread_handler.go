@@ -16,7 +16,17 @@ type ThreadHandler struct {
 }
 
 func (th *ThreadHandler) GetThreads(c echo.Context) error {
-	res, err := th.tu.GetThreads()
+	trending := c.QueryParam("trending")
+
+	var res interface{}
+	var err error
+
+	if trending == "true" {
+		res, err = th.tu.GetTrendingThreads()
+	} else {
+		res, err = th.tu.GetThreads()
+	}
+
 	if err != nil {
 		fmt.Println(err)
 		return response.ErrorResponse(c, err)
