@@ -15,10 +15,10 @@ func NewMysqlUserRepository(Db *gorm.DB) domain.UserRepository {
 	return &MysqlUserRepository{Db}
 }
 
-func (ur *MysqlUserRepository) GetAll() ([]domain.User, error) {
+func (ur *MysqlUserRepository) GetAll(username string) ([]domain.User, error) {
 	users := []domain.User{}
 
-	res := ur.Db.Find(&users)
+	res := ur.Db.Where("username LIKE ?", "%"+username+"%").Find(&users)
 	err := res.Error
 	if err != nil {
 		return []domain.User{}, err

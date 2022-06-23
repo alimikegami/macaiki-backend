@@ -41,7 +41,7 @@ type FollowedCommunity struct {
 type UserUsecase interface {
 	Login(email, password string) (dto.LoginResponse, error)
 	Register(user dto.UserRequest) error
-	GetAll() ([]dto.UserResponse, error)
+	GetAll(username string) ([]dto.UserResponse, error)
 	Get(id uint) (dto.UserDetailResponse, error)
 	Update(userUpdate dto.UpdateUserRequest, id uint) (dto.UserResponse, error)
 	Delete(id uint) error
@@ -57,7 +57,7 @@ type UserUsecase interface {
 }
 
 type UserRepository interface {
-	GetAll() ([]User, error)
+	GetAll(username string) ([]User, error)
 	Store(user User) error
 	Get(id uint) (User, error)
 	Update(userDB *User, user User) (User, error)

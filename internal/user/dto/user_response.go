@@ -9,7 +9,6 @@ type UserResponse struct {
 	Email              string    `json:"email"`
 	Username           string    `json:"username"`
 	Name               string    `json:"name"`
-	ImageUrl           string    `json:"imageUrl"`
 	ProfileImageUrl    string    `json:"profileImageURL"`
 	BackgroundImageUrl string    `json:"backgroundImageURL"`
 	Bio                string    `json:"bio"`
@@ -25,7 +24,6 @@ type UserDetailResponse struct {
 	Email              string    `json:"email"`
 	Username           string    `json:"username"`
 	Name               string    `json:"name"`
-	ImageUrl           string    `json:"imageUrl"`
 	ProfileImageUrl    string    `json:"profileImageURL"`
 	BackgroundImageUrl string    `json:"backgroundImageURL"`
 	Bio                string    `json:"bio"`

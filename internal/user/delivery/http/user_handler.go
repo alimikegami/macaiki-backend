@@ -68,7 +68,8 @@ func (u *UserHandler) Register(c echo.Context) error {
 }
 
 func (u *UserHandler) GetAllUsers(c echo.Context) error {
-	res, err := u.UserUsecase.GetAll()
+	username := c.QueryParam("search")
+	res, err := u.UserUsecase.GetAll(username)
 	if err != nil {
 		return response.ErrorResponse(c, err)
 	}
