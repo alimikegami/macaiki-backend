@@ -62,13 +62,15 @@ func (th *ThreadHandler) GetThreadByID(c echo.Context) error {
 }
 
 func (th *ThreadHandler) CreateThread(c echo.Context) error {
+	userID, _ := _middL.ExtractTokenUser(c)
+
 	thread := new(dto.ThreadRequest)
 	if err := c.Bind(thread); err != nil {
 		fmt.Println(err)
 		return response.ErrorResponse(c, err)
 	}
 
-	res, err := th.tu.CreateThread(*thread, 1)
+	res, err := th.tu.CreateThread(*thread, uint(userID))
 	if err != nil {
 		fmt.Println(err)
 		return response.ErrorResponse(c, err)
@@ -78,6 +80,8 @@ func (th *ThreadHandler) CreateThread(c echo.Context) error {
 }
 
 func (th *ThreadHandler) SetThreadImage(c echo.Context) error {
+	userID, _ := _middL.ExtractTokenUser(c)
+
 	threadID := c.Param("threadID")
 	u64, err := strconv.ParseUint(threadID, 10, 32)
 	if err != nil {
@@ -91,7 +95,7 @@ func (th *ThreadHandler) SetThreadImage(c echo.Context) error {
 		return response.ErrorResponse(c, err)
 	}
 
-	err = th.tu.SetThreadImage(img, threadIDUint)
+	err = th.tu.SetThreadImage(img, threadIDUint, uint(userID))
 	if err != nil {
 		fmt.Println(err)
 		return response.ErrorResponse(c, err)
@@ -101,6 +105,9 @@ func (th *ThreadHandler) SetThreadImage(c echo.Context) error {
 }
 
 func (th *ThreadHandler) DeleteThread(c echo.Context) error {
+	// TODO: Allow admin to delete a thread
+	userID, _ := _middL.ExtractTokenUser(c)
+
 	threadID := c.Param("threadID")
 	u64, err := strconv.ParseUint(threadID, 10, 32)
 	if err != nil {
@@ -108,7 +115,7 @@ func (th *ThreadHandler) DeleteThread(c echo.Context) error {
 		return response.ErrorResponse(c, err)
 	}
 	threadIDUint := uint(u64)
-	if err := th.tu.DeleteThread(threadIDUint); err != nil {
+	if err := th.tu.DeleteThread(threadIDUint, uint(userID)); err != nil {
 		return response.ErrorResponse(c, err)
 
 	}
@@ -116,6 +123,8 @@ func (th *ThreadHandler) DeleteThread(c echo.Context) error {
 }
 
 func (th *ThreadHandler) UpdateThread(c echo.Context) error {
+	userID, _ := _middL.ExtractTokenUser(c)
+
 	threadID := c.Param("threadID")
 	u64, err := strconv.ParseUint(threadID, 10, 32)
 	if err != nil {
@@ -130,7 +139,7 @@ func (th *ThreadHandler) UpdateThread(c echo.Context) error {
 		return response.ErrorResponse(c, err)
 	}
 
-	res, err := th.tu.UpdateThread(*thread, threadIDUint, 1)
+	res, err := th.tu.UpdateThread(*thread, threadIDUint, uint(userID))
 	if err != nil {
 		fmt.Println(err)
 		return response.ErrorResponse(c, err)
@@ -157,12 +166,12 @@ func (th *ThreadHandler) LikeThread(c echo.Context) error {
 
 func CreateNewThreadHandler(e *echo.Echo, tu domain.ThreadUseCase, JWTSecret string) *ThreadHandler {
 	threadHandler := &ThreadHandler{router: e, tu: tu}
-	threadHandler.router.POST("/api/v1/threads", threadHandler.CreateThread)
-	threadHandler.router.DELETE("/api/v1/threads/:threadID", threadHandler.DeleteThread)
+	threadHandler.router.POST("/api/v1/threads", threadHandler.CreateThread, middleware.JWT([]byte(JWTSecret)))
+	threadHandler.router.DELETE("/api/v1/threads/:threadID", threadHandler.DeleteThread, middleware.JWT([]byte(JWTSecret)))
 	threadHandler.router.GET("/api/v1/threads", threadHandler.GetThreads, middleware.JWT([]byte(JWTSecret)))
 	threadHandler.router.GET("/api/v1/threads/:threadID", threadHandler.GetThreadByID)
-	threadHandler.router.PUT("/api/v1/threads/:threadID", threadHandler.UpdateThread)
-	threadHandler.router.PUT("/api/v1/threads/:threadID/images", threadHandler.SetThreadImage)
-	threadHandler.router.POST("/api/v1/threads/:threadID/likes", threadHandler.LikeThread)
+	threadHandler.router.PUT("/api/v1/threads/:threadID", threadHandler.UpdateThread, middleware.JWT([]byte(JWTSecret)))
+	threadHandler.router.PUT("/api/v1/threads/:threadID/images", threadHandler.SetThreadImage, middleware.JWT([]byte(JWTSecret)))
+	threadHandler.router.POST("/api/v1/threads/:threadID/likes", threadHandler.LikeThread, middleware.JWT([]byte(JWTSecret)))
 	return threadHandler
 }

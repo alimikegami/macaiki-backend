@@ -38,11 +38,11 @@ type ThreadWithDetails struct {
 
 type ThreadUseCase interface {
 	CreateThread(thread dto.ThreadRequest, userID uint) (dto.ThreadResponse, error)
-	DeleteThread(threadID uint) error
+	DeleteThread(threadID uint, userID uint) error
 	GetThreads() ([]dto.ThreadResponse, error)
 	UpdateThread(thread dto.ThreadRequest, threadID uint, userID uint) (dto.ThreadResponse, error)
 	GetThreadByID(threadID uint) (dto.ThreadResponse, error)
-	SetThreadImage(img *multipart.FileHeader, threadID uint) error
+	SetThreadImage(img *multipart.FileHeader, threadID uint, userID uint) error
 	LikeThread(threadID uint, userID uint) error
 	GetTrendingThreads() ([]dto.DetailedThreadResponse, error)
 	GetThreadsFromFollowedCommunity(userID uint) ([]dto.DetailedThreadResponse, error)
