@@ -39,7 +39,7 @@ func NewUserHandler(e *echo.Echo, us domain.UserUsecase, JWTSecret string) {
 	e.GET("api/v1/users/:userID/follow", handler.Follow, middleware.JWT([]byte(JWTSecret)))
 	e.GET("api/v1/users/:userID/unfollow", handler.Unfollow, middleware.JWT([]byte(JWTSecret)))
 
-	e.POST("api/v1/report", handler.ReportUser, middleware.JWT([]byte(JWTSecret)))
+	e.POST("api/v1/reports", handler.ReportUser, middleware.JWT([]byte(JWTSecret)))
 }
 
 func (u *UserHandler) Login(c echo.Context) error {
