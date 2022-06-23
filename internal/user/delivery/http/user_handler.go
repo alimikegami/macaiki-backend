@@ -39,7 +39,7 @@ func NewUserHandler(e *echo.Echo, us domain.UserUsecase, JWTSecret string) {
 	e.GET("api/v1/users/:userID/follow", handler.Follow, middleware.JWT([]byte(JWTSecret)))
 	e.GET("api/v1/users/:userID/unfollow", handler.Unfollow, middleware.JWT([]byte(JWTSecret)))
 
-	e.POST("api/v1/users/:userID/report-categories/:report-categoriesID", handler.ReportUser, middleware.JWT([]byte(JWTSecret)))
+	e.POST("api/v1/report", handler.ReportUser, middleware.JWT([]byte(JWTSecret)))
 }
 
 func (u *UserHandler) Login(c echo.Context) error {
@@ -240,18 +240,12 @@ func (u *UserHandler) Unfollow(c echo.Context) error {
 }
 
 func (u *UserHandler) ReportUser(c echo.Context) error {
-	userReportedID, err := strconv.Atoi(c.Param("userID"))
-	if err != nil {
-		return response.ErrorResponse(c, domain.ErrBadParamInput)
-	}
+	reportInfo := dto.UserReportRequest{}
 
-	categoryID, err := strconv.Atoi(c.Param("report-categoriesID"))
-	if err != nil {
-		return response.ErrorResponse(c, domain.ErrBadParamInput)
-	}
+	c.Bind(&reportInfo)
 
 	userID, _ := _middL.ExtractTokenUser(c)
-	err = u.UserUsecase.Report(uint(userID), uint(userReportedID), uint(categoryID))
+	err := u.UserUsecase.Report(uint(userID), reportInfo.UserID, reportInfo.ReportCategoryID)
 	if err != nil {
 		return response.ErrorResponse(c, err)
 	}
