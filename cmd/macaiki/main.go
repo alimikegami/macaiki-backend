@@ -60,7 +60,7 @@ func main() {
 
 	// setup route
 	_userHttpDelivery.NewUserHandler(e, userUsecase, JWTSecret.Secret)
-	_ = _threadHttpDelivery.CreateNewThreadHandler(e, threadUseCase)
+	_ = _threadHttpDelivery.CreateNewThreadHandler(e, threadUseCase, JWTSecret.Secret)
 	_reportCategoryHttpDeliver.NewReportCategoryHandler(e, reportCategoryUsecase)
 
 	log.Fatal(e.Start(":" + config.ServerPort))
