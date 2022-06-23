@@ -30,3 +30,8 @@ type LoginUserRequest struct {
 	Email    string `json:"email"`
 	Password string `json:"password" validate:"required"`
 }
+
+type UserReportRequest struct {
+	UserID           uint `json:"userID"`
+	ReportCategoryID uint `json:"reportCategoryID"`
+}

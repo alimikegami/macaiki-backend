@@ -3,8 +3,9 @@ package domain
 import "macaiki/internal/report_category/dto"
 
 type ReportCategory struct {
-	ID   uint `gorm:"primaryKey"`
-	Name string
+	ID          uint `gorm:"primaryKey"`
+	Name        string
+	UserReports []UserReport `gorm:"foreignKey:ReportCategoryID"`
 }
 
 type ReportCategoryUsecase interface {

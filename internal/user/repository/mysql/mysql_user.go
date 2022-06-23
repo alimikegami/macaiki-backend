@@ -91,8 +91,8 @@ func (ur *MysqlUserRepository) GetByEmail(email string) (domain.User, error) {
 	return user, nil
 }
 
-func (ur *MysqlUserRepository) Follow(user, user_follower domain.User) (domain.User, error) {
-	err := ur.Db.Model(&user).Association("Followers").Append(&user_follower)
+func (ur *MysqlUserRepository) Follow(user, userFollower domain.User) (domain.User, error) {
+	err := ur.Db.Model(&user).Association("Followers").Append(&userFollower)
 	if err != nil {
 		return domain.User{}, err
 	}
@@ -100,8 +100,8 @@ func (ur *MysqlUserRepository) Follow(user, user_follower domain.User) (domain.U
 	return user, nil
 }
 
-func (ur *MysqlUserRepository) Unfollow(user, user_follower domain.User) (domain.User, error) {
-	err := ur.Db.Model(&user).Association("Followers").Delete(&user_follower)
+func (ur *MysqlUserRepository) Unfollow(user, userFollower domain.User) (domain.User, error) {
+	err := ur.Db.Model(&user).Association("Followers").Delete(&userFollower)
 	if err != nil {
 		return domain.User{}, err
 	}
@@ -163,6 +163,16 @@ func (ur *MysqlUserRepository) SetUserImage(id uint, imageURL string, tableName 
 
 	if res.RowsAffected < 1 {
 		return errors.New("resource does not exists")
+	}
+
+	return nil
+}
+
+func (ur *MysqlUserRepository) StoreReport(userReport domain.UserReport) error {
+	res := ur.Db.Create(&userReport)
+	err := res.Error
+	if err != nil {
+		return err
 	}
 
 	return nil

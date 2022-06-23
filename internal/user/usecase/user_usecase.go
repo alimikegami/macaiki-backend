@@ -7,8 +7,9 @@ import (
 	"macaiki/internal/user/delivery/http/helper"
 	"macaiki/internal/user/dto"
 	cloudstorage "macaiki/pkg/cloud_storage"
-	"mime/multipart"
 	"macaiki/pkg/middleware"
+	"mime/multipart"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
@@ -16,16 +17,18 @@ import (
 )
 
 type userUsecase struct {
-	userRepo  domain.UserRepository
-	validator *validator.Validate
-	awsS3     *cloudstorage.S3
+	userRepo           domain.UserRepository
+	reportCategoryRepo domain.ReportCategoryRepository
+	validator          *validator.Validate
+	awsS3              *cloudstorage.S3
 }
 
-func NewUserUsecase(repo domain.UserRepository, validator *validator.Validate, awsS3Instace *cloudstorage.S3) domain.UserUsecase {
+func NewUserUsecase(userRepo domain.UserRepository, reportCategoryRepo domain.ReportCategoryRepository, validator *validator.Validate, awsS3Instace *cloudstorage.S3) domain.UserUsecase {
 	return &userUsecase{
-		userRepo:  repo,
-		validator: validator,
-		awsS3:     awsS3Instace,
+		userRepo:           userRepo,
+		reportCategoryRepo: reportCategoryRepo,
+		validator:          validator,
+		awsS3:              awsS3Instace,
 	}
 }
 
@@ -252,8 +255,8 @@ func (uu *userUsecase) SetBackgroundImage(id uint, img *multipart.FileHeader) (s
 	return imageURL, err
 }
 
-func (uu *userUsecase) Follow(user_id, user_follower_id uint) error {
-	user, err := uu.userRepo.Get(user_id)
+func (uu *userUsecase) Follow(userID, userFollowerID uint) error {
+	user, err := uu.userRepo.Get(userID)
 	if err != nil {
 		return domain.ErrInternalServerError
 	}
@@ -261,7 +264,7 @@ func (uu *userUsecase) Follow(user_id, user_follower_id uint) error {
 		return domain.ErrNotFound
 	}
 
-	user_follower, err := uu.userRepo.Get(user_follower_id)
+	user_follower, err := uu.userRepo.Get(userFollowerID)
 	if err != nil {
 		return domain.ErrInternalServerError
 	}
@@ -282,8 +285,8 @@ func (uu *userUsecase) Follow(user_id, user_follower_id uint) error {
 	return nil
 }
 
-func (uu *userUsecase) Unfollow(user_id, user_follower_id uint) error {
-	user, err := uu.userRepo.Get(user_id)
+func (uu *userUsecase) Unfollow(userID, userFollowerID uint) error {
+	user, err := uu.userRepo.Get(userID)
 	if err != nil {
 		return domain.ErrInternalServerError
 	}
@@ -291,7 +294,7 @@ func (uu *userUsecase) Unfollow(user_id, user_follower_id uint) error {
 		return domain.ErrNotFound
 	}
 
-	user_follower, err := uu.userRepo.Get(user_follower_id)
+	user_follower, err := uu.userRepo.Get(userFollowerID)
 	if err != nil {
 		return domain.ErrInternalServerError
 	}
@@ -300,6 +303,41 @@ func (uu *userUsecase) Unfollow(user_id, user_follower_id uint) error {
 	}
 
 	_, err = uu.userRepo.Unfollow(user, user_follower)
+	if err != nil {
+		return domain.ErrInternalServerError
+	}
+	return nil
+}
+
+func (uu *userUsecase) Report(userID, userReportedID, reportCategoryID uint) error {
+	var err error
+
+	if userID == userReportedID {
+		return domain.ErrBadParamInput
+	}
+
+	_, err = uu.userRepo.Get(userID)
+	if err != nil {
+		return domain.ErrNotFound
+	}
+
+	_, err = uu.userRepo.Get(userReportedID)
+	if err != nil {
+		return domain.ErrNotFound
+	}
+
+	_, err = uu.reportCategoryRepo.GetReportCategory(reportCategoryID)
+	if err != nil {
+		return domain.ErrNotFound
+	}
+
+	userReport := domain.UserReport{
+		UserID:           userID,
+		ReportedUserID:   userReportedID,
+		ReportCategoryID: reportCategoryID,
+	}
+
+	err = uu.userRepo.StoreReport(userReport)
 	if err != nil {
 		return domain.ErrInternalServerError
 	}
