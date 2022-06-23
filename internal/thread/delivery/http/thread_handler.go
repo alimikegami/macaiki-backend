@@ -4,10 +4,12 @@ import (
 	"fmt"
 	"macaiki/internal/domain"
 	"macaiki/internal/thread/dto"
+	_middL "macaiki/pkg/middleware"
 	"macaiki/pkg/response"
 	"strconv"
 
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 )
 
 type ThreadHandler struct {
@@ -16,13 +18,20 @@ type ThreadHandler struct {
 }
 
 func (th *ThreadHandler) GetThreads(c echo.Context) error {
-	trending := c.QueryParam("trending")
+	userID, _ := _middL.ExtractTokenUser(c)
 
+	trending := c.QueryParam("trending")
+	community := c.QueryParam("community")
+	forYou := c.QueryParam("forYou")
 	var res interface{}
 	var err error
 
 	if trending == "true" {
 		res, err = th.tu.GetTrendingThreads()
+	} else if community == "true" {
+		res, err = th.tu.GetThreadsFromFollowedCommunity(uint(userID))
+	} else if forYou == "true" {
+		res, err = th.tu.GetThreadsFromFollowedUsers(uint(userID))
 	} else {
 		res, err = th.tu.GetThreads()
 	}
@@ -146,11 +155,11 @@ func (th *ThreadHandler) LikeThread(c echo.Context) error {
 	return response.SuccessResponse(c, nil)
 }
 
-func CreateNewThreadHandler(e *echo.Echo, tu domain.ThreadUseCase) *ThreadHandler {
+func CreateNewThreadHandler(e *echo.Echo, tu domain.ThreadUseCase, JWTSecret string) *ThreadHandler {
 	threadHandler := &ThreadHandler{router: e, tu: tu}
 	threadHandler.router.POST("/api/v1/threads", threadHandler.CreateThread)
 	threadHandler.router.DELETE("/api/v1/threads/:threadID", threadHandler.DeleteThread)
-	threadHandler.router.GET("/api/v1/threads", threadHandler.GetThreads)
+	threadHandler.router.GET("/api/v1/threads", threadHandler.GetThreads, middleware.JWT([]byte(JWTSecret)))
 	threadHandler.router.GET("/api/v1/threads/:threadID", threadHandler.GetThreadByID)
 	threadHandler.router.PUT("/api/v1/threads/:threadID", threadHandler.UpdateThread)
 	threadHandler.router.PUT("/api/v1/threads/:threadID/images", threadHandler.SetThreadImage)
