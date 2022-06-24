@@ -99,8 +99,8 @@ func (uu *userUsecase) Register(user dto.UserRequest) error {
 	return nil
 }
 
-func (uu *userUsecase) GetAll() ([]dto.UserResponse, error) {
-	users, err := uu.userRepo.GetAll()
+func (uu *userUsecase) GetAll(username string) ([]dto.UserResponse, error) {
+	users, err := uu.userRepo.GetAll(username)
 	if err != nil {
 		return []dto.UserResponse{}, domain.ErrInternalServerError
 	}

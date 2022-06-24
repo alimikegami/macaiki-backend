@@ -26,7 +26,7 @@ func NewUserHandler(e *echo.Echo, us domain.UserUsecase, JWTSecret string) {
 	e.POST("/api/v1/login", handler.Login)
 	e.POST("/api/v1/register", handler.Register)
 	e.GET("/api/v1/users", handler.GetAllUsers)
-	e.GET("/api/v1/users/:userID", handler.GetUser, middleware.JWT([]byte(JWTSecret)))
+	e.GET("/api/v1/users/:userID", handler.GetUser)
 	e.PUT("/api/v1/users/:userID", handler.Update, middleware.JWT([]byte(JWTSecret)))
 	e.DELETE("/api/v1/users/:userID", handler.Delete, middleware.JWT([]byte(JWTSecret)))
 
@@ -70,7 +70,8 @@ func (u *UserHandler) Register(c echo.Context) error {
 }
 
 func (u *UserHandler) GetAllUsers(c echo.Context) error {
-	res, err := u.UserUsecase.GetAll()
+	key := c.QueryParam("search")
+	res, err := u.UserUsecase.GetAll(key)
 	if err != nil {
 		return response.ErrorResponse(c, err)
 	}
