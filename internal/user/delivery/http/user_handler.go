@@ -30,9 +30,9 @@ func NewUserHandler(e *echo.Echo, us domain.UserUsecase, JWTSecret string) {
 	e.PUT("/api/v1/users/:userID", handler.Update, middleware.JWT([]byte(JWTSecret)))
 	e.DELETE("/api/v1/users/:userID", handler.Delete, middleware.JWT([]byte(JWTSecret)))
 
-	e.PUT("/api/v1/change-email", handler.ChangeEmail, middleware.JWT([]byte(JWTSecret)))
-	e.PUT("/api/v1/change-password", handler.ChangePassword, middleware.JWT([]byte(JWTSecret)))
-	e.GET("/api/v1/my-profile", handler.GetUserByToken, middleware.JWT([]byte(JWTSecret)))
+	e.PUT("/api/v1/curent-user/email", handler.ChangeEmail, middleware.JWT([]byte(JWTSecret)))
+	e.PUT("/api/v1/curent-user/password", handler.ChangePassword, middleware.JWT([]byte(JWTSecret)))
+	e.GET("/api/v1/curent-user/profile", handler.GetUserByToken, middleware.JWT([]byte(JWTSecret)))
 
 	e.PUT("/api/v1/users/:userID/profile-images", handler.SetProfileImage, middleware.JWT([]byte(JWTSecret)))
 	e.PUT("/api/v1/users/:userID/background-images", handler.SetBackgroundImage, middleware.JWT([]byte(JWTSecret)))
