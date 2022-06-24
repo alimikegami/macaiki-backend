@@ -27,19 +27,21 @@ func NewUserHandler(e *echo.Echo, us domain.UserUsecase, JWTSecret string) {
 	e.POST("/api/v1/register", handler.Register)
 	e.GET("/api/v1/users", handler.GetAllUsers, middleware.JWT([]byte(JWTSecret)))
 	e.GET("/api/v1/users/:userID", handler.GetUser)
-	e.PUT("api/v1/users/:userID", handler.Update)
-	e.DELETE("api/v1/users/:userID", handler.Delete)
+	e.PUT("/api/v1/users/:userID", handler.Update)
+	e.DELETE("/api/v1/users/:userID", handler.Delete)
 
+	e.PUT("/api/v1/change-email", handler.ChangeEmail, middleware.JWT([]byte(JWTSecret)))
+	e.PUT("/api/v1/change-password", handler.ChangePassword, middleware.JWT([]byte(JWTSecret)))
 	e.GET("/api/v1/my-profile", handler.GetUserByToken, middleware.JWT([]byte(JWTSecret)))
 
-	e.PUT("api/v1/users/:userID/profile-images", handler.SetProfileImage)
-	e.PUT("api/v1/users/:userID/background-images", handler.SetBackgroundImage)
-	e.GET("api/v1/users/:userID/followers", handler.GetUserFollowers)
-	e.GET("api/v1/users/:userID/following", handler.GetUserFollowing)
-	e.GET("api/v1/users/:userID/follow", handler.Follow, middleware.JWT([]byte(JWTSecret)))
-	e.GET("api/v1/users/:userID/unfollow", handler.Unfollow, middleware.JWT([]byte(JWTSecret)))
+	e.PUT("/api/v1/users/:userID/profile-images", handler.SetProfileImage)
+	e.PUT("/api/v1/users/:userID/background-images", handler.SetBackgroundImage)
+	e.GET("/api/v1/users/:userID/followers", handler.GetUserFollowers)
+	e.GET("/api/v1/users/:userID/following", handler.GetUserFollowing)
+	e.GET("/api/v1/users/:userID/follow", handler.Follow, middleware.JWT([]byte(JWTSecret)))
+	e.GET("/api/v1/users/:userID/unfollow", handler.Unfollow, middleware.JWT([]byte(JWTSecret)))
 
-	e.POST("api/v1/reports", handler.ReportUser, middleware.JWT([]byte(JWTSecret)))
+	e.POST("/api/v1/reports", handler.ReportUser, middleware.JWT([]byte(JWTSecret)))
 }
 
 func (u *UserHandler) Login(c echo.Context) error {
@@ -47,7 +49,7 @@ func (u *UserHandler) Login(c echo.Context) error {
 
 	c.Bind(&loginInfo)
 
-	token, err := u.UserUsecase.Login(loginInfo.Email, loginInfo.Password)
+	token, err := u.UserUsecase.Login(loginInfo)
 	if err != nil {
 		return response.ErrorResponse(c, err)
 	}
@@ -128,6 +130,34 @@ func (u *UserHandler) Delete(c echo.Context) error {
 	}
 
 	err = u.UserUsecase.Delete(uint(userID))
+	if err != nil {
+		return response.ErrorResponse(c, err)
+	}
+
+	return response.SuccessResponse(c, nil)
+}
+
+func (u *UserHandler) ChangeEmail(c echo.Context) error {
+	info := dto.LoginUserRequest{}
+	userID, _ := _middL.ExtractTokenUser(c)
+
+	c.Bind(&info)
+
+	res, err := u.UserUsecase.ChangeEmail(uint(userID), info)
+	if err != nil {
+		return response.ErrorResponse(c, err)
+	}
+
+	return response.SuccessResponse(c, res)
+}
+
+func (u *UserHandler) ChangePassword(c echo.Context) error {
+	newPasswordInfo := dto.ChangePasswordUserRequest{}
+	userID, _ := _middL.ExtractTokenUser(c)
+
+	c.Bind(&newPasswordInfo)
+
+	err := u.UserUsecase.ChangePassword(uint(userID), newPasswordInfo)
 	if err != nil {
 		return response.ErrorResponse(c, err)
 	}
