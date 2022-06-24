@@ -13,7 +13,7 @@ type UserResponse struct {
 	ProfileImageUrl    string    `json:"profileImageURL"`
 	BackgroundImageUrl string    `json:"backgroundImageURL"`
 	Bio                string    `json:"bio"`
-	Proffesion         string    `json:"proffesion"`
+	Profession         string    `json:"profession"`
 	Role               string    `json:"role"`
 	IsBanned           bool      `json:"isBanned"`
 	CreatedAt          time.Time `json:"createdAt"`
@@ -29,7 +29,7 @@ type UserDetailResponse struct {
 	ProfileImageUrl    string    `json:"profileImageURL"`
 	BackgroundImageUrl string    `json:"backgroundImageURL"`
 	Bio                string    `json:"bio"`
-	Proffesion         string    `json:"proffesion"`
+	Profession         string    `json:"profession"`
 	Role               string    `json:"role"`
 	IsBanned           bool      `json:"isBanned"`
 	CreatedAt          time.Time `json:"createdAt"`

@@ -151,7 +151,7 @@ func (uu *userUsecase) Update(user dto.UpdateUserRequest, id uint) (dto.UserResp
 		ProfileImageUrl:    user.ProfileImageUrl,
 		BackgroundImageUrl: user.BackgroundImageUrl,
 		Bio:                user.Bio,
-		Proffesion:         user.Proffesion,
+		Profession:         user.Profession,
 		Role:               user.Role,
 		IsBanned:           user.IsBanned,
 	}

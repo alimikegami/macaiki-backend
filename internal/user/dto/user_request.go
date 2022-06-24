@@ -13,7 +13,7 @@ type UpdateUserRequest struct {
 	ProfileImageUrl    string `json:"profileImageURL"`
 	BackgroundImageUrl string `json:"backgroundImageURL"`
 	Bio                string `json:"bio"`
-	Proffesion         string `json:"proffesion"`
+	Profession         string `json:"profession"`
 	Role               string `json:"role"`
 	IsBanned           bool   `json:"isBanned"`
 }

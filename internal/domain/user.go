@@ -17,7 +17,7 @@ type User struct {
 	ProfileImageUrl    string
 	BackgroundImageUrl string
 	Bio                string
-	Proffesion         string
+	Profession         string
 	Role               string
 	IsBanned           bool
 	Followers          []User       `gorm:"many2many:user_followers"`
