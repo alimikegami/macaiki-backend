@@ -1,7 +1,6 @@
 package usercase
 
 import (
-	"fmt"
 	"log"
 	"macaiki/internal/domain"
 	"macaiki/internal/user/delivery/http/helper"
@@ -132,17 +131,36 @@ func (uu *userUsecase) Get(id uint) (dto.UserDetailResponse, error) {
 	}
 	return helper.DomainUserToUserDetailResponse(userEntity, totalFollowing, totalFollower), nil
 }
-func (uu *userUsecase) Update(user dto.UpdateUserRequest, id uint) (dto.UserResponse, error) {
+func (uu *userUsecase) Update(user dto.UpdateUserRequest, id uint, curentUserID uint) (dto.UserResponse, error) {
+	// TODO: validation the username that has been used
 	if err := uu.validator.Struct(user); err != nil {
 		return dto.UserResponse{}, domain.ErrBadParamInput
 	}
 
+	// validation that accesses is the user itself
+	if id != curentUserID {
+		return dto.UserResponse{}, domain.ErrUnauthorizedAccess
+	}
+
+	// validation the user exist
 	userDB, err := uu.userRepo.Get(id)
 	if err != nil {
 		return dto.UserResponse{}, domain.ErrInternalServerError
 	}
 	if userDB.ID == 0 {
 		return dto.UserResponse{}, domain.ErrNotFound
+	}
+
+	// validation the username that has beed used
+	if userDB.Username != user.Username {
+		userUsername, err := uu.userRepo.GetByUsername(user.Username)
+		if err != nil {
+			return dto.UserResponse{}, domain.ErrInternalServerError
+		}
+
+		if userUsername.ID != 0 {
+			return dto.UserResponse{}, domain.ErrUsernameAlreadyUsed
+		}
 	}
 
 	userEntity := domain.User{
@@ -152,7 +170,6 @@ func (uu *userUsecase) Update(user dto.UpdateUserRequest, id uint) (dto.UserResp
 		BackgroundImageUrl: user.BackgroundImageUrl,
 		Bio:                user.Bio,
 		Profession:         user.Profession,
-		Role:               user.Role,
 		IsBanned:           user.IsBanned,
 	}
 	userDB, err = uu.userRepo.Update(&userDB, userEntity)
@@ -162,7 +179,8 @@ func (uu *userUsecase) Update(user dto.UpdateUserRequest, id uint) (dto.UserResp
 
 	return helper.DomainUserToUserResponse(userDB), nil
 }
-func (uu *userUsecase) Delete(id uint) error {
+func (uu *userUsecase) Delete(id uint, curentUserID uint, curentUserRole string) error {
+	// validation the user exist
 	userEntity, err := uu.userRepo.Get(id)
 	if err != nil {
 		return domain.ErrInternalServerError
@@ -171,11 +189,17 @@ func (uu *userUsecase) Delete(id uint) error {
 		return domain.ErrNotFound
 	}
 
-	_, err = uu.userRepo.Delete(id)
+	// validation that accesses is the user itself or Admin
+	if curentUserID != id && curentUserRole != "Admin" {
+		return domain.ErrUnauthorizedAccess
+	}
+
+	err = uu.userRepo.Delete(id)
 	if err != nil {
 		return domain.ErrInternalServerError
 	}
 	return nil
+
 }
 
 func (uu *userUsecase) ChangeEmail(id uint, info dto.LoginUserRequest) (dto.UserResponse, error) {
@@ -274,16 +298,13 @@ func (uu *userUsecase) SetProfileImage(id uint, img *multipart.FileHeader) (stri
 	uniqueFilename := uuid.New()
 	result, err := uu.awsS3.UploadImage(uniqueFilename.String(), "profile", img)
 	if err != nil {
-		fmt.Printf("failed to upload file, %v", err)
 		return "", err
 	}
 
 	imageURL := aws.StringValue(&result.Location)
-	fmt.Printf("file uploaded to, %s\n", imageURL)
 
 	err = uu.userRepo.SetUserImage(id, imageURL, "profile_image_url")
 	if err != nil {
-		fmt.Println("failed to save url on database")
 		return "", err
 	}
 
@@ -294,16 +315,12 @@ func (uu *userUsecase) SetBackgroundImage(id uint, img *multipart.FileHeader) (s
 	uniqueFilename := uuid.New()
 	result, err := uu.awsS3.UploadImage(uniqueFilename.String(), "background", img)
 	if err != nil {
-		fmt.Printf("failed to upload file, %v", err)
 		return "", err
 	}
 
 	imageURL := aws.StringValue(&result.Location)
-	fmt.Printf("file uploaded to, %s\n", imageURL)
-	// fmt.Printf("file uploaded to, %s\n", uniqueFilename.String()+filepath.Ext(img.Filename))
 	err = uu.userRepo.SetUserImage(id, imageURL, "background_image_url")
 	if err != nil {
-		fmt.Println("failed to save url on database")
 		return "", err
 	}
 

@@ -65,18 +65,18 @@ func (ur *MysqlUserRepository) Update(userDB *domain.User, user domain.User) (do
 	return user, nil
 }
 
-func (ur *MysqlUserRepository) Delete(id uint) (domain.User, error) {
+func (ur *MysqlUserRepository) Delete(id uint) error {
 	user, err := ur.Get(id)
 	if err != nil {
-		return domain.User{}, err
+		return err
 	}
 
 	res := ur.Db.Delete(&user, "id = ?", id)
 	err = res.Error
 	if err != nil {
-		return domain.User{}, err
+		return err
 	}
-	return user, nil
+	return nil
 }
 
 func (ur *MysqlUserRepository) GetByEmail(email string) (domain.User, error) {

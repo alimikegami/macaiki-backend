@@ -33,15 +33,15 @@ func NewUserHandler(e *echo.Echo, us domain.UserUsecase, JWTSecret string) {
 	e.PUT("/api/v1/curent-user/email", handler.ChangeEmail, middleware.JWT([]byte(JWTSecret)))
 	e.PUT("/api/v1/curent-user/password", handler.ChangePassword, middleware.JWT([]byte(JWTSecret)))
 	e.GET("/api/v1/curent-user/profile", handler.GetUserByToken, middleware.JWT([]byte(JWTSecret)))
+	e.PUT("/api/v1/curent-user/profile-images", handler.SetProfileImage, middleware.JWT([]byte(JWTSecret)))
+	e.PUT("/api/v1/curent-user/background-images", handler.SetBackgroundImage, middleware.JWT([]byte(JWTSecret)))
 
-	e.PUT("/api/v1/users/:userID/profile-images", handler.SetProfileImage, middleware.JWT([]byte(JWTSecret)))
-	e.PUT("/api/v1/users/:userID/background-images", handler.SetBackgroundImage, middleware.JWT([]byte(JWTSecret)))
+	e.GET("/api/v1/curent-user/users/:userID/follow", handler.Follow, middleware.JWT([]byte(JWTSecret)))
+	e.GET("/api/v1/curent-user/users/:userID/unfollow", handler.Unfollow, middleware.JWT([]byte(JWTSecret)))
+	e.POST("/api/v1/curent-user/reports", handler.ReportUser, middleware.JWT([]byte(JWTSecret)))
+
 	e.GET("/api/v1/users/:userID/followers", handler.GetUserFollowers)
 	e.GET("/api/v1/users/:userID/following", handler.GetUserFollowing)
-	e.GET("/api/v1/users/:userID/follow", handler.Follow, middleware.JWT([]byte(JWTSecret)))
-	e.GET("/api/v1/users/:userID/unfollow", handler.Unfollow, middleware.JWT([]byte(JWTSecret)))
-
-	e.POST("/api/v1/reports", handler.ReportUser, middleware.JWT([]byte(JWTSecret)))
 }
 
 func (u *UserHandler) Login(c echo.Context) error {
@@ -115,7 +115,9 @@ func (u *UserHandler) Update(c echo.Context) error {
 	user := dto.UpdateUserRequest{}
 	c.Bind(&user)
 
-	res, err := u.UserUsecase.Update(user, uint(userID))
+	curentUserID, _ := _middL.ExtractTokenUser(c)
+
+	res, err := u.UserUsecase.Update(user, uint(userID), uint(curentUserID))
 	if err != nil {
 		return response.ErrorResponse(c, err)
 	}
@@ -130,7 +132,9 @@ func (u *UserHandler) Delete(c echo.Context) error {
 		response.ErrorResponse(c, domain.ErrBadParamInput)
 	}
 
-	err = u.UserUsecase.Delete(uint(userID))
+	curentUserID, curentUserRole := _middL.ExtractTokenUser(c)
+
+	err = u.UserUsecase.Delete(uint(userID), uint(curentUserID), curentUserRole)
 	if err != nil {
 		return response.ErrorResponse(c, err)
 	}
@@ -167,11 +171,7 @@ func (u *UserHandler) ChangePassword(c echo.Context) error {
 }
 
 func (u *UserHandler) SetProfileImage(c echo.Context) error {
-	num := c.Param("userID")
-	userID, err := strconv.Atoi(num)
-	if err != nil {
-		return response.ErrorResponse(c, err)
-	}
+	userID, _ := _middL.ExtractTokenUser(c)
 
 	img, err := c.FormFile("profileImage")
 	if err != nil {
@@ -189,11 +189,7 @@ func (u *UserHandler) SetProfileImage(c echo.Context) error {
 }
 
 func (u *UserHandler) SetBackgroundImage(c echo.Context) error {
-	num := c.Param("userID")
-	userID, err := strconv.Atoi(num)
-	if err != nil {
-		return response.ErrorResponse(c, err)
-	}
+	userID, _ := _middL.ExtractTokenUser(c)
 
 	img, err := c.FormFile("backgroundImage")
 	if err != nil {

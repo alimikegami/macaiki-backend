@@ -43,8 +43,8 @@ type UserUsecase interface {
 	Register(user dto.UserRequest) error
 	GetAll(username string) ([]dto.UserResponse, error)
 	Get(id uint) (dto.UserDetailResponse, error)
-	Update(userUpdate dto.UpdateUserRequest, id uint) (dto.UserResponse, error)
-	Delete(id uint) error
+	Update(userUpdate dto.UpdateUserRequest, id, curentUserID uint) (dto.UserResponse, error)
+	Delete(id uint, curentUserID uint, curentUser string) error
 
 	ChangeEmail(id uint, info dto.LoginUserRequest) (dto.UserResponse, error)
 	ChangePassword(id uint, passwordInfo dto.ChangePasswordUserRequest) error
@@ -64,7 +64,7 @@ type UserRepository interface {
 	Store(user User) error
 	Get(id uint) (User, error)
 	Update(userDB *User, user User) (User, error)
-	Delete(id uint) (User, error)
+	Delete(id uint) error
 	GetByEmail(email string) (User, error)
 	GetByUsername(username string) (User, error)
 
