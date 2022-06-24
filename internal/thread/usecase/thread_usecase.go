@@ -17,6 +17,19 @@ type ThreadUseCaseImpl struct {
 	awsS3 *cloudstorage.S3
 }
 
+func AuthorizeThreadAccess(threadID uint, userID uint, tuc *ThreadUseCaseImpl) (bool, error) {
+	thread, err := tuc.tr.GetThreadByID(threadID)
+	if err != nil {
+		return false, err
+	}
+
+	if thread.UserID != userID {
+		return false, nil
+	}
+
+	return true, nil
+}
+
 func CreateNewThreadUseCase(tr domain.ThreadRepository, awsS3Instance *cloudstorage.S3) domain.ThreadUseCase {
 	return &ThreadUseCaseImpl{tr: tr, awsS3: awsS3Instance}
 }
@@ -91,7 +104,16 @@ func (tuc *ThreadUseCaseImpl) CreateThread(thread dto.ThreadRequest, userID uint
 	}, nil
 }
 
-func (tuc *ThreadUseCaseImpl) SetThreadImage(img *multipart.FileHeader, threadID uint) error {
+func (tuc *ThreadUseCaseImpl) SetThreadImage(img *multipart.FileHeader, threadID uint, userID uint) error {
+	flag, err := AuthorizeThreadAccess(threadID, userID, tuc)
+	if err != nil {
+		return err
+	}
+
+	if !flag {
+		return domain.ErrUnauthorizedAccess
+	}
+
 	uniqueFilename := uuid.New()
 	result, err := tuc.awsS3.UploadImage(uniqueFilename.String(), "thread", img)
 	if err != nil {
@@ -106,25 +128,41 @@ func (tuc *ThreadUseCaseImpl) SetThreadImage(img *multipart.FileHeader, threadID
 	return err
 }
 
-func (tuc *ThreadUseCaseImpl) DeleteThread(threadID uint) error {
-	// TODO: add validation logic to make sure the only user that can delete a thread is either the admin or the user who created the thread
-	err := tuc.tr.DeleteThread(threadID)
+func (tuc *ThreadUseCaseImpl) DeleteThread(threadID uint, userID uint) error {
+	flag, err := AuthorizeThreadAccess(threadID, userID, tuc)
+	if err != nil {
+		return err
+	}
+
+	if !flag {
+		return domain.ErrUnauthorizedAccess
+	}
+
+	err = tuc.tr.DeleteThread(threadID)
 	return err
 }
 
 func (tuc *ThreadUseCaseImpl) UpdateThread(thread dto.ThreadRequest, threadID uint, userID uint) (dto.ThreadResponse, error) {
-	// TODO: add validation logic to make sure the only user that can update a thread is the user who created the thread
+	flag, err := AuthorizeThreadAccess(threadID, userID, tuc)
+	if err != nil {
+		return dto.ThreadResponse{}, err
+	}
+
+	if !flag {
+		return dto.ThreadResponse{}, domain.ErrUnauthorizedAccess
+	}
+
 	threadEntity := domain.Thread{
 		Title:       thread.Title,
 		Body:        thread.Body,
 		CommunityID: thread.CommunityID,
 	}
 
-	err := tuc.tr.UpdateThread(threadID, threadEntity)
-
-	if err.Error() == "no affected rows" {
-		return dto.ThreadResponse{}, domain.ErrBadParamInput
-	} else if err != nil {
+	err = tuc.tr.UpdateThread(threadID, threadEntity)
+	if err != nil {
+		if err.Error() == "no affected rows" {
+			return dto.ThreadResponse{}, domain.ErrBadParamInput
+		}
 		return dto.ThreadResponse{}, domain.ErrInternalServerError
 	}
 

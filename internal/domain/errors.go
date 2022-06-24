@@ -26,6 +26,8 @@ var (
 	ErrPasswordRequired = errors.New("Password is Required")
 
 	ErrPasswordDontMatch = errors.New("Password don't match")
+
+	ErrUnauthorizedAccess = errors.New("unauthorized access")
 )
 
 // unfinished
@@ -48,6 +50,8 @@ func GetStatusCode(err error) int {
 	case ErrForbidden:
 		return http.StatusForbidden
 	case ErrLoginFailed:
+		return http.StatusUnauthorized
+	case ErrUnauthorizedAccess:
 		return http.StatusUnauthorized
 	default:
 		return http.StatusOK
