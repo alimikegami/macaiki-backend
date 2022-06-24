@@ -69,6 +69,15 @@ func (uu *userUsecase) Register(user dto.UserRequest) error {
 		return domain.ErrEmailAlreadyUsed
 	}
 
+	userUsername, err := uu.userRepo.GetByUsername(user.Username)
+	if err != nil {
+		return domain.ErrInternalServerError
+	}
+
+	if userUsername.ID != 0 {
+		return domain.ErrUsernameAlreadyUsed
+	}
+
 	if user.Password != user.PasswordConfirmation {
 		return domain.ErrPasswordDontMatch
 	}

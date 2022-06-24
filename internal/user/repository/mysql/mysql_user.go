@@ -91,6 +91,18 @@ func (ur *MysqlUserRepository) GetByEmail(email string) (domain.User, error) {
 	return user, nil
 }
 
+func (ur *MysqlUserRepository) GetByUsername(username string) (domain.User, error) {
+	user := domain.User{}
+
+	res := ur.Db.Find(&user, "username = ?", username)
+	err := res.Error
+	if err != nil {
+		return domain.User{}, err
+	}
+
+	return user, nil
+}
+
 func (ur *MysqlUserRepository) Follow(user, userFollower domain.User) (domain.User, error) {
 	err := ur.Db.Model(&user).Association("Followers").Append(&userFollower)
 	if err != nil {

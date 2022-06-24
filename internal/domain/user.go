@@ -66,6 +66,7 @@ type UserRepository interface {
 	Update(userDB *User, user User) (User, error)
 	Delete(id uint) (User, error)
 	GetByEmail(email string) (User, error)
+	GetByUsername(username string) (User, error)
 
 	GetFollowerNumber(id uint) (int, error)
 	GetFollowingNumber(id uint) (int, error)

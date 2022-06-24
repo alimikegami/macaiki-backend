@@ -25,17 +25,17 @@ func NewUserHandler(e *echo.Echo, us domain.UserUsecase, JWTSecret string) {
 
 	e.POST("/api/v1/login", handler.Login)
 	e.POST("/api/v1/register", handler.Register)
-	e.GET("/api/v1/users", handler.GetAllUsers, middleware.JWT([]byte(JWTSecret)))
-	e.GET("/api/v1/users/:userID", handler.GetUser)
-	e.PUT("/api/v1/users/:userID", handler.Update)
-	e.DELETE("/api/v1/users/:userID", handler.Delete)
+	e.GET("/api/v1/users", handler.GetAllUsers)
+	e.GET("/api/v1/users/:userID", handler.GetUser, middleware.JWT([]byte(JWTSecret)))
+	e.PUT("/api/v1/users/:userID", handler.Update, middleware.JWT([]byte(JWTSecret)))
+	e.DELETE("/api/v1/users/:userID", handler.Delete, middleware.JWT([]byte(JWTSecret)))
 
 	e.PUT("/api/v1/change-email", handler.ChangeEmail, middleware.JWT([]byte(JWTSecret)))
 	e.PUT("/api/v1/change-password", handler.ChangePassword, middleware.JWT([]byte(JWTSecret)))
 	e.GET("/api/v1/my-profile", handler.GetUserByToken, middleware.JWT([]byte(JWTSecret)))
 
-	e.PUT("/api/v1/users/:userID/profile-images", handler.SetProfileImage)
-	e.PUT("/api/v1/users/:userID/background-images", handler.SetBackgroundImage)
+	e.PUT("/api/v1/users/:userID/profile-images", handler.SetProfileImage, middleware.JWT([]byte(JWTSecret)))
+	e.PUT("/api/v1/users/:userID/background-images", handler.SetBackgroundImage, middleware.JWT([]byte(JWTSecret)))
 	e.GET("/api/v1/users/:userID/followers", handler.GetUserFollowers)
 	e.GET("/api/v1/users/:userID/following", handler.GetUserFollowing)
 	e.GET("/api/v1/users/:userID/follow", handler.Follow, middleware.JWT([]byte(JWTSecret)))
