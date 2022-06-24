@@ -17,7 +17,7 @@ type User struct {
 	ProfileImageUrl    string
 	BackgroundImageUrl string
 	Bio                string
-	Proffesion         string
+	Profession         string
 	Role               string
 	IsBanned           bool
 	Followers          []User       `gorm:"many2many:user_followers"`
@@ -39,12 +39,15 @@ type FollowedCommunity struct {
 }
 
 type UserUsecase interface {
-	Login(email, password string) (dto.LoginResponse, error)
+	Login(loginInfo dto.LoginUserRequest) (dto.LoginResponse, error)
 	Register(user dto.UserRequest) error
-	GetAll() ([]dto.UserResponse, error)
+	GetAll(username string) ([]dto.UserResponse, error)
 	Get(id uint) (dto.UserDetailResponse, error)
 	Update(userUpdate dto.UpdateUserRequest, id uint) (dto.UserResponse, error)
 	Delete(id uint) error
+
+	ChangeEmail(id uint, info dto.LoginUserRequest) (dto.UserResponse, error)
+	ChangePassword(id uint, passwordInfo dto.ChangePasswordUserRequest) error
 
 	SetProfileImage(id uint, img *multipart.FileHeader) (string, error)
 	SetBackgroundImage(id uint, img *multipart.FileHeader) (string, error)
@@ -57,12 +60,13 @@ type UserUsecase interface {
 }
 
 type UserRepository interface {
-	GetAll() ([]User, error)
+	GetAll(username string) ([]User, error)
 	Store(user User) error
 	Get(id uint) (User, error)
 	Update(userDB *User, user User) (User, error)
 	Delete(id uint) (User, error)
 	GetByEmail(email string) (User, error)
+	GetByUsername(username string) (User, error)
 
 	GetFollowerNumber(id uint) (int, error)
 	GetFollowingNumber(id uint) (int, error)

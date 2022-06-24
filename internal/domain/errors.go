@@ -16,6 +16,8 @@ var (
 	ErrBadParamInput = errors.New("Given Param is not valid")
 	// ErrBadParamInput will throw if the email already used
 	ErrEmailAlreadyUsed = errors.New("Email already used")
+
+	ErrUsernameAlreadyUsed = errors.New("Username already used")
 	// ErrForbidden will throw if the authorization is fail
 	ErrForbidden = errors.New("Forbidden")
 	// ErrLoginFailed will throw if the email & password invalid
