@@ -271,11 +271,11 @@ func (uu *userUsecase) GetUserFollowers(id uint) ([]dto.UserResponse, error) {
 		return []dto.UserResponse{}, domain.ErrNotFound
 	}
 
-	following, err := uu.userRepo.GetFollower(userEntity)
+	followers, err := uu.userRepo.GetFollower(userEntity)
 	if err != nil {
 		return []dto.UserResponse{}, domain.ErrInternalServerError
 	}
-	return helper.DomainUserToListUserResponse(following), nil
+	return helper.DomainUserToListUserResponse(followers), nil
 }
 
 func (uu *userUsecase) GetUserFollowing(id uint) ([]dto.UserResponse, error) {

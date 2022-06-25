@@ -22,6 +22,7 @@ type User struct {
 	IsBanned           bool
 	Followers          []User       `gorm:"many2many:user_followers"`
 	Report             []UserReport `gorm:"foreignKey:UserID"`
+	Reported           []UserReport `gorm:"foreignKey:ReportedUserID"`
 }
 
 type UserReport struct {

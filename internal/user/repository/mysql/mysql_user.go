@@ -144,7 +144,7 @@ func (ur *MysqlUserRepository) GetFollowingNumber(id uint) (int, error) {
 func (ur *MysqlUserRepository) GetFollower(user domain.User) ([]domain.User, error) {
 	users := []domain.User{}
 
-	res := ur.Db.Raw("SELECT * FROM `users` LEFT JOIN `user_followers` `Followers` ON `users`.`id` = `Followers`.`user_id` WHERE `Followers`.`user_id` = ?", user.ID).Scan(&users)
+	res := ur.Db.Raw("SELECT * FROM `users` LEFT JOIN `user_followers` `Followers` ON `users`.`id` = `Followers`.`follower_id` WHERE `Followers`.`user_id` = ?", user.ID).Scan(&users)
 	err := res.Error
 
 	if err != nil {
