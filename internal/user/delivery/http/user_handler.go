@@ -36,8 +36,8 @@ func NewUserHandler(e *echo.Echo, us domain.UserUsecase, JWTSecret string) {
 	e.PUT("/api/v1/curent-user/profile-images", handler.SetProfileImage, middleware.JWT([]byte(JWTSecret)))
 	e.PUT("/api/v1/curent-user/background-images", handler.SetBackgroundImage, middleware.JWT([]byte(JWTSecret)))
 
-	e.GET("/api/v1/curent-user/users/:userID/follow", handler.Follow, middleware.JWT([]byte(JWTSecret)))
-	e.GET("/api/v1/curent-user/users/:userID/unfollow", handler.Unfollow, middleware.JWT([]byte(JWTSecret)))
+	e.POST("/api/v1/curent-user/user-followers/:userID", handler.Follow, middleware.JWT([]byte(JWTSecret)))
+	e.DELETE("/api/v1/curent-user/user-followers/:userID", handler.Unfollow, middleware.JWT([]byte(JWTSecret)))
 	e.POST("/api/v1/curent-user/reports", handler.ReportUser, middleware.JWT([]byte(JWTSecret)))
 
 	e.GET("/api/v1/users/:userID/followers", handler.GetUserFollowers)
