@@ -9,11 +9,11 @@ import (
 
 type Thread struct {
 	gorm.Model
-	Title    string
-	Body     string
-	ImageURL string
-	UserID   uint
-	TopicID  uint
+	Title       string
+	Body        string
+	ImageURL    string
+	UserID      uint
+	CommunityID uint
 }
 
 type ThreadLikes struct {
@@ -24,14 +24,44 @@ type ThreadLikes struct {
 	User     User
 }
 
+type ThreadWithDetails struct {
+	Thread
+	User
+	LikesCount int
+}
+
+type ThreadFollower struct {
+	gorm.Model
+	ThreadID uint
+	UserID   uint
+}
+
+type Comment struct {
+	gorm.Model
+	Body      string
+	UserID    uint
+	ThreadID  uint
+	CommentID uint
+}
+
+type CommentDetails struct {
+	Comment
+	User
+}
+
 type ThreadUseCase interface {
 	CreateThread(thread dto.ThreadRequest, userID uint) (dto.ThreadResponse, error)
-	DeleteThread(threadID uint) error
+	DeleteThread(threadID uint, userID uint) error
 	GetThreads() ([]dto.ThreadResponse, error)
 	UpdateThread(thread dto.ThreadRequest, threadID uint, userID uint) (dto.ThreadResponse, error)
 	GetThreadByID(threadID uint) (dto.ThreadResponse, error)
-	SetThreadImage(img *multipart.FileHeader, threadID uint) error
+	SetThreadImage(img *multipart.FileHeader, threadID uint, userID uint) error
 	LikeThread(threadID uint, userID uint) error
+	GetTrendingThreads() ([]dto.DetailedThreadResponse, error)
+	GetThreadsFromFollowedCommunity(userID uint) ([]dto.DetailedThreadResponse, error)
+	GetThreadsFromFollowedUsers(userID uint) ([]dto.DetailedThreadResponse, error)
+	AddThreadComment(dto.CommentRequest) error
+	GetCommentsByThreadID(threadID uint) ([]dto.CommentResponse, error)
 }
 
 type ThreadRepository interface {
@@ -42,4 +72,9 @@ type ThreadRepository interface {
 	GetThreadByID(threadID uint) (Thread, error)
 	SetThreadImage(imageURL string, threadID uint) error
 	LikeThread(threadLikes ThreadLikes) error
+	GetTrendingThreads() ([]ThreadWithDetails, error)
+	GetThreadsFromFollowedCommunity(userID uint) ([]ThreadWithDetails, error)
+	GetThreadsFromFollowedUsers(userID uint) ([]ThreadWithDetails, error)
+	AddThreadComment(comment Comment) error
+	GetCommentsByThreadID(threadID uint) ([]CommentDetails, error)
 }

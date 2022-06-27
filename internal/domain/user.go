@@ -3,6 +3,7 @@ package domain
 import (
 	"macaiki/internal/user/dto"
 	"mime/multipart"
+	"time"
 
 	"gorm.io/gorm"
 )
@@ -16,41 +17,65 @@ type User struct {
 	ProfileImageUrl    string
 	BackgroundImageUrl string
 	Bio                string
-	Proffesion         string
+	Profession         string
 	Role               string
 	IsBanned           bool
-	Followers          []User `gorm:"many2many:user_followers"`
+	Followers          []User       `gorm:"many2many:user_followers"`
+	Report             []UserReport `gorm:"foreignKey:UserID"`
+	Reported           []UserReport `gorm:"foreignKey:ReportedUserID"`
+}
+
+type UserReport struct {
+	UserID           uint `gorm:"primaryKey"`
+	ReportedUserID   uint `gorm:"primaryKey"`
+	ReportCategoryID uint
+	CreatedAt        time.Time
+	UpdatedAt        time.Time
+}
+
+type FollowedCommunity struct {
+	gorm.Model
+	CommunityID uint
+	UserID      uint
 }
 
 type UserUsecase interface {
-	Login(email, password string) (dto.LoginResponse, error)
+	Login(loginInfo dto.LoginUserRequest) (dto.LoginResponse, error)
 	Register(user dto.UserRequest) error
-	GetAll() ([]dto.UserResponse, error)
+	GetAll(username string) ([]dto.UserResponse, error)
 	Get(id uint) (dto.UserDetailResponse, error)
-	Update(userUpdate dto.UpdateUserRequest, id uint) (dto.UserResponse, error)
-	Delete(id uint) error
+	Update(userUpdate dto.UpdateUserRequest, id, curentUserID uint) (dto.UserResponse, error)
+	Delete(id uint, curentUserID uint, curentUser string) error
+
+	ChangeEmail(id uint, info dto.LoginUserRequest) (dto.UserResponse, error)
+	ChangePassword(id uint, passwordInfo dto.ChangePasswordUserRequest) error
 
 	SetProfileImage(id uint, img *multipart.FileHeader) (string, error)
 	SetBackgroundImage(id uint, img *multipart.FileHeader) (string, error)
 	GetUserFollowers(id uint) ([]dto.UserResponse, error)
 	GetUserFollowing(id uint) ([]dto.UserResponse, error)
-	Follow(user_id, user_follower_id uint) error
-	Unfollow(user_id, user_follower_id uint) error
+	Follow(userID, userFollowerID uint) error
+	Unfollow(userID, userFollowerID uint) error
+
+	Report(userID, userReportedID, ReportCategoryID uint) error
 }
 
 type UserRepository interface {
-	GetAll() ([]User, error)
+	GetAll(username string) ([]User, error)
 	Store(user User) error
 	Get(id uint) (User, error)
 	Update(userDB *User, user User) (User, error)
-	Delete(id uint) (User, error)
+	Delete(id uint) error
 	GetByEmail(email string) (User, error)
+	GetByUsername(username string) (User, error)
 
 	GetFollowerNumber(id uint) (int, error)
 	GetFollowingNumber(id uint) (int, error)
-	Follow(user, user_follower User) (User, error)
-	Unfollow(user, user_follower User) (User, error)
+	Follow(user, userFollower User) (User, error)
+	Unfollow(user, userFollower User) (User, error)
 	GetFollower(user User) ([]User, error)
 	GetFollowing(user User) ([]User, error)
 	SetUserImage(id uint, imageURL string, tableName string) error
+
+	StoreReport(userReport UserReport) error
 }
