@@ -18,7 +18,7 @@ type ThreadUseCaseImpl struct {
 	awsS3 *cloudstorage.S3
 }
 
-func AuthorizeThreadAccess(threadID uint, userID uint, tuc *ThreadUseCaseImpl) (bool, error) {
+func AuthorizeThreadAccess(threadID uint, userID uint, tuc *ThreadUseCaseImpl) (bool, domain.Thread, error) {
 	thread, err := tuc.tr.GetThreadByID(threadID)
 	if err != nil {
 		return false, err
@@ -28,7 +28,7 @@ func AuthorizeThreadAccess(threadID uint, userID uint, tuc *ThreadUseCaseImpl) (
 		return false, nil
 	}
 
-	return true, nil
+	return true, thread, nil
 }
 
 func CreateNewThreadUseCase(tr domain.ThreadRepository, awsS3Instance *cloudstorage.S3) domain.ThreadUseCase {
@@ -107,7 +107,7 @@ func (tuc *ThreadUseCaseImpl) CreateThread(thread dto.ThreadRequest, userID uint
 
 
 func (tuc *ThreadUseCaseImpl) SetThreadImage(img *multipart.FileHeader, threadID uint, userID uint) error {
-	flag, err := AuthorizeThreadAccess(threadID, userID, tuc)
+	flag, thread, err := AuthorizeThreadAccess(threadID, userID, tuc)
 	if err != nil {
 		return err
 	}
@@ -139,7 +139,7 @@ func (tuc *ThreadUseCaseImpl) SetThreadImage(img *multipart.FileHeader, threadID
 }
 
 func (tuc *ThreadUseCaseImpl) DeleteThread(threadID uint, userID uint) error {
-	flag, err := AuthorizeThreadAccess(threadID, userID, tuc)
+	flag, _, err := AuthorizeThreadAccess(threadID, userID, tuc)
 	if err != nil {
 		return err
 	}
@@ -153,7 +153,7 @@ func (tuc *ThreadUseCaseImpl) DeleteThread(threadID uint, userID uint) error {
 }
 
 func (tuc *ThreadUseCaseImpl) UpdateThread(thread dto.ThreadRequest, threadID uint, userID uint) (dto.ThreadResponse, error) {
-	flag, err := AuthorizeThreadAccess(threadID, userID, tuc)
+	flag, _, err := AuthorizeThreadAccess(threadID, userID, tuc)
 	if err != nil {
 		return dto.ThreadResponse{}, err
 	}
