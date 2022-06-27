@@ -84,3 +84,65 @@ func (tr *ThreadRepositoryImpl) UpdateThread(threadID uint, thread domain.Thread
 
 	return nil
 }
+
+func (tr *ThreadRepositoryImpl) LikeThread(threadLikes domain.ThreadLikes) error {
+	res := tr.db.Create(&threadLikes)
+
+	return res.Error
+}
+
+func (tr *ThreadRepositoryImpl) GetTrendingThreads() ([]domain.ThreadWithDetails, error) {
+	var threads []domain.ThreadWithDetails
+
+	res := tr.db.Raw("SELECT * FROM threads t LEFT JOIN (SELECT thread_id, COUNT(*) AS likes_count FROM thread_likes tl WHERE DATEDIFF(NOW(), tl.created_at) < 7  GROUP BY thread_id) AS t2 ON t.id = t2.thread_id ORDER BY likes_count DESC;").Scan(&threads)
+	if res.Error != nil {
+		return []domain.ThreadWithDetails{}, res.Error
+	}
+
+	return threads, nil
+}
+
+func (tr *ThreadRepositoryImpl) GetThreadsFromFollowedCommunity(userID uint) ([]domain.ThreadWithDetails, error) {
+	var threads []domain.ThreadWithDetails
+
+	res := tr.db.Raw("SELECT t.*, users.name, users.profile_image_url, users.proffesion FROM threads t LEFT JOIN (SELECT thread_id, COUNT(*) AS likes_count FROM thread_likes tl GROUP BY thread_id) AS t2 ON t.id = t2.thread_id INNER JOIN (SELECT * FROM followed_communities fc WHERE fc.user_id = ?) AS t3 ON t.community_id = t3.community_id INNER JOIN users ON users.id = t.user_id;", userID).Scan(&threads)
+
+	if res.Error != nil {
+		return []domain.ThreadWithDetails{}, res.Error
+	}
+
+	return threads, nil
+}
+
+func (tr *ThreadRepositoryImpl) GetThreadsFromFollowedUsers(userID uint) ([]domain.ThreadWithDetails, error) {
+	var threads []domain.ThreadWithDetails
+
+	res := tr.db.Raw("SELECT t.*, users.name, users.profile_image_url, users.proffesion  FROM threads t LEFT JOIN (SELECT thread_id, COUNT(*) AS likes_count FROM thread_likes tl GROUP BY thread_id) AS t2 ON t.id = t2.thread_id INNER JOIN (SELECT user_id FROM user_followers uf WHERE uf.follower_id= ?) AS t3 ON t3.user_id = t.user_id INNER JOIN users ON users.id = t.user_id;", userID).Scan(&threads)
+
+	if res.Error != nil {
+		return []domain.ThreadWithDetails{}, res.Error
+	}
+
+	return threads, nil
+}
+
+func (tr *ThreadRepositoryImpl) AddThreadComment(comment domain.Comment) error {
+	res := tr.db.Create(&comment)
+
+	if res.Error != nil {
+		return res.Error
+	}
+
+	return nil
+}
+
+func (tr *ThreadRepositoryImpl) GetCommentsByThreadID(threadID uint) ([]domain.CommentDetails, error) {
+	var comments []domain.CommentDetails
+	res := tr.db.Raw("SELECT comments.*, users.* FROM comments INNER JOIN users ON comments.user_id = users.id WHERE comments.thread_id = ?", threadID).Scan(&comments)
+
+	if res.Error != nil {
+		return []domain.CommentDetails{}, res.Error
+	}
+
+	return comments, nil
+}

@@ -16,10 +16,22 @@ var (
 	ErrBadParamInput = errors.New("Given Param is not valid")
 	// ErrBadParamInput will throw if the email already used
 	ErrEmailAlreadyUsed = errors.New("Email already used")
+
+	ErrUsernameAlreadyUsed = errors.New("Username already used")
 	// ErrForbidden will throw if the authorization is fail
 	ErrForbidden = errors.New("Forbidden")
 	// ErrLoginFailed will throw if the email & password invalid
 	ErrLoginFailed = errors.New("Invalid Email or Password")
+
+	ErrEmailRequired = errors.New("Email is Required")
+
+	ErrReportCategoryNameRequired = errors.New("Report Category Name is Required")
+
+	ErrPasswordRequired = errors.New("Password is Required")
+
+	ErrPasswordDontMatch = errors.New("Password don't match")
+
+	ErrUnauthorizedAccess = errors.New("unauthorized access")
 )
 
 // unfinished
@@ -35,9 +47,17 @@ func GetStatusCode(err error) int {
 		return http.StatusBadRequest
 	case ErrEmailAlreadyUsed:
 		return http.StatusBadRequest
+	case ErrEmailRequired:
+		return http.StatusBadRequest
+	case ErrReportCategoryNameRequired:
+		return http.StatusBadRequest
+	case ErrPasswordDontMatch:
+		return http.StatusBadRequest
 	case ErrForbidden:
 		return http.StatusForbidden
 	case ErrLoginFailed:
+		return http.StatusUnauthorized
+	case ErrUnauthorizedAccess:
 		return http.StatusUnauthorized
 	default:
 		return http.StatusOK
