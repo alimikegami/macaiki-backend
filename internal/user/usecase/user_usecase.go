@@ -295,6 +295,18 @@ func (uu *userUsecase) GetUserFollowing(id uint) ([]dto.UserResponse, error) {
 }
 
 func (uu *userUsecase) SetProfileImage(id uint, img *multipart.FileHeader) (string, error) {
+	user, err := uu.userRepo.Get(id)
+	if err != nil {
+		return "", domain.ErrInternalServerError
+	}
+
+	if user.ProfileImageUrl != "" {
+		err = uu.awsS3.DeleteImage(user.ProfileImageUrl, "profile")
+		if err != nil {
+			return "", err
+		}
+	}
+
 	uniqueFilename := uuid.New()
 	result, err := uu.awsS3.UploadImage(uniqueFilename.String(), "profile", img)
 	if err != nil {
@@ -312,6 +324,18 @@ func (uu *userUsecase) SetProfileImage(id uint, img *multipart.FileHeader) (stri
 }
 
 func (uu *userUsecase) SetBackgroundImage(id uint, img *multipart.FileHeader) (string, error) {
+	user, err := uu.userRepo.Get(id)
+	if err != nil {
+		return "", domain.ErrInternalServerError
+	}
+
+	if user.BackgroundImageUrl != "" {
+		err = uu.awsS3.DeleteImage(user.BackgroundImageUrl, "background")
+		if err != nil {
+			return "", err
+		}
+	}
+
 	uniqueFilename := uuid.New()
 	result, err := uu.awsS3.UploadImage(uniqueFilename.String(), "background", img)
 	if err != nil {
