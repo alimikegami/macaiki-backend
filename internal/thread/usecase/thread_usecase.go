@@ -21,11 +21,11 @@ type ThreadUseCaseImpl struct {
 func AuthorizeThreadAccess(threadID uint, userID uint, tuc *ThreadUseCaseImpl) (bool, domain.Thread, error) {
 	thread, err := tuc.tr.GetThreadByID(threadID)
 	if err != nil {
-		return false, err
+		return false, domain.Thread{}, err
 	}
 
 	if thread.UserID != userID {
-		return false, nil
+		return false, domain.Thread{}, nil
 	}
 
 	return true, thread, nil
