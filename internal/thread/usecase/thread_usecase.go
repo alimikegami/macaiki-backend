@@ -279,3 +279,38 @@ func (tuc *ThreadUseCaseImpl) GetThreadsFromFollowedUsers(userID uint) ([]dto.De
 
 	return threads, nil
 }
+
+func (tuc *ThreadUseCaseImpl) AddThreadComment(comment dto.CommentRequest) error {
+	err := tuc.tr.AddThreadComment(domain.Comment{
+		Body:      comment.Body,
+		UserID:    comment.UserID,
+		ThreadID:  comment.ThreadID,
+		CommentID: comment.CommentID,
+	})
+
+	return err
+}
+
+func (tuc *ThreadUseCaseImpl) GetCommentsByThreadID(threadID uint) ([]dto.CommentResponse, error) {
+	var commentsResp []dto.CommentResponse
+
+	comments, err := tuc.tr.GetCommentsByThreadID(threadID)
+
+	if err != nil {
+		return []dto.CommentResponse{}, err
+	}
+
+	for _, comment := range comments {
+		commentsResp = append(commentsResp, dto.CommentResponse{
+			ID:                    comment.Comment.ID,
+			Body:                  comment.Body,
+			ThreadID:              comment.ThreadID,
+			UserID:                comment.UserID,
+			Username:              comment.User.Name,
+			UserProfilePictureURL: comment.User.ProfileImageUrl,
+			CreatedAt:             comment.Comment.CreatedAt,
+		})
+	}
+
+	return commentsResp, nil
+}
