@@ -125,3 +125,24 @@ func (tr *ThreadRepositoryImpl) GetThreadsFromFollowedUsers(userID uint) ([]doma
 
 	return threads, nil
 }
+
+func (tr *ThreadRepositoryImpl) AddThreadComment(comment domain.Comment) error {
+	res := tr.db.Create(&comment)
+
+	if res.Error != nil {
+		return res.Error
+	}
+
+	return nil
+}
+
+func (tr *ThreadRepositoryImpl) GetCommentsByThreadID(threadID uint) ([]domain.CommentDetails, error) {
+	var comments []domain.CommentDetails
+	res := tr.db.Raw("SELECT comments.*, users.* FROM comments INNER JOIN users ON comments.user_id = users.id WHERE comments.thread_id = ?", threadID).Scan(&comments)
+
+	if res.Error != nil {
+		return []domain.CommentDetails{}, res.Error
+	}
+
+	return comments, nil
+}

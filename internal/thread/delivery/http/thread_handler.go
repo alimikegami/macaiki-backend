@@ -164,6 +164,50 @@ func (th *ThreadHandler) LikeThread(c echo.Context) error {
 	return response.SuccessResponse(c, nil)
 }
 
+func (th *ThreadHandler) AddThreadComment(c echo.Context) error {
+	threadID := c.Param("threadID")
+	u64, err := strconv.ParseUint(threadID, 10, 32)
+	if err != nil {
+		fmt.Println(err)
+		return response.ErrorResponse(c, err)
+	}
+	threadIDUint := uint(u64)
+	userID, _ := _middL.ExtractTokenUser(c)
+	comment := new(dto.CommentRequest)
+	if err := c.Bind(comment); err != nil {
+		fmt.Println(err)
+		return response.ErrorResponse(c, err)
+	}
+
+	comment.ThreadID = threadIDUint
+	comment.UserID = uint(userID)
+
+	err = th.tu.AddThreadComment(*comment)
+	if err != nil {
+		fmt.Println(err)
+		return response.ErrorResponse(c, err)
+	}
+	return response.SuccessResponse(c, nil)
+}
+
+func (th *ThreadHandler) GetCommentsByThreadID(c echo.Context) error {
+	threadID := c.Param("threadID")
+	u64, err := strconv.ParseUint(threadID, 10, 32)
+	if err != nil {
+		fmt.Println(err)
+		return response.ErrorResponse(c, err)
+	}
+	threadIDUint := uint(u64)
+
+	comments, err := th.tu.GetCommentsByThreadID(threadIDUint)
+
+	if err != nil {
+		return response.ErrorResponse(c, err)
+	}
+
+	return response.SuccessResponse(c, comments)
+}
+
 func CreateNewThreadHandler(e *echo.Echo, tu domain.ThreadUseCase, JWTSecret string) *ThreadHandler {
 	threadHandler := &ThreadHandler{router: e, tu: tu}
 	threadHandler.router.POST("/api/v1/threads", threadHandler.CreateThread, middleware.JWT([]byte(JWTSecret)))
@@ -173,5 +217,9 @@ func CreateNewThreadHandler(e *echo.Echo, tu domain.ThreadUseCase, JWTSecret str
 	threadHandler.router.PUT("/api/v1/threads/:threadID", threadHandler.UpdateThread, middleware.JWT([]byte(JWTSecret)))
 	threadHandler.router.PUT("/api/v1/threads/:threadID/images", threadHandler.SetThreadImage, middleware.JWT([]byte(JWTSecret)))
 	threadHandler.router.POST("/api/v1/threads/:threadID/likes", threadHandler.LikeThread, middleware.JWT([]byte(JWTSecret)))
+	threadHandler.router.PUT("/api/v1/threads/:threadID", threadHandler.UpdateThread)
+	threadHandler.router.POST("/api/v1/threads/:threadID/comments", threadHandler.AddThreadComment, middleware.JWT([]byte(JWTSecret)))
+	threadHandler.router.PUT("/api/v1/threads/:threadID/images", threadHandler.SetThreadImage)
+	threadHandler.router.GET("/api/v1/threads/:threadID/comments", threadHandler.GetCommentsByThreadID)
 	return threadHandler
 }
