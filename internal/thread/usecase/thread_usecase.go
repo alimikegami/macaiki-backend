@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"macaiki/internal/domain"
 	"macaiki/internal/thread/dto"
+	"path/filepath"
 
 	cloudstorage "macaiki/pkg/cloud_storage"
 	"mime/multipart"
@@ -17,17 +18,17 @@ type ThreadUseCaseImpl struct {
 	awsS3 *cloudstorage.S3
 }
 
-func AuthorizeThreadAccess(threadID uint, userID uint, tuc *ThreadUseCaseImpl) (bool, error) {
+func AuthorizeThreadAccess(threadID uint, userID uint, tuc *ThreadUseCaseImpl) (bool, domain.Thread, error) {
 	thread, err := tuc.tr.GetThreadByID(threadID)
 	if err != nil {
-		return false, err
+		return false, domain.Thread{}, err
 	}
 
 	if thread.UserID != userID {
-		return false, nil
+		return false, domain.Thread{}, nil
 	}
 
-	return true, nil
+	return true, thread, nil
 }
 
 func CreateNewThreadUseCase(tr domain.ThreadRepository, awsS3Instance *cloudstorage.S3) domain.ThreadUseCase {
@@ -104,8 +105,9 @@ func (tuc *ThreadUseCaseImpl) CreateThread(thread dto.ThreadRequest, userID uint
 	}, nil
 }
 
+
 func (tuc *ThreadUseCaseImpl) SetThreadImage(img *multipart.FileHeader, threadID uint, userID uint) error {
-	flag, err := AuthorizeThreadAccess(threadID, userID, tuc)
+	flag, thread, err := AuthorizeThreadAccess(threadID, userID, tuc)
 	if err != nil {
 		return err
 	}
@@ -113,6 +115,14 @@ func (tuc *ThreadUseCaseImpl) SetThreadImage(img *multipart.FileHeader, threadID
 	if !flag {
 		return domain.ErrUnauthorizedAccess
 	}
+  
+  if thread.ImageURL != "" {
+		err = tuc.awsS3.DeleteImage(thread.ImageURL, "thread")
+		if err != nil {
+			fmt.Println(err)
+			return err
+		}
+  }
 
 	uniqueFilename := uuid.New()
 	result, err := tuc.awsS3.UploadImage(uniqueFilename.String(), "thread", img)
@@ -123,13 +133,13 @@ func (tuc *ThreadUseCaseImpl) SetThreadImage(img *multipart.FileHeader, threadID
 
 	fmt.Printf("file uploaded to, %s\n", aws.StringValue(&result.Location))
 
-	err = tuc.tr.SetThreadImage(aws.StringValue(&result.Location), threadID)
+	err = tuc.tr.SetThreadImage(uniqueFilename.String()+filepath.Ext(img.Filename), threadID)
 
 	return err
 }
 
 func (tuc *ThreadUseCaseImpl) DeleteThread(threadID uint, userID uint) error {
-	flag, err := AuthorizeThreadAccess(threadID, userID, tuc)
+	flag, _, err := AuthorizeThreadAccess(threadID, userID, tuc)
 	if err != nil {
 		return err
 	}
@@ -143,7 +153,7 @@ func (tuc *ThreadUseCaseImpl) DeleteThread(threadID uint, userID uint) error {
 }
 
 func (tuc *ThreadUseCaseImpl) UpdateThread(thread dto.ThreadRequest, threadID uint, userID uint) (dto.ThreadResponse, error) {
-	flag, err := AuthorizeThreadAccess(threadID, userID, tuc)
+	flag, _, err := AuthorizeThreadAccess(threadID, userID, tuc)
 	if err != nil {
 		return dto.ThreadResponse{}, err
 	}
