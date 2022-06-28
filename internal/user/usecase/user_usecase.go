@@ -126,10 +126,11 @@ func (uu *userUsecase) Get(id uint) (dto.UserDetailResponse, error) {
 		return dto.UserDetailResponse{}, domain.ErrInternalServerError
 	}
 
+	totalPost, err := uu.userRepo.GetThreadsNumber(id)
 	if err != nil {
 		return dto.UserDetailResponse{}, domain.ErrInternalServerError
 	}
-	return helper.DomainUserToUserDetailResponse(userEntity, totalFollowing, totalFollower), nil
+	return helper.DomainUserToUserDetailResponse(userEntity, totalFollowing, totalFollower, totalPost), nil
 }
 func (uu *userUsecase) Update(user dto.UpdateUserRequest, id uint, curentUserID uint) (dto.UserResponse, error) {
 	// TODO: validation the username that has been used

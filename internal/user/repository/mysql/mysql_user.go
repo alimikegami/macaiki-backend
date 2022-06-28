@@ -141,6 +141,16 @@ func (ur *MysqlUserRepository) GetFollowingNumber(id uint) (int, error) {
 	return int(count), nil
 }
 
+func (ur *MysqlUserRepository) GetThreadsNumber(id uint) (int, error) {
+	var count int64
+	res := ur.Db.Table("threads").Where("user_id = ?", id).Count(&count)
+	err := res.Error
+	if err != nil {
+		return 0, err
+	}
+	return int(count), nil
+}
+
 func (ur *MysqlUserRepository) GetFollower(user domain.User) ([]domain.User, error) {
 	users := []domain.User{}
 
