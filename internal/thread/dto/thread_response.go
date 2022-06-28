@@ -28,4 +28,5 @@ type DetailedThreadResponse struct {
 	CreatedAt             time.Time `json:"createdAt"`
 	UpdatedAt             time.Time `json:"updatedAt"`
 	LikesCount            int       `json:"likesCount"`
+	IsLiked               int       `json:"isLiked"`
 }

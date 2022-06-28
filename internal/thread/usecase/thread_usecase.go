@@ -196,9 +196,9 @@ func (tuc *ThreadUseCaseImpl) LikeThread(threadID uint, userID uint) error {
 	return err
 }
 
-func (tuc *ThreadUseCaseImpl) GetTrendingThreads() ([]dto.DetailedThreadResponse, error) {
+func (tuc *ThreadUseCaseImpl) GetTrendingThreads(userID uint) ([]dto.DetailedThreadResponse, error) {
 	var threads []dto.DetailedThreadResponse
-	res, err := tuc.tr.GetTrendingThreads()
+	res, err := tuc.tr.GetTrendingThreads(userID)
 
 	if err != nil {
 		return []dto.DetailedThreadResponse{}, domain.ErrInternalServerError
@@ -218,6 +218,7 @@ func (tuc *ThreadUseCaseImpl) GetTrendingThreads() ([]dto.DetailedThreadResponse
 			CreatedAt:             thread.Thread.CreatedAt,
 			UpdatedAt:             thread.Thread.UpdatedAt,
 			LikesCount:            thread.LikesCount,
+			IsLiked:               thread.IsLiked,
 		})
 	}
 
@@ -246,6 +247,7 @@ func (tuc *ThreadUseCaseImpl) GetThreadsFromFollowedCommunity(userID uint) ([]dt
 			CreatedAt:             thread.Thread.CreatedAt,
 			UpdatedAt:             thread.Thread.UpdatedAt,
 			LikesCount:            thread.LikesCount,
+			IsLiked:               thread.IsLiked,
 		})
 	}
 
@@ -274,6 +276,7 @@ func (tuc *ThreadUseCaseImpl) GetThreadsFromFollowedUsers(userID uint) ([]dto.De
 			CreatedAt:             thread.Thread.CreatedAt,
 			UpdatedAt:             thread.Thread.UpdatedAt,
 			LikesCount:            thread.LikesCount,
+			IsLiked:               thread.IsLiked,
 		})
 	}
 

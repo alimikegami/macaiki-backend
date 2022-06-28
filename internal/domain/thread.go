@@ -34,6 +34,7 @@ type ThreadWithDetails struct {
 	Thread
 	User
 	LikesCount int
+	IsLiked    int
 }
 
 type ThreadUseCase interface {
@@ -44,7 +45,7 @@ type ThreadUseCase interface {
 	GetThreadByID(threadID uint) (dto.ThreadResponse, error)
 	SetThreadImage(img *multipart.FileHeader, threadID uint, userID uint) error
 	LikeThread(threadID uint, userID uint) error
-	GetTrendingThreads() ([]dto.DetailedThreadResponse, error)
+	GetTrendingThreads(userID uint) ([]dto.DetailedThreadResponse, error)
 	GetThreadsFromFollowedCommunity(userID uint) ([]dto.DetailedThreadResponse, error)
 	GetThreadsFromFollowedUsers(userID uint) ([]dto.DetailedThreadResponse, error)
 }
@@ -57,7 +58,7 @@ type ThreadRepository interface {
 	GetThreadByID(threadID uint) (Thread, error)
 	SetThreadImage(imageURL string, threadID uint) error
 	LikeThread(threadLikes ThreadLikes) error
-	GetTrendingThreads() ([]ThreadWithDetails, error)
+	GetTrendingThreads(userID uint) ([]ThreadWithDetails, error)
 	GetThreadsFromFollowedCommunity(userID uint) ([]ThreadWithDetails, error)
 	GetThreadsFromFollowedUsers(userID uint) ([]ThreadWithDetails, error)
 }
