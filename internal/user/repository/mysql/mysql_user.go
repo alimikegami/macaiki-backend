@@ -65,18 +65,18 @@ func (ur *MysqlUserRepository) Update(userDB *domain.User, user domain.User) (do
 	return user, nil
 }
 
-func (ur *MysqlUserRepository) Delete(id uint) (domain.User, error) {
+func (ur *MysqlUserRepository) Delete(id uint) error {
 	user, err := ur.Get(id)
 	if err != nil {
-		return domain.User{}, err
+		return err
 	}
 
 	res := ur.Db.Delete(&user, "id = ?", id)
 	err = res.Error
 	if err != nil {
-		return domain.User{}, err
+		return err
 	}
-	return user, nil
+	return nil
 }
 
 func (ur *MysqlUserRepository) GetByEmail(email string) (domain.User, error) {
@@ -144,7 +144,7 @@ func (ur *MysqlUserRepository) GetFollowingNumber(id uint) (int, error) {
 func (ur *MysqlUserRepository) GetFollower(user domain.User) ([]domain.User, error) {
 	users := []domain.User{}
 
-	res := ur.Db.Raw("SELECT * FROM `users` LEFT JOIN `user_followers` `Followers` ON `users`.`id` = `Followers`.`user_id` WHERE `Followers`.`user_id` = ?", user.ID).Scan(&users)
+	res := ur.Db.Raw("SELECT * FROM `users` LEFT JOIN `user_followers` `Followers` ON `users`.`id` = `Followers`.`follower_id` WHERE `Followers`.`user_id` = ?", user.ID).Scan(&users)
 	err := res.Error
 
 	if err != nil {

@@ -32,13 +32,14 @@ func ConnectDB(driver, host, port, username, password, name string) {
 
 func InitialMigration(DB *gorm.DB) {
 	DB.AutoMigrate(
+		&domain.ReportCategory{},
 		&domain.User{},
 		&domain.UserReport{},
-		&domain.ReportCategory{},
 		&domain.Thread{},
 		&domain.ThreadLikes{},
 		&domain.ThreadFollower{},
-		&domain.Community{},
 		&domain.FollowedCommunity{},
+		&domain.Community{},
+		&domain.Comment{},
 	)
 }

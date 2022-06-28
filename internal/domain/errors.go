@@ -25,6 +25,8 @@ var (
 
 	ErrEmailRequired = errors.New("Email is Required")
 
+	ErrReportCategoryNameRequired = errors.New("Report Category Name is Required")
+
 	ErrPasswordRequired = errors.New("Password is Required")
 
 	ErrPasswordDontMatch = errors.New("Password don't match")
@@ -46,6 +48,8 @@ func GetStatusCode(err error) int {
 	case ErrEmailAlreadyUsed:
 		return http.StatusBadRequest
 	case ErrEmailRequired:
+		return http.StatusBadRequest
+	case ErrReportCategoryNameRequired:
 		return http.StatusBadRequest
 	case ErrPasswordDontMatch:
 		return http.StatusBadRequest

@@ -24,14 +24,28 @@ type ThreadLikes struct {
 	User     User
 }
 
+type ThreadWithDetails struct {
+	Thread
+	User
+	LikesCount int
+}
+
 type ThreadFollower struct {
 	gorm.Model
 	ThreadID uint
 	UserID   uint
 }
 
-type ThreadWithDetails struct {
-	Thread
+type Comment struct {
+	gorm.Model
+	Body      string
+	UserID    uint
+	ThreadID  uint
+	CommentID uint
+}
+
+type CommentDetails struct {
+	Comment
 	User
 	LikesCount int
 	IsLiked    int
@@ -48,6 +62,8 @@ type ThreadUseCase interface {
 	GetTrendingThreads(userID uint) ([]dto.DetailedThreadResponse, error)
 	GetThreadsFromFollowedCommunity(userID uint) ([]dto.DetailedThreadResponse, error)
 	GetThreadsFromFollowedUsers(userID uint) ([]dto.DetailedThreadResponse, error)
+	AddThreadComment(dto.CommentRequest) error
+	GetCommentsByThreadID(threadID uint) ([]dto.CommentResponse, error)
 }
 
 type ThreadRepository interface {
@@ -61,4 +77,6 @@ type ThreadRepository interface {
 	GetTrendingThreads(userID uint) ([]ThreadWithDetails, error)
 	GetThreadsFromFollowedCommunity(userID uint) ([]ThreadWithDetails, error)
 	GetThreadsFromFollowedUsers(userID uint) ([]ThreadWithDetails, error)
+	AddThreadComment(comment Comment) error
+	GetCommentsByThreadID(threadID uint) ([]CommentDetails, error)
 }

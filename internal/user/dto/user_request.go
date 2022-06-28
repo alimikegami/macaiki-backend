@@ -14,7 +14,6 @@ type UpdateUserRequest struct {
 	BackgroundImageUrl string `json:"backgroundImageURL"`
 	Bio                string `json:"bio"`
 	Profession         string `json:"profession"`
-	Role               string `json:"role"`
 	IsBanned           bool   `json:"isBanned"`
 }
 
