@@ -5,6 +5,9 @@ import (
 	"net/http"
 
 	_config "macaiki/config"
+	_communityHttpDelivery "macaiki/internal/community/delivery/http"
+	_communityRepo "macaiki/internal/community/repository/mysql"
+	_communityUsecase "macaiki/internal/community/usecase"
 	_driver "macaiki/internal/driver"
 	_reportCategoryHttpDeliver "macaiki/internal/report_category/delivery/http"
 	_reportCategoryRepo "macaiki/internal/report_category/repository/mysql"
@@ -46,11 +49,13 @@ func main() {
 	userRepo := _userRepo.NewMysqlUserRepository(_driver.DB)
 	reportCategoryRepo := _reportCategoryRepo.NewReportCategoryRepository(_driver.DB)
 	threadRepo := _threadRepo.CreateNewThreadRepository(_driver.DB)
+	communityRepo := _communityRepo.NewCommunityRepository(_driver.DB)
 
 	// setup usecase
 	userUsecase := _userUsecase.NewUserUsecase(userRepo, reportCategoryRepo, v, s3Instance)
 	reportCategoryUsecase := _reportCategoryUsecase.NewReportCategoryUsecase(reportCategoryRepo, v)
 	threadUseCase := _threadUsecase.CreateNewThreadUseCase(threadRepo, s3Instance)
+	communityUsecase := _communityUsecase.NewCommunityUsecase(communityRepo, v, s3Instance)
 
 	// setup middleware
 	JWTSecret, err := _config.LoadJWTSecret(".")
@@ -62,6 +67,7 @@ func main() {
 	_userHttpDelivery.NewUserHandler(e, userUsecase, JWTSecret.Secret)
 	_ = _threadHttpDelivery.CreateNewThreadHandler(e, threadUseCase, JWTSecret.Secret)
 	_reportCategoryHttpDeliver.NewReportCategoryHandler(e, reportCategoryUsecase, JWTSecret.Secret)
+	_communityHttpDelivery.NewCommunityHandler(e, communityUsecase, JWTSecret.Secret)
 
 	log.Fatal(e.Start(":" + config.ServerPort))
 }
