@@ -36,6 +36,7 @@ type UserDetailResponse struct {
 	UpdatedAt          time.Time `json:"updatedAt"`
 	TotalFollower      int       `json:"totalFollower"`
 	TotalFollowing     int       `json:"totalFollowing"`
+	TotalPost          int       `json:"totalPost"`
 }
 
 type LoginResponse struct {

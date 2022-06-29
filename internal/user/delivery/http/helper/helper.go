@@ -23,7 +23,7 @@ func DomainUserToUserResponse(user domain.User) dto.UserResponse {
 	}
 }
 
-func DomainUserToUserDetailResponse(user domain.User, totalFollowing, totalFollower int) dto.UserDetailResponse {
+func DomainUserToUserDetailResponse(user domain.User, totalFollowing, totalFollower, totalPost int) dto.UserDetailResponse {
 	return dto.UserDetailResponse{
 		ID:                 user.ID,
 		Email:              user.Email,
@@ -39,6 +39,7 @@ func DomainUserToUserDetailResponse(user domain.User, totalFollowing, totalFollo
 		UpdatedAt:          user.UpdatedAt,
 		TotalFollower:      totalFollower,
 		TotalFollowing:     totalFollowing,
+		TotalPost:          totalPost,
 	}
 }
 

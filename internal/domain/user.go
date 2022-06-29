@@ -71,6 +71,7 @@ type UserRepository interface {
 
 	GetFollowerNumber(id uint) (int, error)
 	GetFollowingNumber(id uint) (int, error)
+	GetThreadsNumber(id uint) (int, error)
 	Follow(user, userFollower User) (User, error)
 	Unfollow(user, userFollower User) (User, error)
 	GetFollower(user User) ([]User, error)
