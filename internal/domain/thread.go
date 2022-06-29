@@ -28,6 +28,7 @@ type ThreadWithDetails struct {
 	Thread
 	User
 	LikesCount int
+	IsLiked    int
 }
 
 type ThreadFollower struct {
