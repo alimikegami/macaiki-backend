@@ -12,6 +12,7 @@ type Community struct {
 	CommunityImageUrl           string
 	CommunityBackgroundImageUrl string
 	Description                 string
+	Users                       []User `gorm:"many2many:community_followers;"`
 }
 
 type CommunityUsecase interface {
@@ -20,6 +21,9 @@ type CommunityUsecase interface {
 	StoreCommunity(community dto.CommunityRequest, role string) error
 	UpdateCommunity(id uint, community dto.CommunityRequest, role string) error
 	DeleteCommunity(id uint, role string) error
+
+	FollowCommunity(userID, communityID uint) error
+	UnfollowCommunity(userID, communityID uint) error
 }
 
 type CommunityRepository interface {
@@ -28,4 +32,7 @@ type CommunityRepository interface {
 	StoreCommunity(community Community) error
 	UpdateCommunity(community Community, communityReq Community) error
 	DeleteCommunity(community Community) error
+
+	FollowCommunity(user User, community Community) error
+	UnfollowCommunity(user User, community Community) error
 }

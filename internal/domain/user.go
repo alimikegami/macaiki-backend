@@ -33,12 +33,6 @@ type UserReport struct {
 	UpdatedAt        time.Time
 }
 
-type FollowedCommunity struct {
-	gorm.Model
-	CommunityID uint
-	UserID      uint
-}
-
 type UserUsecase interface {
 	Login(loginInfo dto.LoginUserRequest) (dto.LoginResponse, error)
 	Register(user dto.UserRequest) error
