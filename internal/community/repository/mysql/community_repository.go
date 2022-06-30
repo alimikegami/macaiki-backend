@@ -1,7 +1,8 @@
 package mysql
 
 import (
-	"macaiki/internal/domain"
+	"macaiki/internal/community"
+	"macaiki/internal/community/entity"
 
 	"gorm.io/gorm"
 )
@@ -10,36 +11,36 @@ type CommunityRepositoryImpl struct {
 	db *gorm.DB
 }
 
-func NewCommunityRepository(db *gorm.DB) domain.CommunityRepository {
+func NewCommunityRepository(db *gorm.DB) community.CommunityRepository {
 	return &CommunityRepositoryImpl{db}
 }
 
-func (cr *CommunityRepositoryImpl) GetAllCommunity(search string) ([]domain.Community, error) {
-	communities := []domain.Community{}
+func (cr *CommunityRepositoryImpl) GetAllCommunity(search string) ([]entity.Community, error) {
+	communities := []entity.Community{}
 
 	res := cr.db.Where("name LIKE ?", "%"+search+"%").Find(&communities)
 	err := res.Error
 	if err != nil {
-		return []domain.Community{}, err
+		return []entity.Community{}, err
 	}
 
 	return communities, nil
 }
 
-func (cr *CommunityRepositoryImpl) GetCommunity(id uint) (domain.Community, error) {
-	community := domain.Community{}
+func (cr *CommunityRepositoryImpl) GetCommunity(id uint) (entity.Community, error) {
+	community := entity.Community{}
 
 	res := cr.db.Find(&community, id)
 	err := res.Error
 
 	if err != nil {
-		return domain.Community{}, err
+		return entity.Community{}, err
 	}
 
 	return community, nil
 }
 
-func (cr *CommunityRepositoryImpl) StoreCommunity(community domain.Community) error {
+func (cr *CommunityRepositoryImpl) StoreCommunity(community entity.Community) error {
 	res := cr.db.Create(&community)
 	err := res.Error
 	if err != nil {
@@ -49,7 +50,7 @@ func (cr *CommunityRepositoryImpl) StoreCommunity(community domain.Community) er
 	return nil
 }
 
-func (cr *CommunityRepositoryImpl) UpdateCommunity(community domain.Community, communityReq domain.Community) error {
+func (cr *CommunityRepositoryImpl) UpdateCommunity(community entity.Community, communityReq entity.Community) error {
 
 	res := cr.db.Model(&community).Updates(communityReq)
 	err := res.Error
@@ -59,7 +60,8 @@ func (cr *CommunityRepositoryImpl) UpdateCommunity(community domain.Community, c
 
 	return nil
 }
-func (cr *CommunityRepositoryImpl) DeleteCommunity(community domain.Community) error {
+
+func (cr *CommunityRepositoryImpl) DeleteCommunity(community entity.Community) error {
 	res := cr.db.Delete(&community)
 	err := res.Error
 	if err != nil {
