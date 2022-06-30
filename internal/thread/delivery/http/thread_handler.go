@@ -23,6 +23,7 @@ func (th *ThreadHandler) GetThreads(c echo.Context) error {
 	trending := c.QueryParam("trending")
 	community := c.QueryParam("community")
 	forYou := c.QueryParam("forYou")
+	keyword := c.QueryParam("keyword")
 
 	var res interface{}
 	var err error
@@ -34,7 +35,7 @@ func (th *ThreadHandler) GetThreads(c echo.Context) error {
 	} else if forYou == "true" {
 		res, err = th.tu.GetThreadsFromFollowedUsers(uint(userID))
 	} else {
-		res, err = th.tu.GetThreads()
+		res, err = th.tu.GetThreads(keyword, uint(userID))
 	}
 
 	if err != nil {

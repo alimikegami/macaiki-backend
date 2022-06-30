@@ -55,7 +55,6 @@ type CommentDetails struct {
 type ThreadUseCase interface {
 	CreateThread(thread dto.ThreadRequest, userID uint) (dto.ThreadResponse, error)
 	DeleteThread(threadID uint, userID uint) error
-	GetThreads() ([]dto.ThreadResponse, error)
 	UpdateThread(thread dto.ThreadRequest, threadID uint, userID uint) (dto.ThreadResponse, error)
 	GetThreadByID(threadID uint) (dto.ThreadResponse, error)
 	SetThreadImage(img *multipart.FileHeader, threadID uint, userID uint) error
@@ -65,12 +64,12 @@ type ThreadUseCase interface {
 	GetThreadsFromFollowedUsers(userID uint) ([]dto.DetailedThreadResponse, error)
 	AddThreadComment(dto.CommentRequest) error
 	GetCommentsByThreadID(threadID uint) ([]dto.CommentResponse, error)
+	GetThreads(keyword string, userID uint) ([]dto.DetailedThreadResponse, error)
 }
 
 type ThreadRepository interface {
 	CreateThread(thread Thread) (Thread, error)
 	DeleteThread(threadID uint) error
-	GetThreads() ([]Thread, error)
 	UpdateThread(threadID uint, thread Thread) error
 	GetThreadByID(threadID uint) (Thread, error)
 	SetThreadImage(imageURL string, threadID uint) error
@@ -80,4 +79,5 @@ type ThreadRepository interface {
 	GetThreadsFromFollowedUsers(userID uint) ([]ThreadWithDetails, error)
 	AddThreadComment(comment Comment) error
 	GetCommentsByThreadID(threadID uint) ([]CommentDetails, error)
+	GetThreads(keyword string, userID uint) ([]ThreadWithDetails, error)
 }
