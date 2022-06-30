@@ -35,30 +35,6 @@ func CreateNewThreadUseCase(tr domain.ThreadRepository, awsS3Instance *cloudstor
 	return &ThreadUseCaseImpl{tr: tr, awsS3: awsS3Instance}
 }
 
-func (tuc *ThreadUseCaseImpl) GetThreads() ([]dto.ThreadResponse, error) {
-	var threads []dto.ThreadResponse
-	res, err := tuc.tr.GetThreads()
-
-	if err != nil {
-		return []dto.ThreadResponse{}, domain.ErrInternalServerError
-	}
-
-	for _, thread := range res {
-		threads = append(threads, dto.ThreadResponse{
-			ID:          thread.ID,
-			Title:       thread.Title,
-			Body:        thread.Body,
-			CommunityID: thread.CommunityID,
-			ImageURL:    thread.ImageURL,
-			UserID:      thread.UserID,
-			CreatedAt:   thread.CreatedAt,
-			UpdatedAt:   thread.UpdatedAt,
-		})
-	}
-
-	return threads, nil
-}
-
 func (tuc *ThreadUseCaseImpl) GetThreadByID(threadID uint) (dto.ThreadResponse, error) {
 	var thread dto.ThreadResponse
 	res, err := tuc.tr.GetThreadByID(threadID)
@@ -105,7 +81,6 @@ func (tuc *ThreadUseCaseImpl) CreateThread(thread dto.ThreadRequest, userID uint
 	}, nil
 }
 
-
 func (tuc *ThreadUseCaseImpl) SetThreadImage(img *multipart.FileHeader, threadID uint, userID uint) error {
 	flag, thread, err := AuthorizeThreadAccess(threadID, userID, tuc)
 	if err != nil {
@@ -115,14 +90,14 @@ func (tuc *ThreadUseCaseImpl) SetThreadImage(img *multipart.FileHeader, threadID
 	if !flag {
 		return domain.ErrUnauthorizedAccess
 	}
-  
-  if thread.ImageURL != "" {
+
+	if thread.ImageURL != "" {
 		err = tuc.awsS3.DeleteImage(thread.ImageURL, "thread")
 		if err != nil {
 			fmt.Println(err)
 			return err
 		}
-  }
+	}
 
 	uniqueFilename := uuid.New()
 	result, err := tuc.awsS3.UploadImage(uniqueFilename.String(), "thread", img)
@@ -326,4 +301,33 @@ func (tuc *ThreadUseCaseImpl) GetCommentsByThreadID(threadID uint) ([]dto.Commen
 	}
 
 	return commentsResp, nil
+}
+
+func (tuc *ThreadUseCaseImpl) GetThreads(keyword string, userID uint) ([]dto.DetailedThreadResponse, error) {
+	var threads []dto.DetailedThreadResponse
+	res, err := tuc.tr.GetThreads(keyword, userID)
+
+	if err != nil {
+		return []dto.DetailedThreadResponse{}, domain.ErrInternalServerError
+	}
+
+	for _, thread := range res {
+		threads = append(threads, dto.DetailedThreadResponse{
+			ID:                    thread.Thread.ID,
+			Title:                 thread.Title,
+			Body:                  thread.Body,
+			CommunityID:           thread.CommunityID,
+			ImageURL:              thread.ImageURL,
+			UserID:                thread.UserID,
+			UserName:              thread.User.Name,
+			UserProfession:        thread.User.Profession,
+			UserProfilePictureURL: thread.User.ProfileImageUrl,
+			CreatedAt:             thread.Thread.CreatedAt,
+			UpdatedAt:             thread.Thread.UpdatedAt,
+			LikesCount:            thread.LikesCount,
+			IsLiked:               thread.IsLiked,
+		})
+	}
+
+	return threads, nil
 }

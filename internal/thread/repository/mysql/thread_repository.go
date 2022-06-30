@@ -16,17 +16,6 @@ func CreateNewThreadRepository(db *gorm.DB) domain.ThreadRepository {
 	return &ThreadRepositoryImpl{db: db}
 }
 
-func (tr *ThreadRepositoryImpl) GetThreads() ([]domain.Thread, error) {
-	var threads []domain.Thread
-	res := tr.db.Where("title LIKE ? OR body LIKE ?").Find(&threads)
-
-	if res.Error != nil {
-		return []domain.Thread{}, res.Error
-	}
-
-	return threads, nil
-}
-
 func (tr *ThreadRepositoryImpl) SetThreadImage(imageURL string, threadID uint) error {
 	fmt.Println(imageURL)
 	res := tr.db.Model(&domain.Thread{}).Where("id = ?", threadID).Update("image_url", imageURL)
@@ -145,4 +134,16 @@ func (tr *ThreadRepositoryImpl) GetCommentsByThreadID(threadID uint) ([]domain.C
 	}
 
 	return comments, nil
+}
+
+func (tr *ThreadRepositoryImpl) GetThreads(keyword string, userID uint) ([]domain.ThreadWithDetails, error) {
+	var threads []domain.ThreadWithDetails
+
+	res := tr.db.Raw("SELECT combined.*, likes_count, NOT ISNULL(t4.id) AS is_liked, users.name, users.profile_image_url, users.proffesion FROM (SELECT * FROM threads t WHERE t.body LIKE ? OR t.title LIKE ? UNION SELECT t.* FROM comments c LEFT JOIN threads t ON t.id = c.thread_id WHERE c.body LIKE ?) AS combined LEFT JOIN (SELECT thread_id, COUNT(*) AS likes_count FROM thread_likes tl GROUP BY thread_id) AS t2 ON combined.id = t2.thread_id INNER JOIN (SELECT user_id FROM user_followers uf WHERE uf.follower_id= ?) AS t3 ON t3.user_id = combined.user_id INNER JOIN users ON users.id = combined.user_id LEFT JOIN (SELECT * FROM thread_likes tl WHERE tl.user_id = ?) AS t4 ON combined.id = t4.thread_id;", "%"+keyword+"%", "%"+keyword+"%", "%"+keyword+"%", userID, userID).Scan(&threads)
+
+	if res.Error != nil {
+		return []domain.ThreadWithDetails{}, res.Error
+	}
+
+	return threads, nil
 }
