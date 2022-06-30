@@ -1,9 +1,10 @@
 package http
 
 import (
-	"macaiki/internal/domain"
+	"macaiki/internal/user"
 	"macaiki/internal/user/dto"
 	"macaiki/pkg/response"
+	"macaiki/pkg/utils"
 	"strconv"
 
 	"github.com/labstack/echo/v4"
@@ -13,11 +14,11 @@ import (
 )
 
 type UserHandler struct {
-	UserUsecase domain.UserUsecase
+	UserUsecase user.UserUsecase
 	JWTSecret   string
 }
 
-func NewUserHandler(e *echo.Echo, us domain.UserUsecase, JWTSecret string) {
+func NewUserHandler(e *echo.Echo, us user.UserUsecase, JWTSecret string) {
 	handler := &UserHandler{
 		UserUsecase: us,
 		JWTSecret:   JWTSecret,
@@ -109,7 +110,7 @@ func (u *UserHandler) Update(c echo.Context) error {
 	num := c.Param("userID")
 	userID, err := strconv.Atoi(num)
 	if err != nil {
-		response.ErrorResponse(c, domain.ErrBadParamInput)
+		response.ErrorResponse(c, utils.ErrBadParamInput)
 	}
 
 	user := dto.UpdateUserRequest{}
@@ -129,7 +130,7 @@ func (u *UserHandler) Delete(c echo.Context) error {
 	num := c.Param("userID")
 	userID, err := strconv.Atoi(num)
 	if err != nil {
-		response.ErrorResponse(c, domain.ErrBadParamInput)
+		response.ErrorResponse(c, utils.ErrBadParamInput)
 	}
 
 	curentUserID, curentUserRole := _middL.ExtractTokenUser(c)
@@ -210,7 +211,7 @@ func (u *UserHandler) GetUserFollowers(c echo.Context) error {
 	num := c.Param("userID")
 	userID, err := strconv.Atoi(num)
 	if err != nil {
-		return response.ErrorResponse(c, domain.ErrBadParamInput)
+		return response.ErrorResponse(c, utils.ErrBadParamInput)
 	}
 
 	followers, err := u.UserUsecase.GetUserFollowers(uint(userID))
@@ -225,7 +226,7 @@ func (u *UserHandler) GetUserFollowing(c echo.Context) error {
 	num := c.Param("userID")
 	userID, err := strconv.Atoi(num)
 	if err != nil {
-		return response.ErrorResponse(c, domain.ErrBadParamInput)
+		return response.ErrorResponse(c, utils.ErrBadParamInput)
 	}
 
 	followers, err := u.UserUsecase.GetUserFollowing(uint(userID))
@@ -240,7 +241,7 @@ func (u *UserHandler) Follow(c echo.Context) error {
 	num := c.Param("userID")
 	userID, err := strconv.Atoi(num)
 	if err != nil {
-		response.ErrorResponse(c, domain.ErrBadParamInput)
+		response.ErrorResponse(c, utils.ErrBadParamInput)
 	}
 
 	follower_id, _ := _middL.ExtractTokenUser(c)
@@ -255,7 +256,7 @@ func (u *UserHandler) Unfollow(c echo.Context) error {
 	num := c.Param("userID")
 	userID, err := strconv.Atoi(num)
 	if err != nil {
-		response.ErrorResponse(c, domain.ErrBadParamInput)
+		response.ErrorResponse(c, utils.ErrBadParamInput)
 	}
 
 	follower_id, _ := _middL.ExtractTokenUser(c)
