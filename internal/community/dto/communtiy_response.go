@@ -7,3 +7,12 @@ type CommunityResponse struct {
 	CommunityBackgroundImageUrl string `json:"communityBackgroundImageUrl"`
 	Description                 string `json:"description"`
 }
+
+type CommunityWithDetailResponse struct {
+	ID                          uint   `json:"ID"`
+	Name                        string `json:"name"`
+	CommunityImageUrl           string `json:"communityImageUrl"`
+	CommunityBackgroundImageUrl string `json:"communityBackgroundImageUrl"`
+	Description                 string `json:"description"`
+	IsFollowed                  bool   `json:"isFollowed"`
+}

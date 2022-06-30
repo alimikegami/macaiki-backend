@@ -26,6 +26,18 @@ func (cr *CommunityRepositoryImpl) GetAllCommunity(search string) ([]domain.Comm
 	return communities, nil
 }
 
+func (cr *CommunityRepositoryImpl) GetAllCommunityDetail(userID, search string) ([]domain.CommunityWithDetail, error) {
+	communitiesWithDetail := []domain.CommunityWithDetail{}
+
+	res := cr.db.Raw("SELECT c.*, !ISNULL(cf.user_id) AS `is_followed` FROM `communities` AS c LEFT JOIN (SELECT * FROM community_followers WHERE user_id = ?) AS cf ON c.id = cf.community_id", userID).Scan(&communitiesWithDetail)
+	err := res.Error
+	if err != nil {
+		return []domain.CommunityWithDetail{}, err
+	}
+
+	return communitiesWithDetail, nil
+}
+
 func (cr *CommunityRepositoryImpl) GetCommunity(id uint) (domain.Community, error) {
 	community := domain.Community{}
 
@@ -65,5 +77,22 @@ func (cr *CommunityRepositoryImpl) DeleteCommunity(community domain.Community) e
 	if err != nil {
 		return err
 	}
+	return nil
+}
+func (cr *CommunityRepositoryImpl) FollowCommunity(user domain.User, community domain.Community) error {
+	err := cr.db.Model(&community).Association("Users").Append(&user)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (cr *CommunityRepositoryImpl) UnfollowCommunity(user domain.User, community domain.Community) error {
+	err := cr.db.Model(&community).Association("Users").Delete(&user)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

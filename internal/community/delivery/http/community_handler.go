@@ -24,10 +24,14 @@ func NewCommunityHandler(e *echo.Echo, communityUsecase domain.CommunityUsecase,
 	}
 
 	e.POST("api/v1/communities", communityHandler.CreateCommunity, middleware.JWT([]byte(JWTSecret)))
-	e.GET("api/v1/communities", communityHandler.GetAllCommunity)
+	// e.GET("api/v1/communities", communityHandler.GetAllCommunity)
+	e.GET("api/v1/communities", communityHandler.GetAllCommunityWithDetail, middleware.JWT([]byte(JWTSecret)))
 	e.GET("api/v1/communities/:communityID", communityHandler.GetCommunity)
 	e.PUT("api/v1/communities/:communityID", communityHandler.UpdateCommunity, middleware.JWT([]byte(JWTSecret)))
 	e.DELETE("api/v1/communities/:communityID", communityHandler.DeleteCommunity, middleware.JWT([]byte(JWTSecret)))
+
+	e.POST("api/v1/curent-user/community-followers/:communityID", communityHandler.FollowCommunity, middleware.JWT([]byte(JWTSecret)))
+	e.DELETE("api/v1/curent-user/community-followers/:communityID", communityHandler.UnfollowCommunity, middleware.JWT([]byte(JWTSecret)))
 }
 
 func (communityHandler *CommunityHandler) CreateCommunity(c echo.Context) error {
@@ -43,9 +47,23 @@ func (communityHandler *CommunityHandler) CreateCommunity(c echo.Context) error 
 	return response.SuccessResponse(c, nil)
 }
 
-func (communityHandler *CommunityHandler) GetAllCommunity(c echo.Context) error {
+// TODO implement this function when the user is logged in as anonymous
+// func (communityHandler *CommunityHandler) GetAllCommunity(c echo.Context) error {
+// 	search := c.QueryParam("search")
+// 	communitiesResp, err := communityHandler.communityUsecase.GetAllCommunity(search)
+// 	if err != nil {
+// 		return response.ErrorResponse(c, err)
+// 	}
+
+// 	return response.SuccessResponse(c, communitiesResp)
+// }
+
+func (communityHandler *CommunityHandler) GetAllCommunityWithDetail(c echo.Context) error {
 	search := c.QueryParam("search")
-	communitiesResp, err := communityHandler.communityUsecase.GetAllCommunity(search)
+
+	userID, _ := _middL.ExtractTokenUser(c)
+
+	communitiesResp, err := communityHandler.communityUsecase.GetAllCommunityDetail(userID, search)
 	if err != nil {
 		return response.ErrorResponse(c, err)
 	}
@@ -53,13 +71,13 @@ func (communityHandler *CommunityHandler) GetAllCommunity(c echo.Context) error 
 	return response.SuccessResponse(c, communitiesResp)
 }
 
-func (CommunityHandler *CommunityHandler) GetCommunity(c echo.Context) error {
+func (communityHandler *CommunityHandler) GetCommunity(c echo.Context) error {
 	id, err := strconv.Atoi(c.Param("communityID"))
 	if err != nil {
 		return response.ErrorResponse(c, domain.ErrBadParamInput)
 	}
 
-	communityResp, err := CommunityHandler.communityUsecase.GetCommunity(uint(id))
+	communityResp, err := communityHandler.communityUsecase.GetCommunity(uint(id))
 	if err != nil {
 		return response.ErrorResponse(c, err)
 	}
@@ -67,7 +85,7 @@ func (CommunityHandler *CommunityHandler) GetCommunity(c echo.Context) error {
 	return response.SuccessResponse(c, communityResp)
 }
 
-func (CommunityHandler *CommunityHandler) UpdateCommunity(c echo.Context) error {
+func (communityHandler *CommunityHandler) UpdateCommunity(c echo.Context) error {
 	id, err := strconv.Atoi(c.Param("communityID"))
 	if err != nil {
 		return response.ErrorResponse(c, domain.ErrBadParamInput)
@@ -77,7 +95,7 @@ func (CommunityHandler *CommunityHandler) UpdateCommunity(c echo.Context) error 
 	c.Bind(&communityReq)
 
 	_, role := _middL.ExtractTokenUser(c)
-	err = CommunityHandler.communityUsecase.UpdateCommunity(uint(id), communityReq, role)
+	err = communityHandler.communityUsecase.UpdateCommunity(uint(id), communityReq, role)
 	if err != nil {
 		return response.ErrorResponse(c, err)
 	}
@@ -85,14 +103,46 @@ func (CommunityHandler *CommunityHandler) UpdateCommunity(c echo.Context) error 
 	return response.SuccessResponse(c, nil)
 }
 
-func (CommunityHandler *CommunityHandler) DeleteCommunity(c echo.Context) error {
+func (communityHandler *CommunityHandler) DeleteCommunity(c echo.Context) error {
 	id, err := strconv.Atoi(c.Param("communityID"))
 	if err != nil {
 		return response.ErrorResponse(c, domain.ErrBadParamInput)
 	}
 
 	_, role := _middL.ExtractTokenUser(c)
-	err = CommunityHandler.communityUsecase.DeleteCommunity(uint(id), role)
+	err = communityHandler.communityUsecase.DeleteCommunity(uint(id), role)
+	if err != nil {
+		return response.ErrorResponse(c, err)
+	}
+
+	return response.SuccessResponse(c, nil)
+}
+
+func (communityHandler *CommunityHandler) FollowCommunity(c echo.Context) error {
+	userID, _ := _middL.ExtractTokenUser(c)
+
+	communityID, err := strconv.Atoi(c.Param("communityID"))
+	if err != nil {
+		return response.ErrorResponse(c, domain.ErrBadParamInput)
+	}
+
+	err = communityHandler.communityUsecase.FollowCommunity(uint(userID), uint(communityID))
+	if err != nil {
+		return response.ErrorResponse(c, err)
+	}
+
+	return response.SuccessResponse(c, nil)
+}
+
+func (communityHandler *CommunityHandler) UnfollowCommunity(c echo.Context) error {
+	userID, _ := _middL.ExtractTokenUser(c)
+
+	communityID, err := strconv.Atoi(c.Param("communityID"))
+	if err != nil {
+		return response.ErrorResponse(c, domain.ErrBadParamInput)
+	}
+
+	err = communityHandler.communityUsecase.UnfollowCommunity(uint(userID), uint(communityID))
 	if err != nil {
 		return response.ErrorResponse(c, err)
 	}
