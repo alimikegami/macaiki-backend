@@ -2,8 +2,10 @@ package usecase
 
 import (
 	"fmt"
-	"macaiki/internal/domain"
+	"macaiki/internal/thread"
 	"macaiki/internal/thread/dto"
+	"macaiki/internal/thread/entity"
+	"macaiki/pkg/utils"
 	"path/filepath"
 
 	cloudstorage "macaiki/pkg/cloud_storage"
@@ -14,24 +16,24 @@ import (
 )
 
 type ThreadUseCaseImpl struct {
-	tr    domain.ThreadRepository
+	tr    thread.ThreadRepository
 	awsS3 *cloudstorage.S3
 }
 
-func AuthorizeThreadAccess(threadID uint, userID uint, tuc *ThreadUseCaseImpl) (bool, domain.Thread, error) {
+func AuthorizeThreadAccess(threadID uint, userID uint, tuc *ThreadUseCaseImpl) (bool, entity.Thread, error) {
 	thread, err := tuc.tr.GetThreadByID(threadID)
 	if err != nil {
-		return false, domain.Thread{}, err
+		return false, entity.Thread{}, err
 	}
 
 	if thread.UserID != userID {
-		return false, domain.Thread{}, nil
+		return false, entity.Thread{}, nil
 	}
 
 	return true, thread, nil
 }
 
-func CreateNewThreadUseCase(tr domain.ThreadRepository, awsS3Instance *cloudstorage.S3) domain.ThreadUseCase {
+func CreateNewThreadUseCase(tr thread.ThreadRepository, awsS3Instance *cloudstorage.S3) thread.ThreadUseCase {
 	return &ThreadUseCaseImpl{tr: tr, awsS3: awsS3Instance}
 }
 
@@ -40,7 +42,7 @@ func (tuc *ThreadUseCaseImpl) GetThreadByID(threadID uint) (dto.ThreadResponse, 
 	res, err := tuc.tr.GetThreadByID(threadID)
 
 	if err != nil {
-		return dto.ThreadResponse{}, domain.ErrInternalServerError
+		return dto.ThreadResponse{}, utils.ErrInternalServerError
 	}
 
 	thread = dto.ThreadResponse{
@@ -58,7 +60,7 @@ func (tuc *ThreadUseCaseImpl) GetThreadByID(threadID uint) (dto.ThreadResponse, 
 }
 
 func (tuc *ThreadUseCaseImpl) CreateThread(thread dto.ThreadRequest, userID uint) (dto.ThreadResponse, error) {
-	threadEntity := domain.Thread{
+	threadEntity := entity.Thread{
 		Title:       thread.Title,
 		Body:        thread.Body,
 		UserID:      userID,
@@ -88,7 +90,7 @@ func (tuc *ThreadUseCaseImpl) SetThreadImage(img *multipart.FileHeader, threadID
 	}
 
 	if !flag {
-		return domain.ErrUnauthorizedAccess
+		return utils.ErrUnauthorizedAccess
 	}
 
 	if thread.ImageURL != "" {
@@ -120,7 +122,7 @@ func (tuc *ThreadUseCaseImpl) DeleteThread(threadID uint, userID uint) error {
 	}
 
 	if !flag {
-		return domain.ErrUnauthorizedAccess
+		return utils.ErrUnauthorizedAccess
 	}
 
 	err = tuc.tr.DeleteThread(threadID)
@@ -134,10 +136,10 @@ func (tuc *ThreadUseCaseImpl) UpdateThread(thread dto.ThreadRequest, threadID ui
 	}
 
 	if !flag {
-		return dto.ThreadResponse{}, domain.ErrUnauthorizedAccess
+		return dto.ThreadResponse{}, utils.ErrUnauthorizedAccess
 	}
 
-	threadEntity := domain.Thread{
+	threadEntity := entity.Thread{
 		Title:       thread.Title,
 		Body:        thread.Body,
 		CommunityID: thread.CommunityID,
@@ -146,15 +148,15 @@ func (tuc *ThreadUseCaseImpl) UpdateThread(thread dto.ThreadRequest, threadID ui
 	err = tuc.tr.UpdateThread(threadID, threadEntity)
 	if err != nil {
 		if err.Error() == "no affected rows" {
-			return dto.ThreadResponse{}, domain.ErrBadParamInput
+			return dto.ThreadResponse{}, utils.ErrBadParamInput
 		}
-		return dto.ThreadResponse{}, domain.ErrInternalServerError
+		return dto.ThreadResponse{}, utils.ErrInternalServerError
 	}
 
 	res, err := tuc.tr.GetThreadByID(threadID)
 
 	if err != nil {
-		return dto.ThreadResponse{}, domain.ErrInternalServerError
+		return dto.ThreadResponse{}, utils.ErrInternalServerError
 	}
 
 	threadResponse := dto.ThreadResponse{
@@ -172,7 +174,7 @@ func (tuc *ThreadUseCaseImpl) UpdateThread(thread dto.ThreadRequest, threadID ui
 }
 
 func (tuc *ThreadUseCaseImpl) LikeThread(threadID uint, userID uint) error {
-	threadLikes := domain.ThreadLikes{
+	threadLikes := entity.ThreadLikes{
 		ThreadID: threadID,
 		UserID:   userID,
 	}
@@ -186,7 +188,7 @@ func (tuc *ThreadUseCaseImpl) GetTrendingThreads(userID uint) ([]dto.DetailedThr
 	res, err := tuc.tr.GetTrendingThreads(userID)
 
 	if err != nil {
-		return []dto.DetailedThreadResponse{}, domain.ErrInternalServerError
+		return []dto.DetailedThreadResponse{}, utils.ErrInternalServerError
 	}
 
 	for _, thread := range res {
@@ -215,7 +217,7 @@ func (tuc *ThreadUseCaseImpl) GetThreadsFromFollowedCommunity(userID uint) ([]dt
 	res, err := tuc.tr.GetThreadsFromFollowedCommunity(userID)
 
 	if err != nil {
-		return []dto.DetailedThreadResponse{}, domain.ErrInternalServerError
+		return []dto.DetailedThreadResponse{}, utils.ErrInternalServerError
 	}
 
 	for _, thread := range res {
@@ -244,7 +246,7 @@ func (tuc *ThreadUseCaseImpl) GetThreadsFromFollowedUsers(userID uint) ([]dto.De
 	res, err := tuc.tr.GetThreadsFromFollowedUsers(userID)
 
 	if err != nil {
-		return []dto.DetailedThreadResponse{}, domain.ErrInternalServerError
+		return []dto.DetailedThreadResponse{}, utils.ErrInternalServerError
 	}
 
 	for _, thread := range res {
@@ -269,7 +271,7 @@ func (tuc *ThreadUseCaseImpl) GetThreadsFromFollowedUsers(userID uint) ([]dto.De
 }
 
 func (tuc *ThreadUseCaseImpl) AddThreadComment(comment dto.CommentRequest) error {
-	err := tuc.tr.AddThreadComment(domain.Comment{
+	err := tuc.tr.AddThreadComment(entity.Comment{
 		Body:      comment.Body,
 		UserID:    comment.UserID,
 		ThreadID:  comment.ThreadID,
@@ -308,7 +310,7 @@ func (tuc *ThreadUseCaseImpl) GetThreads(keyword string, userID uint) ([]dto.Det
 	res, err := tuc.tr.GetThreads(keyword, userID)
 
 	if err != nil {
-		return []dto.DetailedThreadResponse{}, domain.ErrInternalServerError
+		return []dto.DetailedThreadResponse{}, utils.ErrInternalServerError
 	}
 
 	for _, thread := range res {

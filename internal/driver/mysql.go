@@ -3,7 +3,10 @@ package driver
 import (
 	"fmt"
 	"log"
-	"macaiki/internal/domain"
+	community "macaiki/internal/community/entity"
+	reportCategoryEntity "macaiki/internal/report_category/entity"
+	threadEntity "macaiki/internal/thread/entity"
+	userEntity "macaiki/internal/user/entity"
 
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -32,14 +35,14 @@ func ConnectDB(driver, host, port, username, password, name string) {
 
 func InitialMigration(DB *gorm.DB) {
 	DB.AutoMigrate(
-		&domain.ReportCategory{},
-		&domain.Community{},
-		&domain.User{},
-		&domain.UserReport{},
-		&domain.Thread{},
-		&domain.ThreadLikes{},
-		&domain.ThreadFollower{},
-		&domain.FollowedCommunity{},
-		&domain.Comment{},
+		&reportCategoryEntity.ReportCategory{},
+		&community.Community{},
+		&userEntity.User{},
+		&userEntity.UserReport{},
+		&threadEntity.Thread{},
+		&threadEntity.ThreadLikes{},
+		&threadEntity.ThreadFollower{},
+		&userEntity.FollowedCommunity{},
+		&threadEntity.Comment{},
 	)
 }

@@ -1,9 +1,10 @@
 package http
 
 import (
+	"macaiki/internal/community"
 	"macaiki/internal/community/dto"
-	"macaiki/internal/domain"
 	"macaiki/pkg/response"
+	"macaiki/pkg/utils"
 	"strconv"
 
 	_middL "macaiki/pkg/middleware"
@@ -13,11 +14,11 @@ import (
 )
 
 type CommunityHandler struct {
-	communityUsecase domain.CommunityUsecase
+	communityUsecase community.CommunityUsecase
 	JWTSecret        string
 }
 
-func NewCommunityHandler(e *echo.Echo, communityUsecase domain.CommunityUsecase, JWTSecret string) {
+func NewCommunityHandler(e *echo.Echo, communityUsecase community.CommunityUsecase, JWTSecret string) {
 	communityHandler := &CommunityHandler{
 		communityUsecase: communityUsecase,
 		JWTSecret:        JWTSecret,
@@ -56,7 +57,7 @@ func (communityHandler *CommunityHandler) GetAllCommunity(c echo.Context) error 
 func (CommunityHandler *CommunityHandler) GetCommunity(c echo.Context) error {
 	id, err := strconv.Atoi(c.Param("communityID"))
 	if err != nil {
-		return response.ErrorResponse(c, domain.ErrBadParamInput)
+		return response.ErrorResponse(c, utils.ErrBadParamInput)
 	}
 
 	communityResp, err := CommunityHandler.communityUsecase.GetCommunity(uint(id))
@@ -70,7 +71,7 @@ func (CommunityHandler *CommunityHandler) GetCommunity(c echo.Context) error {
 func (CommunityHandler *CommunityHandler) UpdateCommunity(c echo.Context) error {
 	id, err := strconv.Atoi(c.Param("communityID"))
 	if err != nil {
-		return response.ErrorResponse(c, domain.ErrBadParamInput)
+		return response.ErrorResponse(c, utils.ErrBadParamInput)
 	}
 
 	var communityReq dto.CommunityRequest
@@ -88,7 +89,7 @@ func (CommunityHandler *CommunityHandler) UpdateCommunity(c echo.Context) error 
 func (CommunityHandler *CommunityHandler) DeleteCommunity(c echo.Context) error {
 	id, err := strconv.Atoi(c.Param("communityID"))
 	if err != nil {
-		return response.ErrorResponse(c, domain.ErrBadParamInput)
+		return response.ErrorResponse(c, utils.ErrBadParamInput)
 	}
 
 	_, role := _middL.ExtractTokenUser(c)

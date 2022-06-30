@@ -1,12 +1,12 @@
 package helper
 
 import (
-	"macaiki/internal/domain"
 	"macaiki/internal/user/dto"
+	"macaiki/internal/user/entity"
 )
 
 // Response
-func DomainUserToUserResponse(user domain.User) dto.UserResponse {
+func DomainUserToUserResponse(user entity.User) dto.UserResponse {
 	return dto.UserResponse{
 		ID:                 user.ID,
 		Email:              user.Email,
@@ -23,7 +23,7 @@ func DomainUserToUserResponse(user domain.User) dto.UserResponse {
 	}
 }
 
-func DomainUserToUserDetailResponse(user domain.User, totalFollowing, totalFollower, totalPost int) dto.UserDetailResponse {
+func DomainUserToUserDetailResponse(user entity.User, totalFollowing, totalFollower, totalPost int) dto.UserDetailResponse {
 	return dto.UserDetailResponse{
 		ID:                 user.ID,
 		Email:              user.Email,
@@ -43,7 +43,7 @@ func DomainUserToUserDetailResponse(user domain.User, totalFollowing, totalFollo
 	}
 }
 
-func DomainUserToListUserResponse(users []domain.User) []dto.UserResponse {
+func DomainUserToListUserResponse(users []entity.User) []dto.UserResponse {
 	usersResponse := []dto.UserResponse{}
 
 	for _, val := range users {

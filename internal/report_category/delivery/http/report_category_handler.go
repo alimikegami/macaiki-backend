@@ -1,10 +1,11 @@
 package http
 
 import (
-	"macaiki/internal/domain"
+	reportcategory "macaiki/internal/report_category"
 	"macaiki/internal/report_category/dto"
 	_middL "macaiki/pkg/middleware"
 	"macaiki/pkg/response"
+	"macaiki/pkg/utils"
 	"strconv"
 
 	"github.com/labstack/echo/v4"
@@ -12,11 +13,11 @@ import (
 )
 
 type ReportCategoryHandler struct {
-	rcUsecase domain.ReportCategoryUsecase
+	rcUsecase reportcategory.ReportCategoryUsecase
 	JWTSecret string
 }
 
-func NewReportCategoryHandler(e *echo.Echo, rcUsecase domain.ReportCategoryUsecase, JWTSecret string) {
+func NewReportCategoryHandler(e *echo.Echo, rcUsecase reportcategory.ReportCategoryUsecase, JWTSecret string) {
 	rcHandler := ReportCategoryHandler{rcUsecase, JWTSecret}
 	e.POST("api/v1/report-categories", rcHandler.CreateReportCategory, middleware.JWT([]byte(JWTSecret)))
 	e.GET("/api/v1/report-categories", rcHandler.GetAllReportCategories)
@@ -50,7 +51,7 @@ func (rcHandler *ReportCategoryHandler) GetAllReportCategories(c echo.Context) e
 func (rcHandler *ReportCategoryHandler) GetReportCategory(c echo.Context) error {
 	id, err := strconv.Atoi(c.Param("reportCategoryID"))
 	if err != nil {
-		return response.ErrorResponse(c, domain.ErrBadParamInput)
+		return response.ErrorResponse(c, utils.ErrBadParamInput)
 	}
 
 	dtoResponse, err := rcHandler.rcUsecase.GetReportCategory(uint(id))
@@ -64,7 +65,7 @@ func (rcHandler *ReportCategoryHandler) GetReportCategory(c echo.Context) error 
 func (rcHandler *ReportCategoryHandler) UpdateReportCategory(c echo.Context) error {
 	id, err := strconv.Atoi(c.Param("reportCategoryID"))
 	if err != nil {
-		return response.ErrorResponse(c, domain.ErrBadParamInput)
+		return response.ErrorResponse(c, utils.ErrBadParamInput)
 	}
 
 	rcReq := dto.ReportCategoryRequest{}
@@ -82,7 +83,7 @@ func (rcHandler *ReportCategoryHandler) UpdateReportCategory(c echo.Context) err
 func (rcHandler *ReportCategoryHandler) DeleteReportCategory(c echo.Context) error {
 	id, err := strconv.Atoi(c.Param("reportCategoryID"))
 	if err != nil {
-		return response.ErrorResponse(c, domain.ErrBadParamInput)
+		return response.ErrorResponse(c, utils.ErrBadParamInput)
 	}
 
 	_, role := _middL.ExtractTokenUser(c)
