@@ -101,8 +101,16 @@ func (uu *userUsecase) Register(user dto.UserRequest) error {
 	return nil
 }
 
-func (uu *userUsecase) GetAll(username string) ([]dto.UserResponse, error) {
-	users, err := uu.userRepo.GetAll(username)
+// func (uu *userUsecase) GetAll(username string) ([]dto.UserResponse, error) {
+// 	users, err := uu.userRepo.GetAll(username)
+// 	if err != nil {
+// 		return []dto.UserResponse{}, utils.ErrInternalServerError
+// 	}
+
+// 	return helper.DomainUserToListUserResponse(users), err
+// }
+func (uu *userUsecase) GetAllWithDetail(userID uint, search string) ([]dto.UserResponse, error) {
+	users, err := uu.userRepo.GetAllWithDetail(userID, search)
 	if err != nil {
 		return []dto.UserResponse{}, utils.ErrInternalServerError
 	}

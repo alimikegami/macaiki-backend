@@ -3,7 +3,7 @@ package user
 import "macaiki/internal/user/entity"
 
 type UserRepository interface {
-	GetAll(username string) ([]entity.User, error)
+	GetAllWithDetail(userID uint, search string) ([]entity.User, error)
 	Store(user entity.User) error
 	Get(id uint) (entity.User, error)
 	Update(userDB *entity.User, user entity.User) (entity.User, error)

@@ -8,18 +8,12 @@ import (
 // Response
 func DomainUserToUserResponse(user entity.User) dto.UserResponse {
 	return dto.UserResponse{
-		ID:                 user.ID,
-		Email:              user.Email,
-		Username:           user.Username,
-		Name:               user.Name,
-		ProfileImageUrl:    user.ProfileImageUrl,
-		BackgroundImageUrl: user.BackgroundImageUrl,
-		Bio:                user.Bio,
-		Profession:         user.Profession,
-		Role:               user.Role,
-		IsBanned:           user.IsBanned,
-		CreatedAt:          user.CreatedAt,
-		UpdatedAt:          user.UpdatedAt,
+		ID:              user.ID,
+		Username:        user.Username,
+		Name:            user.Name,
+		ProfileImageUrl: user.ProfileImageUrl,
+		Profession:      user.Profession,
+		IsFollowed:      user.IsFollowed,
 	}
 }
 
@@ -33,13 +27,12 @@ func DomainUserToUserDetailResponse(user entity.User, totalFollowing, totalFollo
 		BackgroundImageUrl: user.BackgroundImageUrl,
 		Bio:                user.Bio,
 		Profession:         user.Profession,
-		Role:               user.Role,
-		IsBanned:           user.IsBanned,
 		CreatedAt:          user.CreatedAt,
 		UpdatedAt:          user.UpdatedAt,
 		TotalFollower:      totalFollower,
 		TotalFollowing:     totalFollowing,
 		TotalPost:          totalPost,
+		IsFollowed:         user.IsFollowed,
 	}
 }
 
