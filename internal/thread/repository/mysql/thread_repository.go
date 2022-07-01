@@ -128,7 +128,7 @@ func (tr *ThreadRepositoryImpl) AddThreadComment(comment entity.Comment) error {
 
 func (tr *ThreadRepositoryImpl) GetCommentsByThreadID(threadID uint) ([]entity.CommentDetails, error) {
 	var comments []entity.CommentDetails
-	res := tr.db.Raw("SELECT comments.*, users.* FROM comments INNER JOIN users ON comments.user_id = users.id WHERE comments.thread_id = ?", threadID).Scan(&comments)
+	res := tr.db.Raw("SELECT comments.*, users.*, t2.likes_count FROM comments LEFT JOIN (SELECT comment_id, COUNT(*) AS likes_count FROM comment_likes cl GROUP BY comment_id) AS t2 ON comments.id = t2.comment_id INNER JOIN users ON comments.user_id = users.id WHERE comments.thread_id = ?", threadID).Scan(&comments)
 
 	if res.Error != nil {
 		return []entity.CommentDetails{}, res.Error
