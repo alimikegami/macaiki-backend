@@ -124,7 +124,7 @@ func (ur *MysqlUserRepository) Unfollow(user, userFollower entity.User) (entity.
 
 func (ur *MysqlUserRepository) GetFollowerNumber(id uint) (int, error) {
 	var count int64
-	res := ur.Db.Table("user_followers").Where("user_id = ?", id).Count(&count)
+	res := ur.Db.Raw("SELECT COUNT(*) FROM `users` LEFT JOIN `user_followers` `Followers` ON `users`.`id` = `Followers`.`follower_id` WHERE `Followers`.`user_id` = ? AND `users`.`deleted_at` IS NULL", id).Scan(&count)
 	err := res.Error
 	if err != nil {
 		return 0, err
@@ -134,7 +134,7 @@ func (ur *MysqlUserRepository) GetFollowerNumber(id uint) (int, error) {
 
 func (ur *MysqlUserRepository) GetFollowingNumber(id uint) (int, error) {
 	var count int64
-	res := ur.Db.Table("user_followers").Where("follower_id = ?", id).Count(&count)
+	res := ur.Db.Raw("SELECT COUNT(*) FROM `users` LEFT JOIN `user_followers` `Followers` ON `users`.`id` = `Followers`.`user_id` WHERE `Followers`.`follower_id` = ? AND `users`.`deleted_at` IS NULL", id).Scan(&count)
 	err := res.Error
 	if err != nil {
 		return 0, err
@@ -155,7 +155,7 @@ func (ur *MysqlUserRepository) GetThreadsNumber(id uint) (int, error) {
 func (ur *MysqlUserRepository) GetFollower(user entity.User) ([]entity.User, error) {
 	users := []entity.User{}
 
-	res := ur.Db.Raw("SELECT * FROM `users` LEFT JOIN `user_followers` `Followers` ON `users`.`id` = `Followers`.`follower_id` WHERE `Followers`.`user_id` = ?", user.ID).Scan(&users)
+	res := ur.Db.Raw("SELECT * FROM `users` LEFT JOIN `user_followers` `Followers` ON `users`.`id` = `Followers`.`follower_id` WHERE `Followers`.`user_id` = ? AND `users`.`deleted_at` IS NULL", user.ID).Scan(&users)
 	err := res.Error
 
 	if err != nil {
@@ -167,7 +167,7 @@ func (ur *MysqlUserRepository) GetFollower(user entity.User) ([]entity.User, err
 
 func (ur *MysqlUserRepository) GetFollowing(user entity.User) ([]entity.User, error) {
 	users := []entity.User{}
-	res := ur.Db.Raw("SELECT * FROM `users` LEFT JOIN `user_followers` `Followers` ON `users`.`id` = `Followers`.`user_id` WHERE `Followers`.`follower_id` = ?", user.ID).Scan(&users)
+	res := ur.Db.Raw("SELECT * FROM `users` LEFT JOIN `user_followers` `Followers` ON `users`.`id` = `Followers`.`user_id` WHERE `Followers`.`follower_id` = ? AND `users`.`deleted_at` IS NULL", user.ID).Scan(&users)
 	err := res.Error
 
 	if err != nil {
