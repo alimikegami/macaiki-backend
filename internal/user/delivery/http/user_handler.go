@@ -47,7 +47,7 @@ func NewUserHandler(e *echo.Echo, us user.UserUsecase, JWTSecret string) {
 }
 
 func (u *UserHandler) Login(c echo.Context) error {
-	loginInfo := dto.LoginUserRequest{}
+	loginInfo := dto.UserLoginRequest{}
 
 	c.Bind(&loginInfo)
 
@@ -112,18 +112,12 @@ func (u *UserHandler) GetUserByToken(c echo.Context) error {
 }
 
 func (u *UserHandler) Update(c echo.Context) error {
-	num := c.Param("userID")
-	userID, err := strconv.Atoi(num)
-	if err != nil {
-		response.ErrorResponse(c, utils.ErrBadParamInput)
-	}
-
-	user := dto.UpdateUserRequest{}
+	user := dto.UserUpdateRequest{}
 	c.Bind(&user)
 
-	curentUserID, _ := _middL.ExtractTokenUser(c)
+	userID, _ := _middL.ExtractTokenUser(c)
 
-	res, err := u.UserUsecase.Update(user, uint(userID), uint(curentUserID))
+	res, err := u.UserUsecase.Update(user, uint(userID))
 	if err != nil {
 		return response.ErrorResponse(c, err)
 	}
@@ -166,7 +160,7 @@ func (u *UserHandler) DeleteUserByToken(c echo.Context) error {
 }
 
 func (u *UserHandler) ChangeEmail(c echo.Context) error {
-	info := dto.LoginUserRequest{}
+	info := dto.UserLoginRequest{}
 	userID, _ := _middL.ExtractTokenUser(c)
 
 	c.Bind(&info)
@@ -180,7 +174,7 @@ func (u *UserHandler) ChangeEmail(c echo.Context) error {
 }
 
 func (u *UserHandler) ChangePassword(c echo.Context) error {
-	newPasswordInfo := dto.ChangePasswordUserRequest{}
+	newPasswordInfo := dto.UserChangePasswordRequest{}
 	userID, _ := _middL.ExtractTokenUser(c)
 
 	c.Bind(&newPasswordInfo)

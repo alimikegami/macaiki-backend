@@ -24,6 +24,13 @@ type UserDetailResponse struct {
 	IsMine             bool   `json:"isMine"`
 }
 
+type UserUpdateResponse struct {
+	Username   string `json:"username"`
+	Name       string `json:"name"`
+	Bio        string `json:"bio"`
+	Profession string `json:"profession"`
+}
+
 type LoginResponse struct {
 	Token string `json:"token"`
 }
