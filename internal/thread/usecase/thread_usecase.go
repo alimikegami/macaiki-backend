@@ -206,6 +206,7 @@ func (tuc *ThreadUseCaseImpl) GetTrendingThreads(userID uint) ([]dto.DetailedThr
 			UpdatedAt:             thread.Thread.UpdatedAt,
 			LikesCount:            thread.LikesCount,
 			IsLiked:               thread.IsLiked,
+			IsFollowed:            thread.IsFollowed,
 		})
 	}
 
@@ -235,6 +236,7 @@ func (tuc *ThreadUseCaseImpl) GetThreadsFromFollowedCommunity(userID uint) ([]dt
 			UpdatedAt:             thread.Thread.UpdatedAt,
 			LikesCount:            thread.LikesCount,
 			IsLiked:               thread.IsLiked,
+			IsFollowed:            thread.IsFollowed,
 		})
 	}
 
@@ -264,6 +266,7 @@ func (tuc *ThreadUseCaseImpl) GetThreadsFromFollowedUsers(userID uint) ([]dto.De
 			UpdatedAt:             thread.Thread.UpdatedAt,
 			LikesCount:            thread.LikesCount,
 			IsLiked:               thread.IsLiked,
+			IsFollowed:            thread.IsFollowed,
 		})
 	}
 
@@ -299,6 +302,7 @@ func (tuc *ThreadUseCaseImpl) GetCommentsByThreadID(threadID uint) ([]dto.Commen
 			Username:              comment.User.Name,
 			UserProfilePictureURL: comment.User.ProfileImageUrl,
 			CreatedAt:             comment.Comment.CreatedAt,
+			LikesCount:            comment.LikesCount,
 		})
 	}
 
@@ -328,8 +332,18 @@ func (tuc *ThreadUseCaseImpl) GetThreads(keyword string, userID uint) ([]dto.Det
 			UpdatedAt:             thread.Thread.UpdatedAt,
 			LikesCount:            thread.LikesCount,
 			IsLiked:               thread.IsLiked,
+			IsFollowed:            thread.IsFollowed,
 		})
 	}
 
 	return threads, nil
+}
+
+func (tuc *ThreadUseCaseImpl) LikeComment(commentID, userID uint) error {
+	err := tuc.tr.LikeComment(entity.CommentLikes{
+		UserID:    userID,
+		CommentID: commentID,
+	})
+
+	return err
 }

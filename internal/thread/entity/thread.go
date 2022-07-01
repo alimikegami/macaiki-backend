@@ -51,3 +51,9 @@ type CommentDetails struct {
 	LikesCount int
 	IsLiked    int
 }
+
+type CommentLikes struct {
+	gorm.Model
+	UserID    uint
+	CommentID uint
+}

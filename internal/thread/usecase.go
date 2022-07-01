@@ -18,4 +18,5 @@ type ThreadUseCase interface {
 	AddThreadComment(dto.CommentRequest) error
 	GetCommentsByThreadID(threadID uint) ([]dto.CommentResponse, error)
 	GetThreads(keyword string, userID uint) ([]dto.DetailedThreadResponse, error)
+	LikeComment(commentID, userID uint) error
 }
