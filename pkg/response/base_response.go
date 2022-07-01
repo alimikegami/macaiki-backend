@@ -1,7 +1,7 @@
 package response
 
 import (
-	"macaiki/internal/domain"
+	"macaiki/pkg/utils"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -27,7 +27,7 @@ func SuccessResponse(c echo.Context, data interface{}) error {
 
 func ErrorResponse(c echo.Context, err error) error {
 	resp := baseResponse{}
-	resp.Meta.Code = domain.GetStatusCode(err)
+	resp.Meta.Code = utils.GetStatusCode(err)
 	resp.Meta.Message = err.Error()
 	resp.Data = nil
 

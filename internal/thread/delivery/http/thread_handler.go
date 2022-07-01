@@ -2,7 +2,7 @@ package http
 
 import (
 	"fmt"
-	"macaiki/internal/domain"
+	"macaiki/internal/thread"
 	"macaiki/internal/thread/dto"
 	_middL "macaiki/pkg/middleware"
 	"macaiki/pkg/response"
@@ -14,7 +14,7 @@ import (
 
 type ThreadHandler struct {
 	router *echo.Echo
-	tu     domain.ThreadUseCase
+	tu     thread.ThreadUseCase
 }
 
 func (th *ThreadHandler) GetThreads(c echo.Context) error {
@@ -23,17 +23,19 @@ func (th *ThreadHandler) GetThreads(c echo.Context) error {
 	trending := c.QueryParam("trending")
 	community := c.QueryParam("community")
 	forYou := c.QueryParam("forYou")
+	keyword := c.QueryParam("keyword")
+
 	var res interface{}
 	var err error
 
 	if trending == "true" {
-		res, err = th.tu.GetTrendingThreads()
+		res, err = th.tu.GetTrendingThreads(uint(userID))
 	} else if community == "true" {
 		res, err = th.tu.GetThreadsFromFollowedCommunity(uint(userID))
 	} else if forYou == "true" {
 		res, err = th.tu.GetThreadsFromFollowedUsers(uint(userID))
 	} else {
-		res, err = th.tu.GetThreads()
+		res, err = th.tu.GetThreads(keyword, uint(userID))
 	}
 
 	if err != nil {
@@ -208,7 +210,7 @@ func (th *ThreadHandler) GetCommentsByThreadID(c echo.Context) error {
 	return response.SuccessResponse(c, comments)
 }
 
-func CreateNewThreadHandler(e *echo.Echo, tu domain.ThreadUseCase, JWTSecret string) *ThreadHandler {
+func CreateNewThreadHandler(e *echo.Echo, tu thread.ThreadUseCase, JWTSecret string) *ThreadHandler {
 	threadHandler := &ThreadHandler{router: e, tu: tu}
 	threadHandler.router.POST("/api/v1/threads", threadHandler.CreateThread, middleware.JWT([]byte(JWTSecret)))
 	threadHandler.router.DELETE("/api/v1/threads/:threadID", threadHandler.DeleteThread, middleware.JWT([]byte(JWTSecret)))

@@ -1,9 +1,10 @@
 package http
 
 import (
+	"macaiki/internal/community"
 	"macaiki/internal/community/dto"
-	"macaiki/internal/domain"
 	"macaiki/pkg/response"
+	"macaiki/pkg/utils"
 	"strconv"
 
 	_middL "macaiki/pkg/middleware"
@@ -13,11 +14,11 @@ import (
 )
 
 type CommunityHandler struct {
-	communityUsecase domain.CommunityUsecase
+	communityUsecase community.CommunityUsecase
 	JWTSecret        string
 }
 
-func NewCommunityHandler(e *echo.Echo, communityUsecase domain.CommunityUsecase, JWTSecret string) {
+func NewCommunityHandler(e *echo.Echo, communityUsecase community.CommunityUsecase, JWTSecret string) {
 	communityHandler := &CommunityHandler{
 		communityUsecase: communityUsecase,
 		JWTSecret:        JWTSecret,
@@ -74,7 +75,7 @@ func (communityHandler *CommunityHandler) GetAllCommunityWithDetail(c echo.Conte
 func (communityHandler *CommunityHandler) GetCommunity(c echo.Context) error {
 	id, err := strconv.Atoi(c.Param("communityID"))
 	if err != nil {
-		return response.ErrorResponse(c, domain.ErrBadParamInput)
+		return response.ErrorResponse(c, utils.ErrBadParamInput)
 	}
 
 	communityResp, err := communityHandler.communityUsecase.GetCommunity(uint(id))
@@ -88,7 +89,7 @@ func (communityHandler *CommunityHandler) GetCommunity(c echo.Context) error {
 func (communityHandler *CommunityHandler) UpdateCommunity(c echo.Context) error {
 	id, err := strconv.Atoi(c.Param("communityID"))
 	if err != nil {
-		return response.ErrorResponse(c, domain.ErrBadParamInput)
+		return response.ErrorResponse(c, utils.ErrBadParamInput)
 	}
 
 	var communityReq dto.CommunityRequest
@@ -106,7 +107,7 @@ func (communityHandler *CommunityHandler) UpdateCommunity(c echo.Context) error 
 func (communityHandler *CommunityHandler) DeleteCommunity(c echo.Context) error {
 	id, err := strconv.Atoi(c.Param("communityID"))
 	if err != nil {
-		return response.ErrorResponse(c, domain.ErrBadParamInput)
+		return response.ErrorResponse(c, utils.ErrBadParamInput)
 	}
 
 	_, role := _middL.ExtractTokenUser(c)
@@ -123,7 +124,7 @@ func (communityHandler *CommunityHandler) FollowCommunity(c echo.Context) error 
 
 	communityID, err := strconv.Atoi(c.Param("communityID"))
 	if err != nil {
-		return response.ErrorResponse(c, domain.ErrBadParamInput)
+		return response.ErrorResponse(c, utils.ErrBadParamInput)
 	}
 
 	err = communityHandler.communityUsecase.FollowCommunity(uint(userID), uint(communityID))
@@ -139,7 +140,7 @@ func (communityHandler *CommunityHandler) UnfollowCommunity(c echo.Context) erro
 
 	communityID, err := strconv.Atoi(c.Param("communityID"))
 	if err != nil {
-		return response.ErrorResponse(c, domain.ErrBadParamInput)
+		return response.ErrorResponse(c, utils.ErrBadParamInput)
 	}
 
 	err = communityHandler.communityUsecase.UnfollowCommunity(uint(userID), uint(communityID))
