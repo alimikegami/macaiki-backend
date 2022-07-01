@@ -10,4 +10,5 @@ type CommentResponse struct {
 	UserProfilePictureURL string    `json:"userProfilePictureURL"`
 	ThreadID              uint      `json:"threadID"`
 	CreatedAt             time.Time `json:"createdAt"`
+	LikesCount            int       `json:"likesCount"`
 }

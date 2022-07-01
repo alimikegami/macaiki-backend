@@ -302,6 +302,7 @@ func (tuc *ThreadUseCaseImpl) GetCommentsByThreadID(threadID uint) ([]dto.Commen
 			Username:              comment.User.Name,
 			UserProfilePictureURL: comment.User.ProfileImageUrl,
 			CreatedAt:             comment.Comment.CreatedAt,
+			LikesCount:            comment.LikesCount,
 		})
 	}
 
