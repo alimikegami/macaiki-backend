@@ -32,6 +32,9 @@ func NewCommunityHandler(e *echo.Echo, communityUsecase community.CommunityUseca
 
 	e.POST("api/v1/curent-user/community-followers/:communityID", communityHandler.FollowCommunity, middleware.JWT([]byte(JWTSecret)))
 	e.DELETE("api/v1/curent-user/community-followers/:communityID", communityHandler.UnfollowCommunity, middleware.JWT([]byte(JWTSecret)))
+
+	e.PUT("api/v1/communities/:communityID/images", communityHandler.SetCommunityImage, middleware.JWT([]byte(JWTSecret)))
+	e.PUT("api/v1/communities/:communityID/background-images", communityHandler.SetCommunityBackgroundImage, middleware.JWT([]byte(JWTSecret)))
 }
 
 func (communityHandler *CommunityHandler) CreateCommunity(c echo.Context) error {
@@ -139,4 +142,44 @@ func (communityHandler *CommunityHandler) UnfollowCommunity(c echo.Context) erro
 	}
 
 	return response.SuccessResponse(c, nil)
+}
+
+func (communityHandler *CommunityHandler) SetCommunityImage(c echo.Context) error {
+	id, err := strconv.Atoi(c.Param("communityID"))
+	if err != nil {
+		return response.ErrorResponse(c, utils.ErrBadParamInput)
+	}
+
+	img, err := c.FormFile("communityImage")
+	if err != nil {
+		return response.ErrorResponse(c, err)
+	}
+
+	_, role := _middL.ExtractTokenUser(c)
+	imageUrl, err := communityHandler.communityUsecase.SetImage(uint(id), img, role)
+	if err != nil {
+		return response.ErrorResponse(c, err)
+	}
+
+	return response.SuccessResponse(c, imageUrl)
+}
+
+func (communityHandler *CommunityHandler) SetCommunityBackgroundImage(c echo.Context) error {
+	id, err := strconv.Atoi(c.Param("communityID"))
+	if err != nil {
+		return response.ErrorResponse(c, utils.ErrBadParamInput)
+	}
+
+	img, err := c.FormFile("communityBgImage")
+	if err != nil {
+		return response.ErrorResponse(c, err)
+	}
+
+	_, role := _middL.ExtractTokenUser(c)
+	imageUrl, err := communityHandler.communityUsecase.SetBackgroundImage(uint(id), img, role)
+	if err != nil {
+		return response.ErrorResponse(c, err)
+	}
+
+	return response.SuccessResponse(c, imageUrl)
 }
