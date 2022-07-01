@@ -6,8 +6,8 @@ import (
 )
 
 type CommunityRepository interface {
-	GetAllCommunity(search string) ([]communityEntity.Community, error)
-	GetAllCommunityDetail(userID, search string) ([]communityEntity.CommunityWithDetail, error)
+	GetAllCommunities(userID uint, search string) ([]communityEntity.Community, error)
+	GetCommunityWithDetail(userID, communityID uint) (communityEntity.Community, error)
 	GetCommunity(id uint) (communityEntity.Community, error)
 	StoreCommunity(community communityEntity.Community) error
 	UpdateCommunity(community communityEntity.Community, communityReq communityEntity.Community) error

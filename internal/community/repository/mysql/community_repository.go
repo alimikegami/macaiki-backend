@@ -16,10 +16,10 @@ func NewCommunityRepository(db *gorm.DB) community.CommunityRepository {
 	return &CommunityRepositoryImpl{db}
 }
 
-func (cr *CommunityRepositoryImpl) GetAllCommunity(search string) ([]communityEntity.Community, error) {
+func (cr *CommunityRepositoryImpl) GetAllCommunities(userID uint, search string) ([]communityEntity.Community, error) {
 	communities := []communityEntity.Community{}
 
-	res := cr.db.Where("name LIKE ?", "%"+search+"%").Find(&communities)
+	res := cr.db.Raw("SELECT c.*, !ISNULL(cf.user_id) AS `is_followed` FROM `communities` AS c LEFT JOIN (SELECT * FROM community_followers WHERE user_id = ?) AS cf ON c.id = cf.community_id WHERE c.deleted_at IS NULL", userID).Scan(&communities)
 	err := res.Error
 	if err != nil {
 		return []communityEntity.Community{}, err
@@ -28,16 +28,17 @@ func (cr *CommunityRepositoryImpl) GetAllCommunity(search string) ([]communityEn
 	return communities, nil
 }
 
-func (cr *CommunityRepositoryImpl) GetAllCommunityDetail(userID, search string) ([]communityEntity.CommunityWithDetail, error) {
-	communitiesWithDetail := []communityEntity.CommunityWithDetail{}
+func (cr *CommunityRepositoryImpl) GetCommunityWithDetail(userID, communityID uint) (communityEntity.Community, error) {
+	community := communityEntity.Community{}
 
-	res := cr.db.Raw("SELECT c.*, !ISNULL(cf.user_id) AS `is_followed` FROM `communities` AS c LEFT JOIN (SELECT * FROM community_followers WHERE user_id = ?) AS cf ON c.id = cf.community_id", userID).Scan(&communitiesWithDetail)
+	res := cr.db.Raw("SELECT c.*, !ISNULL(cf.user_id) AS `is_followed` FROM `communities` AS c LEFT JOIN (SELECT * FROM community_followers WHERE user_id = ?) AS cf ON c.id = cf.community_id WHERE c.id = ? AND c.deleted_at IS NULL", userID, communityID).Scan(&community)
 	err := res.Error
+
 	if err != nil {
-		return []communityEntity.CommunityWithDetail{}, err
+		return communityEntity.Community{}, err
 	}
 
-	return communitiesWithDetail, nil
+	return community, nil
 }
 
 func (cr *CommunityRepositoryImpl) GetCommunity(id uint) (communityEntity.Community, error) {

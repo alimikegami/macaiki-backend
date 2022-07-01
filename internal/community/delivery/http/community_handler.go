@@ -25,9 +25,8 @@ func NewCommunityHandler(e *echo.Echo, communityUsecase community.CommunityUseca
 	}
 
 	e.POST("api/v1/communities", communityHandler.CreateCommunity, middleware.JWT([]byte(JWTSecret)))
-	// e.GET("api/v1/communities", communityHandler.GetAllCommunity)
 	e.GET("api/v1/communities", communityHandler.GetAllCommunityWithDetail, middleware.JWT([]byte(JWTSecret)))
-	e.GET("api/v1/communities/:communityID", communityHandler.GetCommunity)
+	e.GET("api/v1/communities/:communityID", communityHandler.GetCommunity, middleware.JWT([]byte(JWTSecret)))
 	e.PUT("api/v1/communities/:communityID", communityHandler.UpdateCommunity, middleware.JWT([]byte(JWTSecret)))
 	e.DELETE("api/v1/communities/:communityID", communityHandler.DeleteCommunity, middleware.JWT([]byte(JWTSecret)))
 
@@ -48,23 +47,12 @@ func (communityHandler *CommunityHandler) CreateCommunity(c echo.Context) error 
 	return response.SuccessResponse(c, nil)
 }
 
-// TODO implement this function when the user is logged in as anonymous
-// func (communityHandler *CommunityHandler) GetAllCommunity(c echo.Context) error {
-// 	search := c.QueryParam("search")
-// 	communitiesResp, err := communityHandler.communityUsecase.GetAllCommunity(search)
-// 	if err != nil {
-// 		return response.ErrorResponse(c, err)
-// 	}
-
-// 	return response.SuccessResponse(c, communitiesResp)
-// }
-
 func (communityHandler *CommunityHandler) GetAllCommunityWithDetail(c echo.Context) error {
 	search := c.QueryParam("search")
 
 	userID, _ := _middL.ExtractTokenUser(c)
 
-	communitiesResp, err := communityHandler.communityUsecase.GetAllCommunityDetail(userID, search)
+	communitiesResp, err := communityHandler.communityUsecase.GetAllCommunities(userID, search)
 	if err != nil {
 		return response.ErrorResponse(c, err)
 	}
@@ -78,7 +66,9 @@ func (communityHandler *CommunityHandler) GetCommunity(c echo.Context) error {
 		return response.ErrorResponse(c, utils.ErrBadParamInput)
 	}
 
-	communityResp, err := communityHandler.communityUsecase.GetCommunity(uint(id))
+	userID, _ := _middL.ExtractTokenUser(c)
+
+	communityResp, err := communityHandler.communityUsecase.GetCommunity(uint(userID), uint(id))
 	if err != nil {
 		return response.ErrorResponse(c, err)
 	}
