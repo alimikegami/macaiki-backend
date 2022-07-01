@@ -86,12 +86,12 @@ func (communityHandler *CommunityHandler) UpdateCommunity(c echo.Context) error 
 	c.Bind(&communityReq)
 
 	_, role := _middL.ExtractTokenUser(c)
-	err = communityHandler.communityUsecase.UpdateCommunity(uint(id), communityReq, role)
+	communityUpdateResp, err := communityHandler.communityUsecase.UpdateCommunity(uint(id), communityReq, role)
 	if err != nil {
 		return response.ErrorResponse(c, err)
 	}
 
-	return response.SuccessResponse(c, nil)
+	return response.SuccessResponse(c, communityUpdateResp)
 }
 
 func (communityHandler *CommunityHandler) DeleteCommunity(c echo.Context) error {

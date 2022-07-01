@@ -64,15 +64,15 @@ func (cr *CommunityRepositoryImpl) StoreCommunity(community communityEntity.Comm
 	return nil
 }
 
-func (cr *CommunityRepositoryImpl) UpdateCommunity(community communityEntity.Community, communityReq communityEntity.Community) error {
+func (cr *CommunityRepositoryImpl) UpdateCommunity(community communityEntity.Community, communityReq communityEntity.Community) (communityEntity.Community, error) {
 
 	res := cr.db.Model(&community).Updates(communityReq)
 	err := res.Error
 	if err != nil {
-		return err
+		return communityEntity.Community{}, err
 	}
 
-	return nil
+	return community, nil
 }
 
 func (cr *CommunityRepositoryImpl) DeleteCommunity(community communityEntity.Community) error {
