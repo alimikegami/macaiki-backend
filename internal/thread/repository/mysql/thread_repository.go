@@ -148,3 +148,9 @@ func (tr *ThreadRepositoryImpl) GetThreads(keyword string, userID uint) ([]entit
 
 	return threads, nil
 }
+
+func (tr *ThreadRepositoryImpl) LikeComment(commentLikes entity.CommentLikes) error {
+	res := tr.db.Create(&commentLikes)
+
+	return res.Error
+}
