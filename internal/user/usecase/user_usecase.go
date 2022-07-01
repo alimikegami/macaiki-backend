@@ -118,7 +118,7 @@ func (uu *userUsecase) GetAllWithDetail(userID uint, search string) ([]dto.UserR
 	return helper.DomainUserToListUserResponse(users), err
 }
 
-func (uu *userUsecase) Get(id uint) (dto.UserDetailResponse, error) {
+func (uu *userUsecase) Get(id, tokenUserID uint) (dto.UserDetailResponse, error) {
 	userEntity, err := uu.userRepo.Get(id)
 	if err != nil {
 		return dto.UserDetailResponse{}, utils.ErrInternalServerError
@@ -141,7 +141,12 @@ func (uu *userUsecase) Get(id uint) (dto.UserDetailResponse, error) {
 	if err != nil {
 		return dto.UserDetailResponse{}, utils.ErrInternalServerError
 	}
-	return helper.DomainUserToUserDetailResponse(userEntity, totalFollowing, totalFollower, totalPost), nil
+
+	userResp := helper.DomainUserToUserDetailResponse(userEntity, totalFollowing, totalFollower, totalPost)
+	if id == tokenUserID {
+		userResp.IsMine = true
+	}
+	return userResp, nil
 }
 func (uu *userUsecase) Update(user dto.UpdateUserRequest, id uint, curentUserID uint) (dto.UserResponse, error) {
 	// TODO: validation the username that has been used

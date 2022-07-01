@@ -27,7 +27,7 @@ func NewUserHandler(e *echo.Echo, us user.UserUsecase, JWTSecret string) {
 	e.POST("/api/v1/login", handler.Login)
 	e.POST("/api/v1/register", handler.Register)
 	e.GET("/api/v1/users", handler.GetAllUsers, middleware.JWT([]byte(JWTSecret)))
-	e.GET("/api/v1/users/:userID", handler.GetUser)
+	e.GET("/api/v1/users/:userID", handler.GetUser, middleware.JWT([]byte(JWTSecret)))
 	e.PUT("/api/v1/users/:userID", handler.Update, middleware.JWT([]byte(JWTSecret)))
 	e.DELETE("/api/v1/users/:userID", handler.Delete, middleware.JWT([]byte(JWTSecret)))
 
@@ -89,7 +89,9 @@ func (u *UserHandler) GetUser(c echo.Context) error {
 		response.ErrorResponse(c, err)
 	}
 
-	res, err := u.UserUsecase.Get(uint(userID))
+	tokenUserID, _ := _middL.ExtractTokenUser(c)
+
+	res, err := u.UserUsecase.Get(uint(userID), uint(tokenUserID))
 	if err != nil {
 		return response.ErrorResponse(c, err)
 	}
@@ -100,7 +102,7 @@ func (u *UserHandler) GetUser(c echo.Context) error {
 func (u *UserHandler) GetUserByToken(c echo.Context) error {
 	userID, _ := _middL.ExtractTokenUser(c)
 
-	res, err := u.UserUsecase.Get(uint(userID))
+	res, err := u.UserUsecase.Get(uint(userID), uint(userID))
 	if err != nil {
 		return response.ErrorResponse(c, err)
 	}

@@ -20,15 +20,12 @@ func DomainUserToUserResponse(user entity.User) dto.UserResponse {
 func DomainUserToUserDetailResponse(user entity.User, totalFollowing, totalFollower, totalPost int) dto.UserDetailResponse {
 	return dto.UserDetailResponse{
 		ID:                 user.ID,
-		Email:              user.Email,
 		Username:           user.Username,
 		Name:               user.Name,
 		ProfileImageUrl:    user.ProfileImageUrl,
 		BackgroundImageUrl: user.BackgroundImageUrl,
 		Bio:                user.Bio,
 		Profession:         user.Profession,
-		CreatedAt:          user.CreatedAt,
-		UpdatedAt:          user.UpdatedAt,
 		TotalFollower:      totalFollower,
 		TotalFollowing:     totalFollowing,
 		TotalPost:          totalPost,
