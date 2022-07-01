@@ -1,6 +1,7 @@
 package mysql
 
 import (
+	"errors"
 	"macaiki/internal/community"
 	communityEntity "macaiki/internal/community/entity"
 	userEntity "macaiki/internal/user/entity"
@@ -96,6 +97,20 @@ func (cr *CommunityRepositoryImpl) UnfollowCommunity(user userEntity.User, commu
 	err := cr.db.Model(&community).Association("Users").Delete(&user)
 	if err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func (cr *CommunityRepositoryImpl) SetCommunityImage(id uint, imageURL string, tableName string) error {
+	res := cr.db.Model(&communityEntity.Community{}).Where("id = ?", id).Update(tableName, imageURL)
+
+	if res.Error != nil {
+		return res.Error
+	}
+
+	if res.RowsAffected < 1 {
+		return errors.New("resource does not exists")
 	}
 
 	return nil

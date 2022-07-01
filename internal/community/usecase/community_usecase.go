@@ -5,11 +5,14 @@ import (
 	"macaiki/internal/user"
 	cloudstorage "macaiki/pkg/cloud_storage"
 	"macaiki/pkg/utils"
+	"mime/multipart"
 
 	"macaiki/internal/community/dto"
 	"macaiki/internal/community/entity"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/go-playground/validator/v10"
+	"github.com/google/uuid"
 )
 
 type CommunityUsecaseImpl struct {
@@ -195,4 +198,70 @@ func (cu *CommunityUsecaseImpl) UnfollowCommunity(userID, communityID uint) erro
 	}
 
 	return nil
+}
+
+func (cu *CommunityUsecaseImpl) SetImage(id uint, img *multipart.FileHeader, role string) (string, error) {
+	if role != "Admin" {
+		return "", utils.ErrUnauthorizedAccess
+	}
+
+	community, err := cu.communityRepo.GetCommunity(id)
+	if err != nil {
+		return "", utils.ErrInternalServerError
+	}
+
+	if community.CommunityImageUrl != "" {
+		err = cu.awsS3.DeleteImage(community.CommunityImageUrl, "community")
+		if err != nil {
+			return "", err
+		}
+	}
+
+	uniqueFilename := uuid.New()
+	result, err := cu.awsS3.UploadImage(uniqueFilename.String(), "community", img)
+	if err != nil {
+		return "", err
+	}
+
+	imageURL := aws.StringValue(&result.Location)
+
+	err = cu.communityRepo.SetCommunityImage(id, imageURL, "community_image_url")
+	if err != nil {
+		return "", err
+	}
+
+	return imageURL, err
+}
+
+func (cu *CommunityUsecaseImpl) SetBackgroundImage(id uint, img *multipart.FileHeader, role string) (string, error) {
+	if role != "Admin" {
+		return "", utils.ErrUnauthorizedAccess
+	}
+
+	community, err := cu.communityRepo.GetCommunity(id)
+	if err != nil {
+		return "", utils.ErrInternalServerError
+	}
+
+	if community.CommunityImageUrl != "" {
+		err = cu.awsS3.DeleteImage(community.CommunityImageUrl, "community_background")
+		if err != nil {
+			return "", err
+		}
+	}
+
+	uniqueFilename := uuid.New()
+	result, err := cu.awsS3.UploadImage(uniqueFilename.String(), "community_background", img)
+	if err != nil {
+		return "", err
+	}
+
+	imageURL := aws.StringValue(&result.Location)
+
+	err = cu.communityRepo.SetCommunityImage(id, imageURL, "community_background_image_url")
+	if err != nil {
+		return "", err
+	}
+
+	return imageURL, err
 }
