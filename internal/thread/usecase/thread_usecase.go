@@ -337,3 +337,12 @@ func (tuc *ThreadUseCaseImpl) GetThreads(keyword string, userID uint) ([]dto.Det
 
 	return threads, nil
 }
+
+func (tuc *ThreadUseCaseImpl) LikeComment(commentID, userID uint) error {
+	err := tuc.tr.LikeComment(entity.CommentLikes{
+		UserID:    userID,
+		CommentID: commentID,
+	})
+
+	return err
+}

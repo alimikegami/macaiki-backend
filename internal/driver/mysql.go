@@ -43,5 +43,6 @@ func InitialMigration(DB *gorm.DB) {
 		&threadEntity.ThreadLikes{},
 		&threadEntity.ThreadFollower{},
 		&threadEntity.Comment{},
+		&threadEntity.CommentLikes{},
 	)
 }
