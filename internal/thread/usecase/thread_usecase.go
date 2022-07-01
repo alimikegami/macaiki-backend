@@ -206,6 +206,7 @@ func (tuc *ThreadUseCaseImpl) GetTrendingThreads(userID uint) ([]dto.DetailedThr
 			UpdatedAt:             thread.Thread.UpdatedAt,
 			LikesCount:            thread.LikesCount,
 			IsLiked:               thread.IsLiked,
+			IsFollowed:            thread.IsFollowed,
 		})
 	}
 
@@ -235,6 +236,7 @@ func (tuc *ThreadUseCaseImpl) GetThreadsFromFollowedCommunity(userID uint) ([]dt
 			UpdatedAt:             thread.Thread.UpdatedAt,
 			LikesCount:            thread.LikesCount,
 			IsLiked:               thread.IsLiked,
+			IsFollowed:            thread.IsFollowed,
 		})
 	}
 
@@ -264,6 +266,7 @@ func (tuc *ThreadUseCaseImpl) GetThreadsFromFollowedUsers(userID uint) ([]dto.De
 			UpdatedAt:             thread.Thread.UpdatedAt,
 			LikesCount:            thread.LikesCount,
 			IsLiked:               thread.IsLiked,
+			IsFollowed:            thread.IsFollowed,
 		})
 	}
 
@@ -328,6 +331,7 @@ func (tuc *ThreadUseCaseImpl) GetThreads(keyword string, userID uint) ([]dto.Det
 			UpdatedAt:             thread.Thread.UpdatedAt,
 			LikesCount:            thread.LikesCount,
 			IsLiked:               thread.IsLiked,
+			IsFollowed:            thread.IsFollowed,
 		})
 	}
 

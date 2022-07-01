@@ -29,4 +29,5 @@ type DetailedThreadResponse struct {
 	UpdatedAt             time.Time `json:"updatedAt"`
 	LikesCount            int       `json:"likesCount"`
 	IsLiked               int       `json:"isLiked"`
+	IsFollowed            int       `json:"isFollowed"`
 }
