@@ -75,7 +75,7 @@ func (u *UserHandler) GetAllUsers(c echo.Context) error {
 	search := c.QueryParam("search")
 
 	userID, _ := _middL.ExtractTokenUser(c)
-	res, err := u.UserUsecase.GetAllWithDetail(uint(userID), search)
+	res, err := u.UserUsecase.GetAll(uint(userID), search)
 	if err != nil {
 		return response.ErrorResponse(c, err)
 	}

@@ -8,8 +8,7 @@ import (
 type UserUsecase interface {
 	Login(loginInfo dto.LoginUserRequest) (dto.LoginResponse, error)
 	Register(user dto.UserRequest) error
-	// GetAll(username string) ([]dto.UserResponse, error)
-	GetAllWithDetail(userID uint, search string) ([]dto.UserResponse, error)
+	GetAll(userID uint, search string) ([]dto.UserResponse, error)
 	Get(id, tokenUserID uint) (dto.UserDetailResponse, error)
 	Update(userUpdate dto.UpdateUserRequest, id, curentUserID uint) (dto.UserResponse, error)
 	Delete(id uint, curentUserID uint, curentUser string) error
