@@ -30,9 +30,3 @@ type UserReport struct {
 	CreatedAt        time.Time
 	UpdatedAt        time.Time
 }
-
-type FollowedCommunity struct {
-	gorm.Model
-	CommunityID uint
-	UserID      uint
-}
