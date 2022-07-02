@@ -5,11 +5,14 @@ import (
 	"macaiki/internal/user"
 	cloudstorage "macaiki/pkg/cloud_storage"
 	"macaiki/pkg/utils"
+	"mime/multipart"
 
 	"macaiki/internal/community/dto"
 	"macaiki/internal/community/entity"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/go-playground/validator/v10"
+	"github.com/google/uuid"
 )
 
 type CommunityUsecaseImpl struct {
@@ -28,15 +31,15 @@ func NewCommunityUsecase(communityRepo community.CommunityRepository, userRepo u
 	}
 }
 
-func (cu *CommunityUsecaseImpl) GetAllCommunities(userID int, search string) ([]dto.CommunityResponse, error) {
+func (cu *CommunityUsecaseImpl) GetAllCommunities(userID int, search string) ([]dto.CommunityDetailResponse, error) {
 	communities, err := cu.communityRepo.GetAllCommunities(uint(userID), search)
 	if err != nil {
-		return []dto.CommunityResponse{}, utils.ErrInternalServerError
+		return []dto.CommunityDetailResponse{}, utils.ErrInternalServerError
 	}
 
-	communitiesResp := []dto.CommunityResponse{}
+	communitiesResp := []dto.CommunityDetailResponse{}
 	for _, val := range communities {
-		communitiesResp = append(communitiesResp, dto.CommunityResponse{
+		communitiesResp = append(communitiesResp, dto.CommunityDetailResponse{
 			ID:                          val.ID,
 			Name:                        val.Name,
 			CommunityImageUrl:           val.CommunityImageUrl,
@@ -49,17 +52,17 @@ func (cu *CommunityUsecaseImpl) GetAllCommunities(userID int, search string) ([]
 	return communitiesResp, nil
 }
 
-func (cu *CommunityUsecaseImpl) GetCommunity(userID, communityID uint) (dto.CommunityResponse, error) {
+func (cu *CommunityUsecaseImpl) GetCommunity(userID, communityID uint) (dto.CommunityDetailResponse, error) {
 	community, err := cu.communityRepo.GetCommunityWithDetail(userID, communityID)
 	if err != nil {
-		return dto.CommunityResponse{}, utils.ErrInternalServerError
+		return dto.CommunityDetailResponse{}, utils.ErrInternalServerError
 	}
 
 	if community.ID == 0 {
-		return dto.CommunityResponse{}, utils.ErrNotFound
+		return dto.CommunityDetailResponse{}, utils.ErrNotFound
 	}
 
-	communityResp := dto.CommunityResponse{
+	communityResp := dto.CommunityDetailResponse{
 		ID:                          community.ID,
 		Name:                        community.Name,
 		CommunityImageUrl:           community.CommunityImageUrl,
@@ -80,10 +83,8 @@ func (cu *CommunityUsecaseImpl) StoreCommunity(community dto.CommunityRequest, r
 	}
 
 	communityEntity := entity.Community{
-		Name:                        community.Name,
-		CommunityImageUrl:           community.CommunityImageUrl,
-		CommunityBackgroundImageUrl: community.CommunityBackgroundImageUrl,
-		Description:                 community.Description,
+		Name:        community.Name,
+		Description: community.Description,
 	}
 
 	err := cu.communityRepo.StoreCommunity(communityEntity)
@@ -93,37 +94,40 @@ func (cu *CommunityUsecaseImpl) StoreCommunity(community dto.CommunityRequest, r
 
 	return nil
 }
-func (cu *CommunityUsecaseImpl) UpdateCommunity(id uint, community dto.CommunityRequest, role string) error {
+func (cu *CommunityUsecaseImpl) UpdateCommunity(id uint, community dto.CommunityRequest, role string) (dto.CommunityResponse, error) {
 	if role != "Admin" {
-		return utils.ErrUnauthorizedAccess
+		return dto.CommunityResponse{}, utils.ErrUnauthorizedAccess
 	}
 
 	if err := cu.validator.Struct(community); err != nil {
-		return utils.ErrBadParamInput
+		return dto.CommunityResponse{}, utils.ErrBadParamInput
 	}
 
 	communityDB, err := cu.communityRepo.GetCommunity(id)
 	if err != nil {
-		return utils.ErrInternalServerError
+		return dto.CommunityResponse{}, utils.ErrInternalServerError
 	}
 
 	if communityDB.ID == 0 {
-		return utils.ErrNotFound
+		return dto.CommunityResponse{}, utils.ErrNotFound
 	}
 
 	newCommunity := entity.Community{
-		Name:                        community.Name,
-		CommunityImageUrl:           community.CommunityImageUrl,
-		CommunityBackgroundImageUrl: community.CommunityBackgroundImageUrl,
-		Description:                 community.Description,
+		Name:        community.Name,
+		Description: community.Description,
 	}
 
-	err = cu.communityRepo.UpdateCommunity(communityDB, newCommunity)
+	communityDB, err = cu.communityRepo.UpdateCommunity(communityDB, newCommunity)
 	if err != nil {
-		return utils.ErrInternalServerError
+		return dto.CommunityResponse{}, utils.ErrInternalServerError
 	}
 
-	return nil
+	communityResp := dto.CommunityResponse{
+		ID:          communityDB.ID,
+		Name:        communityDB.Name,
+		Description: communityDB.Description,
+	}
+	return communityResp, nil
 }
 func (cu *CommunityUsecaseImpl) DeleteCommunity(id uint, role string) error {
 	if role != "Admin" {
@@ -194,4 +198,70 @@ func (cu *CommunityUsecaseImpl) UnfollowCommunity(userID, communityID uint) erro
 	}
 
 	return nil
+}
+
+func (cu *CommunityUsecaseImpl) SetImage(id uint, img *multipart.FileHeader, role string) (string, error) {
+	if role != "Admin" {
+		return "", utils.ErrUnauthorizedAccess
+	}
+
+	community, err := cu.communityRepo.GetCommunity(id)
+	if err != nil {
+		return "", utils.ErrInternalServerError
+	}
+
+	if community.CommunityImageUrl != "" {
+		err = cu.awsS3.DeleteImage(community.CommunityImageUrl, "community")
+		if err != nil {
+			return "", err
+		}
+	}
+
+	uniqueFilename := uuid.New()
+	result, err := cu.awsS3.UploadImage(uniqueFilename.String(), "community", img)
+	if err != nil {
+		return "", err
+	}
+
+	imageURL := aws.StringValue(&result.Location)
+
+	err = cu.communityRepo.SetCommunityImage(id, imageURL, "community_image_url")
+	if err != nil {
+		return "", err
+	}
+
+	return imageURL, err
+}
+
+func (cu *CommunityUsecaseImpl) SetBackgroundImage(id uint, img *multipart.FileHeader, role string) (string, error) {
+	if role != "Admin" {
+		return "", utils.ErrUnauthorizedAccess
+	}
+
+	community, err := cu.communityRepo.GetCommunity(id)
+	if err != nil {
+		return "", utils.ErrInternalServerError
+	}
+
+	if community.CommunityImageUrl != "" {
+		err = cu.awsS3.DeleteImage(community.CommunityImageUrl, "community_background")
+		if err != nil {
+			return "", err
+		}
+	}
+
+	uniqueFilename := uuid.New()
+	result, err := cu.awsS3.UploadImage(uniqueFilename.String(), "community_background", img)
+	if err != nil {
+		return "", err
+	}
+
+	imageURL := aws.StringValue(&result.Location)
+
+	err = cu.communityRepo.SetCommunityImage(id, imageURL, "community_background_image_url")
+	if err != nil {
+		return "", err
+	}
+
+	return imageURL, err
 }

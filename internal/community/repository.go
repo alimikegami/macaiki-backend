@@ -10,9 +10,11 @@ type CommunityRepository interface {
 	GetCommunityWithDetail(userID, communityID uint) (communityEntity.Community, error)
 	GetCommunity(id uint) (communityEntity.Community, error)
 	StoreCommunity(community communityEntity.Community) error
-	UpdateCommunity(community communityEntity.Community, communityReq communityEntity.Community) error
+	UpdateCommunity(community communityEntity.Community, communityReq communityEntity.Community) (communityEntity.Community, error)
 	DeleteCommunity(community communityEntity.Community) error
 
 	FollowCommunity(user userEntity.User, community communityEntity.Community) error
 	UnfollowCommunity(user userEntity.User, community communityEntity.Community) error
+
+	SetCommunityImage(id uint, imageURL string, tableName string) error
 }
