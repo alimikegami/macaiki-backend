@@ -13,13 +13,5 @@ type Community struct {
 	CommunityBackgroundImageUrl string
 	Description                 string
 	Users                       []userEntity.User `gorm:"many2many:community_followers;"`
-}
-
-type CommunityWithDetail struct {
-	gorm.Model
-	Name                        string
-	CommunityImageUrl           string
-	CommunityBackgroundImageUrl string
-	Description                 string
-	IsFollowed                  bool
+	IsFollowed                  bool              `gorm:"-:migration;<-:false"`
 }

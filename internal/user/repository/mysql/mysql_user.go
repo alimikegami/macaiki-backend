@@ -16,10 +16,10 @@ func NewMysqlUserRepository(Db *gorm.DB) user.UserRepository {
 	return &MysqlUserRepository{Db}
 }
 
-func (ur *MysqlUserRepository) GetAll(username string) ([]entity.User, error) {
+func (ur *MysqlUserRepository) GetAllWithDetail(userID uint, search string) ([]entity.User, error) {
 	users := []entity.User{}
 
-	res := ur.Db.Where("username LIKE ?", "%"+username+"%").Find(&users)
+	res := ur.Db.Raw("SELECT u.*, !ISNULL(uf.user_id) AS is_followed FROM `users` AS u LEFT JOIN (SELECT * FROM user_followers WHERE follower_id = ?) AS uf ON u.id = uf.user_id WHERE u.deleted_at IS NULL AND (u.username LIKE ? OR u.name LIKE ?) ", userID, "%"+search+"%", "%"+search+"%").Find(&users)
 	err := res.Error
 	if err != nil {
 		return []entity.User{}, err
@@ -41,7 +41,7 @@ func (ur *MysqlUserRepository) Store(user entity.User) error {
 func (ur *MysqlUserRepository) Get(id uint) (entity.User, error) {
 	user := entity.User{}
 
-	res := ur.Db.Find(&user, id)
+	res := ur.Db.Raw("SELECT u.*, !ISNULL(uf.user_id) AS is_followed FROM `users` AS u LEFT JOIN (SELECT * FROM user_followers WHERE follower_id = ?) AS uf ON u.id = uf.user_id WHERE u.deleted_at IS NULL AND u.id = ?", id, id).Find(&user)
 	err := res.Error
 
 	if err != nil {
@@ -124,7 +124,7 @@ func (ur *MysqlUserRepository) Unfollow(user, userFollower entity.User) (entity.
 
 func (ur *MysqlUserRepository) GetFollowerNumber(id uint) (int, error) {
 	var count int64
-	res := ur.Db.Table("user_followers").Where("user_id = ?", id).Count(&count)
+	res := ur.Db.Raw("SELECT COUNT(*) FROM `users` LEFT JOIN `user_followers` `Followers` ON `users`.`id` = `Followers`.`follower_id` WHERE `Followers`.`user_id` = ? AND `users`.`deleted_at` IS NULL", id).Scan(&count)
 	err := res.Error
 	if err != nil {
 		return 0, err
@@ -134,7 +134,7 @@ func (ur *MysqlUserRepository) GetFollowerNumber(id uint) (int, error) {
 
 func (ur *MysqlUserRepository) GetFollowingNumber(id uint) (int, error) {
 	var count int64
-	res := ur.Db.Table("user_followers").Where("follower_id = ?", id).Count(&count)
+	res := ur.Db.Raw("SELECT COUNT(*) FROM `users` LEFT JOIN `user_followers` `Followers` ON `users`.`id` = `Followers`.`user_id` WHERE `Followers`.`follower_id` = ? AND `users`.`deleted_at` IS NULL", id).Scan(&count)
 	err := res.Error
 	if err != nil {
 		return 0, err
@@ -155,7 +155,7 @@ func (ur *MysqlUserRepository) GetThreadsNumber(id uint) (int, error) {
 func (ur *MysqlUserRepository) GetFollower(user entity.User) ([]entity.User, error) {
 	users := []entity.User{}
 
-	res := ur.Db.Raw("SELECT * FROM `users` LEFT JOIN `user_followers` `Followers` ON `users`.`id` = `Followers`.`follower_id` WHERE `Followers`.`user_id` = ?", user.ID).Scan(&users)
+	res := ur.Db.Raw("SELECT * FROM `users` LEFT JOIN `user_followers` `Followers` ON `users`.`id` = `Followers`.`follower_id` WHERE `Followers`.`user_id` = ? AND `users`.`deleted_at` IS NULL", user.ID).Scan(&users)
 	err := res.Error
 
 	if err != nil {
@@ -167,7 +167,7 @@ func (ur *MysqlUserRepository) GetFollower(user entity.User) ([]entity.User, err
 
 func (ur *MysqlUserRepository) GetFollowing(user entity.User) ([]entity.User, error) {
 	users := []entity.User{}
-	res := ur.Db.Raw("SELECT * FROM `users` LEFT JOIN `user_followers` `Followers` ON `users`.`id` = `Followers`.`user_id` WHERE `Followers`.`follower_id` = ?", user.ID).Scan(&users)
+	res := ur.Db.Raw("SELECT * FROM `users` LEFT JOIN `user_followers` `Followers` ON `users`.`id` = `Followers`.`user_id` WHERE `Followers`.`follower_id` = ? AND `users`.`deleted_at` IS NULL", user.ID).Scan(&users)
 	err := res.Error
 
 	if err != nil {

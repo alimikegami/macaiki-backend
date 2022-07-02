@@ -5,7 +5,6 @@ import (
 	"macaiki/internal/user"
 	cloudstorage "macaiki/pkg/cloud_storage"
 	"macaiki/pkg/utils"
-	"strconv"
 
 	"macaiki/internal/community/dto"
 	"macaiki/internal/community/entity"
@@ -29,8 +28,8 @@ func NewCommunityUsecase(communityRepo community.CommunityRepository, userRepo u
 	}
 }
 
-func (cu *CommunityUsecaseImpl) GetAllCommunity(search string) ([]dto.CommunityResponse, error) {
-	communities, err := cu.communityRepo.GetAllCommunity(search)
+func (cu *CommunityUsecaseImpl) GetAllCommunities(userID int, search string) ([]dto.CommunityResponse, error) {
+	communities, err := cu.communityRepo.GetAllCommunities(uint(userID), search)
 	if err != nil {
 		return []dto.CommunityResponse{}, utils.ErrInternalServerError
 	}
@@ -43,26 +42,6 @@ func (cu *CommunityUsecaseImpl) GetAllCommunity(search string) ([]dto.CommunityR
 			CommunityImageUrl:           val.CommunityImageUrl,
 			CommunityBackgroundImageUrl: val.CommunityBackgroundImageUrl,
 			Description:                 val.Description,
-		})
-	}
-
-	return communitiesResp, nil
-}
-
-func (cu *CommunityUsecaseImpl) GetAllCommunityDetail(userID int, search string) ([]dto.CommunityWithDetailResponse, error) {
-	communities, err := cu.communityRepo.GetAllCommunityDetail(strconv.Itoa(int(userID)), search)
-	if err != nil {
-		return []dto.CommunityWithDetailResponse{}, utils.ErrInternalServerError
-	}
-
-	communitiesResp := []dto.CommunityWithDetailResponse{}
-	for _, val := range communities {
-		communitiesResp = append(communitiesResp, dto.CommunityWithDetailResponse{
-			ID:                          val.ID,
-			Name:                        val.Name,
-			CommunityImageUrl:           val.CommunityImageUrl,
-			CommunityBackgroundImageUrl: val.CommunityBackgroundImageUrl,
-			Description:                 val.Description,
 			IsFollowed:                  val.IsFollowed,
 		})
 	}
@@ -70,8 +49,8 @@ func (cu *CommunityUsecaseImpl) GetAllCommunityDetail(userID int, search string)
 	return communitiesResp, nil
 }
 
-func (cu *CommunityUsecaseImpl) GetCommunity(id uint) (dto.CommunityResponse, error) {
-	community, err := cu.communityRepo.GetCommunity(id)
+func (cu *CommunityUsecaseImpl) GetCommunity(userID, communityID uint) (dto.CommunityResponse, error) {
+	community, err := cu.communityRepo.GetCommunityWithDetail(userID, communityID)
 	if err != nil {
 		return dto.CommunityResponse{}, utils.ErrInternalServerError
 	}
@@ -86,6 +65,7 @@ func (cu *CommunityUsecaseImpl) GetCommunity(id uint) (dto.CommunityResponse, er
 		CommunityImageUrl:           community.CommunityImageUrl,
 		CommunityBackgroundImageUrl: community.CommunityBackgroundImageUrl,
 		Description:                 community.Description,
+		IsFollowed:                  community.IsFollowed,
 	}
 
 	return communityResp, err

@@ -34,7 +34,7 @@ func NewUserUsecase(userRepo user.UserRepository, reportCategoryRepo reportcateg
 	}
 }
 
-func (uu *userUsecase) Login(loginInfo dto.LoginUserRequest) (dto.LoginResponse, error) {
+func (uu *userUsecase) Login(loginInfo dto.UserLoginRequest) (dto.LoginResponse, error) {
 	if err := uu.validator.Struct(loginInfo); err != nil {
 		return dto.LoginResponse{}, utils.ErrBadParamInput
 	}
@@ -101,8 +101,8 @@ func (uu *userUsecase) Register(user dto.UserRequest) error {
 	return nil
 }
 
-func (uu *userUsecase) GetAll(username string) ([]dto.UserResponse, error) {
-	users, err := uu.userRepo.GetAll(username)
+func (uu *userUsecase) GetAll(userID uint, search string) ([]dto.UserResponse, error) {
+	users, err := uu.userRepo.GetAllWithDetail(userID, search)
 	if err != nil {
 		return []dto.UserResponse{}, utils.ErrInternalServerError
 	}
@@ -110,7 +110,7 @@ func (uu *userUsecase) GetAll(username string) ([]dto.UserResponse, error) {
 	return helper.DomainUserToListUserResponse(users), err
 }
 
-func (uu *userUsecase) Get(id uint) (dto.UserDetailResponse, error) {
+func (uu *userUsecase) Get(id, tokenUserID uint) (dto.UserDetailResponse, error) {
 	userEntity, err := uu.userRepo.Get(id)
 	if err != nil {
 		return dto.UserDetailResponse{}, utils.ErrInternalServerError
@@ -133,55 +133,53 @@ func (uu *userUsecase) Get(id uint) (dto.UserDetailResponse, error) {
 	if err != nil {
 		return dto.UserDetailResponse{}, utils.ErrInternalServerError
 	}
-	return helper.DomainUserToUserDetailResponse(userEntity, totalFollowing, totalFollower, totalPost), nil
+
+	userResp := helper.DomainUserToUserDetailResponse(userEntity, totalFollowing, totalFollower, totalPost)
+	if id == tokenUserID {
+		userResp.IsMine = true
+	}
+	return userResp, nil
 }
-func (uu *userUsecase) Update(user dto.UpdateUserRequest, id uint, curentUserID uint) (dto.UserResponse, error) {
+func (uu *userUsecase) Update(user dto.UserUpdateRequest, id uint) (dto.UserUpdateResponse, error) {
 	// TODO: validation the username that has been used
 	if err := uu.validator.Struct(user); err != nil {
-		return dto.UserResponse{}, utils.ErrBadParamInput
-	}
-
-	// validation that accesses is the user itself
-	if id != curentUserID {
-		return dto.UserResponse{}, utils.ErrUnauthorizedAccess
+		return dto.UserUpdateResponse{}, utils.ErrBadParamInput
 	}
 
 	// validation the user exist
 	userDB, err := uu.userRepo.Get(id)
 	if err != nil {
-		return dto.UserResponse{}, utils.ErrInternalServerError
+		return dto.UserUpdateResponse{}, utils.ErrInternalServerError
 	}
 	if userDB.ID == 0 {
-		return dto.UserResponse{}, utils.ErrNotFound
+		return dto.UserUpdateResponse{}, utils.ErrNotFound
 	}
 
 	// validation the username that has beed used
 	if userDB.Username != user.Username {
 		userUsername, err := uu.userRepo.GetByUsername(user.Username)
 		if err != nil {
-			return dto.UserResponse{}, utils.ErrInternalServerError
+			return dto.UserUpdateResponse{}, utils.ErrInternalServerError
 		}
 
 		if userUsername.ID != 0 {
-			return dto.UserResponse{}, utils.ErrUsernameAlreadyUsed
+			return dto.UserUpdateResponse{}, utils.ErrUsernameAlreadyUsed
 		}
 	}
 
 	userEntity := entity.User{
-		Username:           user.Username,
-		Name:               user.Name,
-		ProfileImageUrl:    user.ProfileImageUrl,
-		BackgroundImageUrl: user.BackgroundImageUrl,
-		Bio:                user.Bio,
-		Profession:         user.Profession,
-		IsBanned:           user.IsBanned,
-	}
-	userDB, err = uu.userRepo.Update(&userDB, userEntity)
-	if err != nil {
-		return dto.UserResponse{}, utils.ErrInternalServerError
+		Username:   user.Username,
+		Name:       user.Name,
+		Bio:        user.Bio,
+		Profession: user.Profession,
 	}
 
-	return helper.DomainUserToUserResponse(userDB), nil
+	userDB, err = uu.userRepo.Update(&userDB, userEntity)
+	if err != nil {
+		return dto.UserUpdateResponse{}, utils.ErrInternalServerError
+	}
+
+	return helper.DomainUserToUserUpdateResponse(userDB), nil
 }
 func (uu *userUsecase) Delete(id uint, curentUserID uint, curentUserRole string) error {
 	// validation the user exist
@@ -206,7 +204,7 @@ func (uu *userUsecase) Delete(id uint, curentUserID uint, curentUserRole string)
 
 }
 
-func (uu *userUsecase) ChangeEmail(id uint, info dto.LoginUserRequest) (dto.UserResponse, error) {
+func (uu *userUsecase) ChangeEmail(id uint, info dto.UserLoginRequest) (dto.UserResponse, error) {
 	if err := uu.validator.Struct(info); err != nil {
 		return dto.UserResponse{}, utils.ErrBadParamInput
 	}
@@ -240,7 +238,7 @@ func (uu *userUsecase) ChangeEmail(id uint, info dto.LoginUserRequest) (dto.User
 
 	return helper.DomainUserToUserResponse(userDB), nil
 }
-func (uu *userUsecase) ChangePassword(id uint, passwordInfo dto.ChangePasswordUserRequest) error {
+func (uu *userUsecase) ChangePassword(id uint, passwordInfo dto.UserChangePasswordRequest) error {
 	if err := uu.validator.Struct(passwordInfo); err != nil {
 		return utils.ErrBadParamInput
 	}
