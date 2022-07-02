@@ -115,3 +115,20 @@ func (cr *CommunityRepositoryImpl) SetCommunityImage(id uint, imageURL string, t
 
 	return nil
 }
+
+func (cr *CommunityRepositoryImpl) AddModerator(user userEntity.User, community communityEntity.Community) error {
+	err := cr.db.Model(&community).Association("Moderators").Append(&user)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+func (cr *CommunityRepositoryImpl) RemoveModerator(user userEntity.User, community communityEntity.Community) error {
+	err := cr.db.Model(&community).Association("Moderators").Delete(user)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

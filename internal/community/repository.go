@@ -17,4 +17,7 @@ type CommunityRepository interface {
 	UnfollowCommunity(user userEntity.User, community communityEntity.Community) error
 
 	SetCommunityImage(id uint, imageURL string, tableName string) error
+
+	AddModerator(user userEntity.User, community communityEntity.Community) error
+	RemoveModerator(user userEntity.User, community communityEntity.Community) error
 }
