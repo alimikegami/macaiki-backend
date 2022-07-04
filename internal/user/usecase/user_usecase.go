@@ -138,7 +138,6 @@ func (uu *userUsecase) Get(id, tokenUserID uint) (dto.UserDetailResponse, error)
 	return userResp, nil
 }
 func (uu *userUsecase) Update(user dto.UserUpdateRequest, id uint) (dto.UserUpdateResponse, error) {
-	// TODO: validation the username that has been used
 	if err := uu.validator.Struct(user); err != nil {
 		return dto.UserUpdateResponse{}, utils.ErrBadParamInput
 	}
@@ -152,20 +151,7 @@ func (uu *userUsecase) Update(user dto.UserUpdateRequest, id uint) (dto.UserUpda
 		return dto.UserUpdateResponse{}, utils.ErrNotFound
 	}
 
-	// validation the username that has beed used
-	if userDB.Username != user.Username {
-		userUsername, err := uu.userRepo.GetByUsername(user.Username)
-		if err != nil {
-			return dto.UserUpdateResponse{}, utils.ErrInternalServerError
-		}
-
-		if userUsername.ID != 0 {
-			return dto.UserUpdateResponse{}, utils.ErrUsernameAlreadyUsed
-		}
-	}
-
 	userEntity := entity.User{
-		Username:   user.Username,
 		Name:       user.Name,
 		Bio:        user.Bio,
 		Profession: user.Profession,
