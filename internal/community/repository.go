@@ -2,6 +2,7 @@ package community
 
 import (
 	communityEntity "macaiki/internal/community/entity"
+	threadEntity "macaiki/internal/thread/entity"
 	userEntity "macaiki/internal/user/entity"
 )
 
@@ -17,4 +18,5 @@ type CommunityRepository interface {
 	UnfollowCommunity(user userEntity.User, community communityEntity.Community) error
 
 	SetCommunityImage(id uint, imageURL string, tableName string) error
+	GetThreadCommunityByID(userID, communityID uint) ([]threadEntity.ThreadWithDetails, error)
 }
