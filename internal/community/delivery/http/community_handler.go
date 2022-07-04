@@ -36,8 +36,10 @@ func NewCommunityHandler(e *echo.Echo, communityUsecase community.CommunityUseca
 	e.PUT("api/v1/communities/:communityID/images", communityHandler.SetCommunityImage, middleware.JWT([]byte(JWTSecret)))
 	e.PUT("api/v1/communities/:communityID/background-images", communityHandler.SetCommunityBackgroundImage, middleware.JWT([]byte(JWTSecret)))
 
+	e.GET("api/v1/communitites/:communityID/threads", communityHandler.GetThreadByCommunityID, middleware.JWT([]byte(JWTSecret)))
 	e.POST("api/v1/community-moderators", communityHandler.AddModerator, middleware.JWT([]byte(JWTSecret)))
 	e.DELETE("api/v1/community-moderators", communityHandler.RemoveModerator, middleware.JWT([]byte(JWTSecret)))
+
 }
 
 func (communityHandler *CommunityHandler) CreateCommunity(c echo.Context) error {
@@ -187,6 +189,17 @@ func (communityHandler *CommunityHandler) SetCommunityBackgroundImage(c echo.Con
 	return response.SuccessResponse(c, imageUrl)
 }
 
+func (communityHandler *CommunityHandler) GetThreadByCommunityID(c echo.Context) error {
+	communityID, err := strconv.Atoi(c.Param("communityID"))
+	userID, _ := _middL.ExtractTokenUser(c)
+
+	threadResp, err := communityHandler.communityUsecase.GetThreadCommunity(uint(userID), uint(communityID))
+	if err != nil {
+		return response.ErrorResponse(c, err)
+	}
+	return response.SuccessResponse(c, threadResp)
+}
+
 func (communityHandler *CommunityHandler) AddModerator(c echo.Context) error {
 	moderatorReq := dto.CommunityModeratorRequest{}
 
@@ -197,8 +210,7 @@ func (communityHandler *CommunityHandler) AddModerator(c echo.Context) error {
 	if err != nil {
 		return response.ErrorResponse(c, err)
 	}
-
-	return response.SuccessResponse(c, nil)
+  return response.SuccessResponse(c, nil)
 }
 
 func (communityHandler *CommunityHandler) RemoveModerator(c echo.Context) error {

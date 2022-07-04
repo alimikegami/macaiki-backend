@@ -1,15 +1,16 @@
 package community
 
 import (
-	"macaiki/internal/community/dto"
+	dtoCommunity "macaiki/internal/community/dto"
+	dtoThread "macaiki/internal/thread/dto"
 	"mime/multipart"
 )
 
 type CommunityUsecase interface {
-	GetAllCommunities(userID int, search string) ([]dto.CommunityDetailResponse, error)
-	GetCommunity(userID, communityID uint) (dto.CommunityDetailResponse, error)
-	StoreCommunity(community dto.CommunityRequest, role string) error
-	UpdateCommunity(id uint, community dto.CommunityRequest, role string) (dto.CommunityResponse, error)
+	GetAllCommunities(userID int, search string) ([]dtoCommunity.CommunityDetailResponse, error)
+	GetCommunity(userID, communityID uint) (dtoCommunity.CommunityDetailResponse, error)
+	StoreCommunity(community dtoCommunity.CommunityRequest, role string) error
+	UpdateCommunity(id uint, community dtoCommunity.CommunityRequest, role string) (dtoCommunity.CommunityResponse, error)
 	DeleteCommunity(id uint, role string) error
 
 	FollowCommunity(userID, communityID uint) error
@@ -17,6 +18,7 @@ type CommunityUsecase interface {
 	SetImage(id uint, img *multipart.FileHeader, role string) (string, error)
 	SetBackgroundImage(id uint, img *multipart.FileHeader, role string) (string, error)
 
-	AddModerator(moderatorReq dto.CommunityModeratorRequest, role string) error
-	RemoveModerator(moderatorReq dto.CommunityModeratorRequest, role string) error
+	GetThreadCommunity(userID, communityID uint) ([]dtoThread.DetailedThreadResponse, error)
+	AddModerator(moderatorReq dtoCommunity.CommunityModeratorRequest, role string) error
+	RemoveModerator(moderatorReq dtoCommunity.CommunityModeratorRequest, role string) error
 }

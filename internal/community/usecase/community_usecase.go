@@ -7,8 +7,9 @@ import (
 	"macaiki/pkg/utils"
 	"mime/multipart"
 
-	"macaiki/internal/community/dto"
+	dtoCommunity "macaiki/internal/community/dto"
 	"macaiki/internal/community/entity"
+	dtoThread "macaiki/internal/thread/dto"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/go-playground/validator/v10"
@@ -31,15 +32,15 @@ func NewCommunityUsecase(communityRepo community.CommunityRepository, userRepo u
 	}
 }
 
-func (cu *CommunityUsecaseImpl) GetAllCommunities(userID int, search string) ([]dto.CommunityDetailResponse, error) {
+func (cu *CommunityUsecaseImpl) GetAllCommunities(userID int, search string) ([]dtoCommunity.CommunityDetailResponse, error) {
 	communities, err := cu.communityRepo.GetAllCommunities(uint(userID), search)
 	if err != nil {
-		return []dto.CommunityDetailResponse{}, utils.ErrInternalServerError
+		return []dtoCommunity.CommunityDetailResponse{}, utils.ErrInternalServerError
 	}
 
-	communitiesResp := []dto.CommunityDetailResponse{}
+	communitiesResp := []dtoCommunity.CommunityDetailResponse{}
 	for _, val := range communities {
-		communitiesResp = append(communitiesResp, dto.CommunityDetailResponse{
+		communitiesResp = append(communitiesResp, dtoCommunity.CommunityDetailResponse{
 			ID:                          val.ID,
 			Name:                        val.Name,
 			CommunityImageUrl:           val.CommunityImageUrl,
@@ -52,17 +53,17 @@ func (cu *CommunityUsecaseImpl) GetAllCommunities(userID int, search string) ([]
 	return communitiesResp, nil
 }
 
-func (cu *CommunityUsecaseImpl) GetCommunity(userID, communityID uint) (dto.CommunityDetailResponse, error) {
+func (cu *CommunityUsecaseImpl) GetCommunity(userID, communityID uint) (dtoCommunity.CommunityDetailResponse, error) {
 	community, err := cu.communityRepo.GetCommunityWithDetail(userID, communityID)
 	if err != nil {
-		return dto.CommunityDetailResponse{}, utils.ErrInternalServerError
+		return dtoCommunity.CommunityDetailResponse{}, utils.ErrInternalServerError
 	}
 
 	if community.ID == 0 {
-		return dto.CommunityDetailResponse{}, utils.ErrNotFound
+		return dtoCommunity.CommunityDetailResponse{}, utils.ErrNotFound
 	}
 
-	communityResp := dto.CommunityDetailResponse{
+	communityResp := dtoCommunity.CommunityDetailResponse{
 		ID:                          community.ID,
 		Name:                        community.Name,
 		CommunityImageUrl:           community.CommunityImageUrl,
@@ -73,7 +74,7 @@ func (cu *CommunityUsecaseImpl) GetCommunity(userID, communityID uint) (dto.Comm
 
 	return communityResp, err
 }
-func (cu *CommunityUsecaseImpl) StoreCommunity(community dto.CommunityRequest, role string) error {
+func (cu *CommunityUsecaseImpl) StoreCommunity(community dtoCommunity.CommunityRequest, role string) error {
 	if role != "Admin" {
 		return utils.ErrUnauthorizedAccess
 	}
@@ -94,22 +95,22 @@ func (cu *CommunityUsecaseImpl) StoreCommunity(community dto.CommunityRequest, r
 
 	return nil
 }
-func (cu *CommunityUsecaseImpl) UpdateCommunity(id uint, community dto.CommunityRequest, role string) (dto.CommunityResponse, error) {
+func (cu *CommunityUsecaseImpl) UpdateCommunity(id uint, community dtoCommunity.CommunityRequest, role string) (dtoCommunity.CommunityResponse, error) {
 	if role != "Admin" {
-		return dto.CommunityResponse{}, utils.ErrUnauthorizedAccess
+		return dtoCommunity.CommunityResponse{}, utils.ErrUnauthorizedAccess
 	}
 
 	if err := cu.validator.Struct(community); err != nil {
-		return dto.CommunityResponse{}, utils.ErrBadParamInput
+		return dtoCommunity.CommunityResponse{}, utils.ErrBadParamInput
 	}
 
 	communityDB, err := cu.communityRepo.GetCommunity(id)
 	if err != nil {
-		return dto.CommunityResponse{}, utils.ErrInternalServerError
+		return dtoCommunity.CommunityResponse{}, utils.ErrInternalServerError
 	}
 
 	if communityDB.ID == 0 {
-		return dto.CommunityResponse{}, utils.ErrNotFound
+		return dtoCommunity.CommunityResponse{}, utils.ErrNotFound
 	}
 
 	newCommunity := entity.Community{
@@ -119,10 +120,10 @@ func (cu *CommunityUsecaseImpl) UpdateCommunity(id uint, community dto.Community
 
 	communityDB, err = cu.communityRepo.UpdateCommunity(communityDB, newCommunity)
 	if err != nil {
-		return dto.CommunityResponse{}, utils.ErrInternalServerError
+		return dtoCommunity.CommunityResponse{}, utils.ErrInternalServerError
 	}
 
-	communityResp := dto.CommunityResponse{
+	communityResp := dtoCommunity.CommunityResponse{
 		ID:          communityDB.ID,
 		Name:        communityDB.Name,
 		Description: communityDB.Description,
@@ -266,7 +267,37 @@ func (cu *CommunityUsecaseImpl) SetBackgroundImage(id uint, img *multipart.FileH
 	return imageURL, err
 }
 
-func (cu *CommunityUsecaseImpl) AddModerator(moderatorReq dto.CommunityModeratorRequest, role string) error {
+func (cu *CommunityUsecaseImpl) GetThreadCommunity(userID, communityID uint) ([]dtoThread.DetailedThreadResponse, error) {
+	threadsEntity, err := cu.communityRepo.GetThreadCommunityByID(userID, communityID)
+	if err != nil {
+		return []dtoThread.DetailedThreadResponse{}, utils.ErrInternalServerError
+	}
+
+	dtoThreads := []dtoThread.DetailedThreadResponse{}
+	for _, val := range threadsEntity {
+		dtoThread := dtoThread.DetailedThreadResponse{
+			ID:                    val.Thread.ID,
+			Title:                 val.Thread.Title,
+			Body:                  val.Thread.Body,
+			CommunityID:           val.Thread.CommunityID,
+			ImageURL:              val.Thread.ImageURL,
+			LikesCount:            val.LikesCount,
+			IsFollowed:            val.IsFollowed,
+			IsLiked:               val.IsLiked,
+			UserID:                val.Thread.UserID,
+			UserName:              val.User.Name,
+			UserProfession:        val.User.Profession,
+			UserProfilePictureURL: val.User.ProfileImageUrl,
+			CreatedAt:             val.Thread.CreatedAt,
+			UpdatedAt:             val.Thread.UpdatedAt,
+		}
+		dtoThreads = append(dtoThreads, dtoThread)
+	}
+
+	return dtoThreads, nil
+}
+
+func (cu *CommunityUsecaseImpl) AddModerator(moderatorReq dtoCommunity.CommunityModeratorRequest, role string) error {
 	if moderatorReq.UserID == 0 || moderatorReq.CommunityID == 0 {
 		return utils.ErrBadParamInput
 	}
@@ -295,7 +326,8 @@ func (cu *CommunityUsecaseImpl) AddModerator(moderatorReq dto.CommunityModerator
 
 	return nil
 }
-func (cu *CommunityUsecaseImpl) RemoveModerator(moderatorReq dto.CommunityModeratorRequest, role string) error {
+
+func (cu *CommunityUsecaseImpl) RemoveModerator(moderatorReq dtoCommunity.CommunityModeratorRequest, role string) error {
 	if moderatorReq.UserID == 0 || moderatorReq.CommunityID == 0 {
 		return utils.ErrBadParamInput
 	}
