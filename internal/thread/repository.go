@@ -8,7 +8,7 @@ type ThreadRepository interface {
 	UpdateThread(threadID uint, thread entity.Thread) error
 	GetThreadByID(threadID uint) (entity.Thread, error)
 	SetThreadImage(imageURL string, threadID uint) error
-	LikeThread(threadLikes entity.ThreadLikes) error
+	UpvoteThread(threadUpvote entity.ThreadUpvote) error
 	GetTrendingThreads(userID uint) ([]entity.ThreadWithDetails, error)
 	GetThreadsFromFollowedCommunity(userID uint) ([]entity.ThreadWithDetails, error)
 	GetThreadsFromFollowedUsers(userID uint) ([]entity.ThreadWithDetails, error)
