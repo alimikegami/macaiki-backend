@@ -23,6 +23,14 @@ type ThreadLikes struct {
 	User     userEntity.User
 }
 
+type ThreadDownvote struct {
+	gorm.Model
+	UserID   uint
+	ThreadID uint
+	Thread   Thread
+	User     userEntity.User
+}
+
 type ThreadWithDetails struct {
 	Thread
 	userEntity.User

@@ -231,6 +231,25 @@ func (th *ThreadHandler) LikeComment(c echo.Context) error {
 	return response.SuccessResponse(c, nil)
 }
 
+func (th *ThreadHandler) DownvoteThread(c echo.Context) error {
+	userID, _ := _middL.ExtractTokenUser(c)
+
+	threadID := c.Param("threadID")
+	u64, err := strconv.ParseUint(threadID, 10, 32)
+	if err != nil {
+		fmt.Println(err)
+		return response.ErrorResponse(c, err)
+	}
+	threadIDUint := uint(u64)
+
+	err = th.tu.DownvoteThread(threadIDUint, uint(userID))
+	if err != nil {
+		fmt.Println(err)
+		return response.ErrorResponse(c, err)
+	}
+	return response.SuccessResponse(c, nil)
+}
+
 func CreateNewThreadHandler(e *echo.Echo, tu thread.ThreadUseCase, JWTSecret string) *ThreadHandler {
 	threadHandler := &ThreadHandler{router: e, tu: tu}
 	threadHandler.router.POST("/api/v1/threads", threadHandler.CreateThread, middleware.JWT([]byte(JWTSecret)))
@@ -244,5 +263,7 @@ func CreateNewThreadHandler(e *echo.Echo, tu thread.ThreadUseCase, JWTSecret str
 	threadHandler.router.POST("/api/v1/threads/:threadID/comments", threadHandler.AddThreadComment, middleware.JWT([]byte(JWTSecret)))
 	threadHandler.router.GET("/api/v1/threads/:threadID/comments", threadHandler.GetCommentsByThreadID)
 	threadHandler.router.POST("/api/v1/threads/:threadID/comments/:commentID", threadHandler.LikeComment, middleware.JWT([]byte(JWTSecret)))
+	threadHandler.router.POST("/api/v1/threads/:threadID/downvote", threadHandler.DownvoteThread, middleware.JWT([]byte(JWTSecret)))
+
 	return threadHandler
 }
