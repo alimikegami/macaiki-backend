@@ -117,6 +117,7 @@ func (cr *CommunityRepositoryImpl) SetCommunityImage(id uint, imageURL string, t
 	return nil
 }
 
+
 func (cr *CommunityRepositoryImpl) GetThreadCommunityByID(userID, communityID uint) ([]threadEntity.ThreadWithDetails, error) {
 	threads := []threadEntity.ThreadWithDetails{}
 	res := cr.db.Raw("SELECT t.*, tlc.count AS like_count, !isnull(tf.user_id) AS is_followed, !isnull(tl.user_id) AS is_liked, u.*, (u.id = ?) AS is_mine FROM threads AS t LEFT JOIN (SELECT * FROM thread_followers WHERE user_id = ?) AS tf ON t.id = tf.thread_id LEFT JOIN (SELECT t.thread_id, COUNT(*) AS count FROM thread_likes AS t GROUP BY t.thread_id) AS tlc ON t.id = tlc.thread_id LEFT JOIN (SELECT * FROM thread_likes WHERE user_id = ?) AS tl ON tl.thread_id = t.id LEFT JOIN (SELECT u.*, !ISNULL(uf.user_id) AS is_followed FROM `users` AS u LEFT JOIN (SELECT * FROM user_followers WHERE follower_id = ?) AS uf ON u.id = uf.user_id WHERE u.deleted_at IS NULL) AS u ON u.id = t.user_id WHERE t.community_id = ?", userID, userID, userID, userID, communityID).Scan(&threads)
@@ -126,4 +127,22 @@ func (cr *CommunityRepositoryImpl) GetThreadCommunityByID(userID, communityID ui
 	}
 
 	return threads, nil
+}
+
+func (cr *CommunityRepositoryImpl) AddModerator(user userEntity.User, community communityEntity.Community) error {
+	err := cr.db.Model(&community).Association("Moderators").Append(&user)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (cr *CommunityRepositoryImpl) RemoveModerator(user userEntity.User, community communityEntity.Community) error {
+	err := cr.db.Model(&community).Association("Moderators").Delete(user)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

@@ -37,6 +37,9 @@ func NewCommunityHandler(e *echo.Echo, communityUsecase community.CommunityUseca
 	e.PUT("api/v1/communities/:communityID/background-images", communityHandler.SetCommunityBackgroundImage, middleware.JWT([]byte(JWTSecret)))
 
 	e.GET("api/v1/communitites/:communityID/threads", communityHandler.GetThreadByCommunityID, middleware.JWT([]byte(JWTSecret)))
+	e.POST("api/v1/community-moderators", communityHandler.AddModerator, middleware.JWT([]byte(JWTSecret)))
+	e.DELETE("api/v1/community-moderators", communityHandler.RemoveModerator, middleware.JWT([]byte(JWTSecret)))
+
 }
 
 func (communityHandler *CommunityHandler) CreateCommunity(c echo.Context) error {
@@ -188,10 +191,6 @@ func (communityHandler *CommunityHandler) SetCommunityBackgroundImage(c echo.Con
 
 func (communityHandler *CommunityHandler) GetThreadByCommunityID(c echo.Context) error {
 	communityID, err := strconv.Atoi(c.Param("communityID"))
-	if err != nil {
-		return response.ErrorResponse(c, err)
-	}
-
 	userID, _ := _middL.ExtractTokenUser(c)
 
 	threadResp, err := communityHandler.communityUsecase.GetThreadCommunity(uint(userID), uint(communityID))
@@ -199,4 +198,31 @@ func (communityHandler *CommunityHandler) GetThreadByCommunityID(c echo.Context)
 		return response.ErrorResponse(c, err)
 	}
 	return response.SuccessResponse(c, threadResp)
+}
+
+func (communityHandler *CommunityHandler) AddModerator(c echo.Context) error {
+	moderatorReq := dto.CommunityModeratorRequest{}
+
+	c.Bind(&moderatorReq)
+
+	_, role := _middL.ExtractTokenUser(c)
+	err := communityHandler.communityUsecase.AddModerator(moderatorReq, role)
+	if err != nil {
+		return response.ErrorResponse(c, err)
+	}
+  return response.SuccessResponse(c, nil)
+}
+
+func (communityHandler *CommunityHandler) RemoveModerator(c echo.Context) error {
+	moderatorReq := dto.CommunityModeratorRequest{}
+
+	c.Bind(&moderatorReq)
+
+	_, role := _middL.ExtractTokenUser(c)
+	err := communityHandler.communityUsecase.RemoveModerator(moderatorReq, role)
+	if err != nil {
+		return response.ErrorResponse(c, err)
+	}
+
+	return response.SuccessResponse(c, nil)
 }

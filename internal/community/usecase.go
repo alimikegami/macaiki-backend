@@ -18,4 +18,6 @@ type CommunityUsecase interface {
 	SetBackgroundImage(id uint, img *multipart.FileHeader, role string) (string, error)
 
 	GetThreadCommunity(userID, communityID uint) ([]dtoCommunity.DetailedThreadResponse, error)
+	AddModerator(moderatorReq dto.CommunityModeratorRequest, role string) error
+	RemoveModerator(moderatorReq dto.CommunityModeratorRequest, role string) error
 }

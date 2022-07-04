@@ -347,3 +347,13 @@ func (tuc *ThreadUseCaseImpl) LikeComment(commentID, userID uint) error {
 
 	return err
 }
+
+func (tuc *ThreadUseCaseImpl) DownvoteThread(threadID uint, userID uint) error {
+	threadDownvote := entity.ThreadDownvote{
+		ThreadID: threadID,
+		UserID:   userID,
+	}
+	err := tuc.tr.DownvoteThread(threadDownvote)
+
+	return err
+}
