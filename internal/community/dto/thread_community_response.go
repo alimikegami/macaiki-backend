@@ -9,13 +9,12 @@ type DetailedThreadResponse struct {
 	CommunityID           uint      `json:"communityID"`
 	ImageURL              string    `json:"imageURL"`
 	LikesCount            int       `json:"likesCount"`
-	ThreadIsLiked         int       `json:"threadisLiked"`
-	ThreadIsFollowed      int       `json:"threadisFollowed"`
+	IsLiked               int       `json:"isLiked"`
+	IsFollowed            int       `json:"isFollowed"`
 	UserID                uint      `json:"userID"`
 	UserName              string    `json:"userName"`
 	UserProfession        string    `json:"userProfession"`
 	UserProfilePictureURL string    `json:"userProfilePictureURL"`
 	CreatedAt             time.Time `json:"createdAt"`
 	UpdatedAt             time.Time `json:"updatedAt"`
-	UserIsFollowed        bool      `json:"userIsFollowed"`
 }

@@ -2,6 +2,7 @@ package community
 
 import (
 	dtoCommunity "macaiki/internal/community/dto"
+	dtoThread "macaiki/internal/thread/dto"
 	"mime/multipart"
 )
 
@@ -17,7 +18,7 @@ type CommunityUsecase interface {
 	SetImage(id uint, img *multipart.FileHeader, role string) (string, error)
 	SetBackgroundImage(id uint, img *multipart.FileHeader, role string) (string, error)
 
-	GetThreadCommunity(userID, communityID uint) ([]dtoCommunity.DetailedThreadResponse, error)
-	AddModerator(moderatorReq dto.CommunityModeratorRequest, role string) error
-	RemoveModerator(moderatorReq dto.CommunityModeratorRequest, role string) error
+	GetThreadCommunity(userID, communityID uint) ([]dtoThread.DetailedThreadResponse, error)
+	AddModerator(moderatorReq dtoCommunity.CommunityModeratorRequest, role string) error
+	RemoveModerator(moderatorReq dtoCommunity.CommunityModeratorRequest, role string) error
 }

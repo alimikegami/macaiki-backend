@@ -9,6 +9,7 @@ import (
 
 	dtoCommunity "macaiki/internal/community/dto"
 	"macaiki/internal/community/entity"
+	dtoThread "macaiki/internal/thread/dto"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/go-playground/validator/v10"
@@ -266,30 +267,29 @@ func (cu *CommunityUsecaseImpl) SetBackgroundImage(id uint, img *multipart.FileH
 	return imageURL, err
 }
 
-func (cu *CommunityUsecaseImpl) GetThreadCommunity(userID, communityID uint) ([]dtoCommunity.DetailedThreadResponse, error) {
+func (cu *CommunityUsecaseImpl) GetThreadCommunity(userID, communityID uint) ([]dtoThread.DetailedThreadResponse, error) {
 	threadsEntity, err := cu.communityRepo.GetThreadCommunityByID(userID, communityID)
 	if err != nil {
-		return []dtoCommunity.DetailedThreadResponse{}, utils.ErrInternalServerError
+		return []dtoThread.DetailedThreadResponse{}, utils.ErrInternalServerError
 	}
 
-	dtoThreads := []dtoCommunity.DetailedThreadResponse{}
+	dtoThreads := []dtoThread.DetailedThreadResponse{}
 	for _, val := range threadsEntity {
-		dtoThread := dtoCommunity.DetailedThreadResponse{
+		dtoThread := dtoThread.DetailedThreadResponse{
 			ID:                    val.Thread.ID,
 			Title:                 val.Thread.Title,
 			Body:                  val.Thread.Body,
 			CommunityID:           val.Thread.CommunityID,
 			ImageURL:              val.Thread.ImageURL,
 			LikesCount:            val.LikesCount,
-			ThreadIsFollowed:      val.IsFollowed,
-			ThreadIsLiked:         val.IsLiked,
+			IsFollowed:            val.IsFollowed,
+			IsLiked:               val.IsLiked,
 			UserID:                val.Thread.UserID,
 			UserName:              val.User.Name,
 			UserProfession:        val.User.Profession,
 			UserProfilePictureURL: val.User.ProfileImageUrl,
 			CreatedAt:             val.Thread.CreatedAt,
 			UpdatedAt:             val.Thread.UpdatedAt,
-			UserIsFollowed:        val.User.IsFollowed,
 		}
 		dtoThreads = append(dtoThreads, dtoThread)
 	}
@@ -297,7 +297,7 @@ func (cu *CommunityUsecaseImpl) GetThreadCommunity(userID, communityID uint) ([]
 	return dtoThreads, nil
 }
 
-func (cu *CommunityUsecaseImpl) AddModerator(moderatorReq dto.CommunityModeratorRequest, role string) error {
+func (cu *CommunityUsecaseImpl) AddModerator(moderatorReq dtoCommunity.CommunityModeratorRequest, role string) error {
 	if moderatorReq.UserID == 0 || moderatorReq.CommunityID == 0 {
 		return utils.ErrBadParamInput
 	}
@@ -327,7 +327,7 @@ func (cu *CommunityUsecaseImpl) AddModerator(moderatorReq dto.CommunityModerator
 	return nil
 }
 
-func (cu *CommunityUsecaseImpl) RemoveModerator(moderatorReq dto.CommunityModeratorRequest, role string) error {
+func (cu *CommunityUsecaseImpl) RemoveModerator(moderatorReq dtoCommunity.CommunityModeratorRequest, role string) error {
 	if moderatorReq.UserID == 0 || moderatorReq.CommunityID == 0 {
 		return utils.ErrBadParamInput
 	}
