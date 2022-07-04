@@ -187,28 +187,28 @@ func (uu *userUsecase) Delete(id uint, curentUserID uint, curentUserRole string)
 
 }
 
-func (uu *userUsecase) ChangeEmail(id uint, info dto.UserLoginRequest) (dto.UserResponse, error) {
+func (uu *userUsecase) ChangeEmail(id uint, info dto.UserLoginRequest) (string, error) {
 	if err := uu.validator.Struct(info); err != nil {
-		return dto.UserResponse{}, utils.ErrBadParamInput
+		return "", utils.ErrBadParamInput
 	}
 
 	userDB, err := uu.userRepo.Get(id)
 	if err != nil {
-		return dto.UserResponse{}, utils.ErrInternalServerError
+		return "", utils.ErrInternalServerError
 	}
 
 	if userDB.Email != info.Email {
 		userEmail, err := uu.userRepo.GetByEmail(info.Email)
 		if err != nil {
-			return dto.UserResponse{}, utils.ErrInternalServerError
+			return "", utils.ErrInternalServerError
 		}
 		if userEmail.ID != 0 {
-			return dto.UserResponse{}, utils.ErrEmailAlreadyUsed
+			return "", utils.ErrEmailAlreadyUsed
 		}
 	}
 
 	if !comparePasswords(userDB.Password, []byte(info.Password)) {
-		return dto.UserResponse{}, utils.ErrForbidden
+		return "", utils.ErrForbidden
 	}
 
 	userEntity := entity.User{
@@ -216,10 +216,10 @@ func (uu *userUsecase) ChangeEmail(id uint, info dto.UserLoginRequest) (dto.User
 	}
 	userDB, err = uu.userRepo.Update(&userDB, userEntity)
 	if err != nil {
-		return dto.UserResponse{}, utils.ErrInternalServerError
+		return "", utils.ErrInternalServerError
 	}
 
-	return helper.DomainUserToUserResponse(userDB), nil
+	return info.Email, nil
 }
 func (uu *userUsecase) ChangePassword(id uint, passwordInfo dto.UserChangePasswordRequest) error {
 	if err := uu.validator.Struct(passwordInfo); err != nil {
