@@ -17,11 +17,11 @@ type User struct {
 	Bio                string
 	Profession         string
 	Role               string
-	IsBanned           bool
+	IsBanned           int
 	Followers          []User       `gorm:"many2many:user_followers"`
 	Report             []UserReport `gorm:"foreignKey:UserID"`
 	Reported           []UserReport `gorm:"foreignKey:ReportedUserID"`
-	IsFollowed         bool         `gorm:"-:migration;<-:false"`
+	IsFollowed         int          `gorm:"-:migration;<-:false"`
 }
 
 type UserReport struct {

@@ -90,7 +90,7 @@ func (uu *userUsecase) Register(user dto.UserRequest) error {
 		Password: hashAndSalt([]byte(user.Password)),
 		Role:     "User",
 		Name:     user.Username,
-		IsBanned: false,
+		IsBanned: 0,
 	}
 
 	err = uu.userRepo.Store(userEntity)
@@ -136,7 +136,7 @@ func (uu *userUsecase) Get(id, tokenUserID uint) (dto.UserDetailResponse, error)
 
 	userResp := helper.DomainUserToUserDetailResponse(userEntity, totalFollowing, totalFollower, totalPost)
 	if id == tokenUserID {
-		userResp.IsMine = true
+		userResp.IsMine = 1
 	}
 	return userResp, nil
 }

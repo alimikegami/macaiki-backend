@@ -6,7 +6,7 @@ type UserResponse struct {
 	Name            string `json:"name"`
 	ProfileImageUrl string `json:"profileImageURL"`
 	Profession      string `json:"profession"`
-	IsFollowed      bool   `json:"isFollowed"`
+	IsFollowed      int    `json:"isFollowed"`
 }
 
 type UserDetailResponse struct {
@@ -20,8 +20,8 @@ type UserDetailResponse struct {
 	TotalFollower      int    `json:"totalFollower"`
 	TotalFollowing     int    `json:"totalFollowing"`
 	TotalPost          int    `json:"totalPost"`
-	IsFollowed         bool   `json:"isFollowed"`
-	IsMine             bool   `json:"isMine"`
+	IsFollowed         int    `json:"isFollowed"`
+	IsMine             int    `json:"isMine"`
 }
 
 type UserUpdateResponse struct {
