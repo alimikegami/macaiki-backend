@@ -16,4 +16,5 @@ type ThreadRepository interface {
 	GetCommentsByThreadID(threadID uint) ([]entity.CommentDetails, error)
 	GetThreads(keyword string, userID uint) ([]entity.ThreadWithDetails, error)
 	LikeComment(commentLikes entity.CommentLikes) error
+	DownvoteThread(downvote entity.ThreadDownvote) error
 }

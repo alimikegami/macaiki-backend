@@ -154,3 +154,9 @@ func (tr *ThreadRepositoryImpl) LikeComment(commentLikes entity.CommentLikes) er
 
 	return res.Error
 }
+
+func (tr *ThreadRepositoryImpl) DownvoteThread(downvote entity.ThreadDownvote) error {
+	res := tr.db.Create(&downvote)
+
+	return res.Error
+}
