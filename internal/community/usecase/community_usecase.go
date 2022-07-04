@@ -265,3 +265,62 @@ func (cu *CommunityUsecaseImpl) SetBackgroundImage(id uint, img *multipart.FileH
 
 	return imageURL, err
 }
+
+func (cu *CommunityUsecaseImpl) AddModerator(moderatorReq dto.CommunityModeratorRequest, role string) error {
+	if moderatorReq.UserID == 0 || moderatorReq.CommunityID == 0 {
+		return utils.ErrBadParamInput
+	}
+	user, err := cu.userRepo.Get(moderatorReq.UserID)
+	if err != nil {
+		return utils.ErrInternalServerError
+	}
+
+	if user.ID == 0 {
+		return utils.ErrNotFound
+	}
+
+	community, err := cu.communityRepo.GetCommunity(moderatorReq.CommunityID)
+	if err != nil {
+		return utils.ErrInternalServerError
+	}
+
+	if community.ID == 0 {
+		return utils.ErrNotFound
+	}
+
+	err = cu.communityRepo.AddModerator(user, community)
+	if err != nil {
+		return utils.ErrInternalServerError
+	}
+
+	return nil
+}
+func (cu *CommunityUsecaseImpl) RemoveModerator(moderatorReq dto.CommunityModeratorRequest, role string) error {
+	if moderatorReq.UserID == 0 || moderatorReq.CommunityID == 0 {
+		return utils.ErrBadParamInput
+	}
+	user, err := cu.userRepo.Get(moderatorReq.UserID)
+	if err != nil {
+		return utils.ErrInternalServerError
+	}
+
+	if user.ID == 0 {
+		return utils.ErrNotFound
+	}
+
+	community, err := cu.communityRepo.GetCommunity(moderatorReq.CommunityID)
+	if err != nil {
+		return utils.ErrInternalServerError
+	}
+
+	if community.ID == 0 {
+		return utils.ErrNotFound
+	}
+
+	err = cu.communityRepo.RemoveModerator(user, community)
+	if err != nil {
+		return utils.ErrInternalServerError
+	}
+
+	return nil
+}

@@ -35,6 +35,9 @@ func NewCommunityHandler(e *echo.Echo, communityUsecase community.CommunityUseca
 
 	e.PUT("api/v1/communities/:communityID/images", communityHandler.SetCommunityImage, middleware.JWT([]byte(JWTSecret)))
 	e.PUT("api/v1/communities/:communityID/background-images", communityHandler.SetCommunityBackgroundImage, middleware.JWT([]byte(JWTSecret)))
+
+	e.POST("api/v1/community-moderators", communityHandler.AddModerator, middleware.JWT([]byte(JWTSecret)))
+	e.DELETE("api/v1/community-moderators", communityHandler.RemoveModerator, middleware.JWT([]byte(JWTSecret)))
 }
 
 func (communityHandler *CommunityHandler) CreateCommunity(c echo.Context) error {
@@ -182,4 +185,32 @@ func (communityHandler *CommunityHandler) SetCommunityBackgroundImage(c echo.Con
 	}
 
 	return response.SuccessResponse(c, imageUrl)
+}
+
+func (communityHandler *CommunityHandler) AddModerator(c echo.Context) error {
+	moderatorReq := dto.CommunityModeratorRequest{}
+
+	c.Bind(&moderatorReq)
+
+	_, role := _middL.ExtractTokenUser(c)
+	err := communityHandler.communityUsecase.AddModerator(moderatorReq, role)
+	if err != nil {
+		return response.ErrorResponse(c, err)
+	}
+
+	return response.SuccessResponse(c, nil)
+}
+
+func (communityHandler *CommunityHandler) RemoveModerator(c echo.Context) error {
+	moderatorReq := dto.CommunityModeratorRequest{}
+
+	c.Bind(&moderatorReq)
+
+	_, role := _middL.ExtractTokenUser(c)
+	err := communityHandler.communityUsecase.RemoveModerator(moderatorReq, role)
+	if err != nil {
+		return response.ErrorResponse(c, err)
+	}
+
+	return response.SuccessResponse(c, nil)
 }

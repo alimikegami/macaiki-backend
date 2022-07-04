@@ -16,4 +16,7 @@ type CommunityUsecase interface {
 	UnfollowCommunity(userID, communityID uint) error
 	SetImage(id uint, img *multipart.FileHeader, role string) (string, error)
 	SetBackgroundImage(id uint, img *multipart.FileHeader, role string) (string, error)
+
+	AddModerator(moderatorReq dto.CommunityModeratorRequest, role string) error
+	RemoveModerator(moderatorReq dto.CommunityModeratorRequest, role string) error
 }
