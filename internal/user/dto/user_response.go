@@ -5,8 +5,8 @@ type UserResponse struct {
 	Username        string `json:"username"`
 	Name            string `json:"name"`
 	ProfileImageUrl string `json:"profileImageURL"`
-	Profession      string `json:"profession"`
 	IsFollowed      int    `json:"isFollowed"`
+	IsMine          int    `json:"isMine"`
 }
 
 type UserDetailResponse struct {
@@ -25,7 +25,6 @@ type UserDetailResponse struct {
 }
 
 type UserUpdateResponse struct {
-	Username   string `json:"username"`
 	Name       string `json:"name"`
 	Bio        string `json:"bio"`
 	Profession string `json:"profession"`

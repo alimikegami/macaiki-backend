@@ -22,6 +22,7 @@ type User struct {
 	Report             []UserReport `gorm:"foreignKey:UserID"`
 	Reported           []UserReport `gorm:"foreignKey:ReportedUserID"`
 	IsFollowed         int          `gorm:"-:migration;<-:false"`
+	IsMine             int          `gorm:"-:migration;<-:false"`
 }
 
 type UserReport struct {

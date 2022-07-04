@@ -135,9 +135,6 @@ func (uu *userUsecase) Get(id, tokenUserID uint) (dto.UserDetailResponse, error)
 	}
 
 	userResp := helper.DomainUserToUserDetailResponse(userEntity, totalFollowing, totalFollower, totalPost)
-	if id == tokenUserID {
-		userResp.IsMine = 1
-	}
 	return userResp, nil
 }
 func (uu *userUsecase) Update(user dto.UserUpdateRequest, id uint) (dto.UserUpdateResponse, error) {

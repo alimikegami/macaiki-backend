@@ -19,7 +19,7 @@ func NewMysqlUserRepository(Db *gorm.DB) user.UserRepository {
 func (ur *MysqlUserRepository) GetAllWithDetail(userID uint, search string) ([]entity.User, error) {
 	users := []entity.User{}
 
-	res := ur.Db.Raw("SELECT u.*, !ISNULL(uf.user_id) AS is_followed FROM `users` AS u LEFT JOIN (SELECT * FROM user_followers WHERE follower_id = ?) AS uf ON u.id = uf.user_id WHERE u.deleted_at IS NULL AND (u.username LIKE ? OR u.name LIKE ?) ", userID, "%"+search+"%", "%"+search+"%").Find(&users)
+	res := ur.Db.Raw("SELECT u.*, !ISNULL(uf.user_id) AS is_followed, (u.id = ?) AS is_mine FROM `users` AS u LEFT JOIN (SELECT * FROM user_followers WHERE follower_id = ?) AS uf ON u.id = uf.user_id WHERE u.deleted_at IS NULL AND (u.username LIKE ? OR u.name LIKE ?) ", userID, userID, "%"+search+"%", "%"+search+"%").Find(&users)
 	err := res.Error
 	if err != nil {
 		return []entity.User{}, err
@@ -41,7 +41,7 @@ func (ur *MysqlUserRepository) Store(user entity.User) error {
 func (ur *MysqlUserRepository) Get(id uint) (entity.User, error) {
 	user := entity.User{}
 
-	res := ur.Db.Raw("SELECT u.*, !ISNULL(uf.user_id) AS is_followed FROM `users` AS u LEFT JOIN (SELECT * FROM user_followers WHERE follower_id = ?) AS uf ON u.id = uf.user_id WHERE u.deleted_at IS NULL AND u.id = ?", id, id).Find(&user)
+	res := ur.Db.Raw("SELECT u.*, !ISNULL(uf.user_id) AS is_followed, (u.id = ?) AS is_mine  FROM `users` AS u LEFT JOIN (SELECT * FROM user_followers WHERE follower_id = ?) AS uf ON u.id = uf.user_id WHERE u.deleted_at IS NULL AND u.id = ?", id, id, id).Find(&user)
 	err := res.Error
 
 	if err != nil {
