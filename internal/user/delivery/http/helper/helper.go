@@ -12,14 +12,13 @@ func DomainUserToUserResponse(user entity.User) dto.UserResponse {
 		Username:        user.Username,
 		Name:            user.Name,
 		ProfileImageUrl: user.ProfileImageUrl,
-		Profession:      user.Profession,
 		IsFollowed:      user.IsFollowed,
+		IsMine:          user.IsMine,
 	}
 }
 
 func DomainUserToUserUpdateResponse(user entity.User) dto.UserUpdateResponse {
 	return dto.UserUpdateResponse{
-		Username:   user.Username,
 		Name:       user.Name,
 		Bio:        user.Bio,
 		Profession: user.Profession,
@@ -39,6 +38,7 @@ func DomainUserToUserDetailResponse(user entity.User, totalFollowing, totalFollo
 		TotalFollowing:     totalFollowing,
 		TotalPost:          totalPost,
 		IsFollowed:         user.IsFollowed,
+		IsMine:             user.IsMine,
 	}
 }
 

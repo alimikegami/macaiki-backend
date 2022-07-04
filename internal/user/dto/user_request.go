@@ -8,7 +8,6 @@ type UserRequest struct {
 }
 
 type UserUpdateRequest struct {
-	Username   string `json:"username"`
 	Name       string `json:"name"`
 	Bio        string `json:"bio"`
 	Profession string `json:"profession"`

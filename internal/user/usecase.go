@@ -13,7 +13,7 @@ type UserUsecase interface {
 	Update(userUpdate dto.UserUpdateRequest, id uint) (dto.UserUpdateResponse, error)
 	Delete(id uint, curentUserID uint, curentUser string) error
 
-	ChangeEmail(id uint, info dto.UserLoginRequest) (dto.UserResponse, error)
+	ChangeEmail(id uint, info dto.UserLoginRequest) (string, error)
 	ChangePassword(id uint, passwordInfo dto.UserChangePasswordRequest) error
 
 	SetProfileImage(id uint, img *multipart.FileHeader) (string, error)
