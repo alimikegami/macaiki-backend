@@ -110,7 +110,7 @@ func (cr *CommunityRepositoryImpl) DeleteCommunity(community communityEntity.Com
 	return nil
 }
 func (cr *CommunityRepositoryImpl) FollowCommunity(user userEntity.User, community communityEntity.Community) error {
-	err := cr.db.Model(&community).Association("Users").Append(&user)
+	err := cr.db.Model(&community).Association("Followers").Append(&user)
 	if err != nil {
 		return err
 	}
@@ -119,7 +119,7 @@ func (cr *CommunityRepositoryImpl) FollowCommunity(user userEntity.User, communi
 }
 
 func (cr *CommunityRepositoryImpl) UnfollowCommunity(user userEntity.User, community communityEntity.Community) error {
-	err := cr.db.Model(&community).Association("Users").Delete(&user)
+	err := cr.db.Model(&community).Association("Followers").Delete(&user)
 	if err != nil {
 		return err
 	}
@@ -151,7 +151,7 @@ func (cr *CommunityRepositoryImpl) AddModerator(user userEntity.User, community 
 }
 
 func (cr *CommunityRepositoryImpl) RemoveModerator(user userEntity.User, community communityEntity.Community) error {
-	err := cr.db.Model(&community).Association("Moderators").Delete(user)
+	err := cr.db.Model(&community).Association("Moderators").Delete(&user)
 	if err != nil {
 		return err
 	}

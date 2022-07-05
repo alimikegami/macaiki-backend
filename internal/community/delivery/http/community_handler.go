@@ -33,8 +33,8 @@ func NewCommunityHandler(e *echo.Echo, communityUsecase community.CommunityUseca
 	e.PUT("api/v1/communities/:communityID", communityHandler.UpdateCommunity, middleware.JWT([]byte(JWTSecret)))
 	e.DELETE("api/v1/communities/:communityID", communityHandler.DeleteCommunity, middleware.JWT([]byte(JWTSecret)))
 
-	e.POST("api/v1/curent-user/community-followers/:communityID", communityHandler.FollowCommunity, middleware.JWT([]byte(JWTSecret)))
-	e.DELETE("api/v1/curent-user/community-followers/:communityID", communityHandler.UnfollowCommunity, middleware.JWT([]byte(JWTSecret)))
+	e.POST("api/v1/community-followers/:communityID", communityHandler.FollowCommunity, middleware.JWT([]byte(JWTSecret)))
+	e.DELETE("api/v1/community-followers/:communityID", communityHandler.UnfollowCommunity, middleware.JWT([]byte(JWTSecret)))
 
 	e.PUT("api/v1/communities/:communityID/images", communityHandler.SetCommunityImage, middleware.JWT([]byte(JWTSecret)))
 	e.PUT("api/v1/communities/:communityID/background-images", communityHandler.SetCommunityBackgroundImage, middleware.JWT([]byte(JWTSecret)))
