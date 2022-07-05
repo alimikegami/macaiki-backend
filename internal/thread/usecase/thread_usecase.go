@@ -173,12 +173,12 @@ func (tuc *ThreadUseCaseImpl) UpdateThread(thread dto.ThreadRequest, threadID ui
 	return threadResponse, err
 }
 
-func (tuc *ThreadUseCaseImpl) LikeThread(threadID uint, userID uint) error {
-	threadLikes := entity.ThreadLikes{
+func (tuc *ThreadUseCaseImpl) UpvoteThread(threadID uint, userID uint) error {
+	threadUpvote := entity.ThreadUpvote{
 		ThreadID: threadID,
 		UserID:   userID,
 	}
-	err := tuc.tr.LikeThread(threadLikes)
+	err := tuc.tr.UpvoteThread(threadUpvote)
 
 	return err
 }
@@ -354,6 +354,24 @@ func (tuc *ThreadUseCaseImpl) DownvoteThread(threadID uint, userID uint) error {
 		UserID:   userID,
 	}
 	err := tuc.tr.DownvoteThread(threadDownvote)
+
+	return err
+}
+
+func (tuc *ThreadUseCaseImpl) UndoDownvoteThread(threadID, userID uint) error {
+	err := tuc.tr.UndoDownvoteThread(threadID, userID)
+
+	return err
+}
+
+func (tuc *ThreadUseCaseImpl) UndoUpvoteThread(threadID, userID uint) error {
+	err := tuc.tr.UndoUpvoteThread(threadID, userID)
+
+	return err
+}
+
+func (tuc *ThreadUseCaseImpl) UnlikeComment(commentID, userID uint) error {
+	err := tuc.tr.UnlikeComment(commentID, userID)
 
 	return err
 }

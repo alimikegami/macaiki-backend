@@ -15,18 +15,18 @@ type Thread struct {
 	CommunityID uint
 }
 
-type ThreadLikes struct {
+type ThreadUpvote struct {
 	gorm.Model
-	UserID   uint
-	ThreadID uint
+	UserID   uint `gorm:"index:unique_upvote,unique"`
+	ThreadID uint `gorm:"index:unique_upvote,unique"`
 	Thread   Thread
 	User     userEntity.User
 }
 
 type ThreadDownvote struct {
 	gorm.Model
-	UserID   uint
-	ThreadID uint
+	UserID   uint `gorm:"index:unique_downvote,unique"`
+	ThreadID uint `gorm:"index:unique_downvote,unique"`
 	Thread   Thread
 	User     userEntity.User
 }
@@ -62,6 +62,6 @@ type CommentDetails struct {
 
 type CommentLikes struct {
 	gorm.Model
-	UserID    uint
-	CommentID uint
+	UserID    uint `gorm:"index:unique_likes,unique"`
+	CommentID uint `gorm:"index:unique_likes,unique"`
 }

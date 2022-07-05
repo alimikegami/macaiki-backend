@@ -11,7 +11,8 @@ type ThreadUseCase interface {
 	UpdateThread(thread dto.ThreadRequest, threadID uint, userID uint) (dto.ThreadResponse, error)
 	GetThreadByID(threadID uint) (dto.ThreadResponse, error)
 	SetThreadImage(img *multipart.FileHeader, threadID uint, userID uint) error
-	LikeThread(threadID uint, userID uint) error
+	UpvoteThread(threadID uint, userID uint) error
+	UndoUpvoteThread(threadID, userID uint) error
 	GetTrendingThreads(userID uint) ([]dto.DetailedThreadResponse, error)
 	GetThreadsFromFollowedCommunity(userID uint) ([]dto.DetailedThreadResponse, error)
 	GetThreadsFromFollowedUsers(userID uint) ([]dto.DetailedThreadResponse, error)
@@ -19,5 +20,7 @@ type ThreadUseCase interface {
 	GetCommentsByThreadID(threadID uint) ([]dto.CommentResponse, error)
 	GetThreads(keyword string, userID uint) ([]dto.DetailedThreadResponse, error)
 	LikeComment(commentID, userID uint) error
+	UnlikeComment(commentID, userID uint) error
 	DownvoteThread(threadID uint, userID uint) error
+	UndoDownvoteThread(threadID, userID uint) error
 }
