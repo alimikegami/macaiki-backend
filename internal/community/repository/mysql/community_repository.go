@@ -21,7 +21,7 @@ func NewCommunityRepository(db *gorm.DB) community.CommunityRepository {
 func (cr *CommunityRepositoryImpl) GetAllCommunities(userID uint, search string) ([]communityEntity.Community, error) {
 	communities := []communityEntity.Community{}
 
-	res := cr.db.Raw("SELECT c.*, !isnull(cf.user_id) AS is_followed, !isnull(cm.user_id) AS is_moderator FROM `communities` AS c LEFT JOIN (SELECT * FROM community_followers WHERE user_id = ?) AS cf ON c.id = cf.community_id LEFT JOIN (SELECT * FROM community_moderators WHERE user_id = ?) AS cm ON c.id = cm.community_id WHERE c.deleted_at IS NULL ORDER BY is_moderator DESC", userID, userID).Scan(&communities)
+	res := cr.db.Raw("SELECT c.*, !isnull(cf.user_id) AS is_followed, !isnull(cm.user_id) AS is_moderator FROM `communities` AS c LEFT JOIN (SELECT * FROM community_followers WHERE user_id = ?) AS cf ON c.id = cf.community_id LEFT JOIN (SELECT * FROM community_moderators WHERE user_id = ?) AS cm ON c.id = cm.community_id WHERE c.deleted_at IS NULL AND c.name LIKE ? ORDER BY is_moderator DESC", userID, userID, "%"+search+"%").Scan(&communities)
 	err := res.Error
 	if err != nil {
 		return []communityEntity.Community{}, err
