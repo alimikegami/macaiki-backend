@@ -20,4 +20,6 @@ type ThreadRepository interface {
 	UnlikeComment(commentID, userID uint) error
 	DownvoteThread(downvote entity.ThreadDownvote) error
 	UndoDownvoteThread(threadID, userID uint) error
+	GetThreadDownvotes(threadID, userID uint) (entity.ThreadDownvote, error)
+	GetThreadUpvotes(threadID, userID uint) (entity.ThreadUpvote, error)
 }

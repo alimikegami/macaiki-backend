@@ -90,6 +90,8 @@ func (tr *ThreadRepositoryImpl) UpvoteThread(threadUpvote entity.ThreadUpvote) e
 		fmt.Println(res.Error)
 		if strings.HasPrefix(res.Error.Error(), "Error 1452: Cannot add or update a child row") {
 			return utils.ErrNotFound
+		} else if strings.HasPrefix(res.Error.Error(), "Error 1062: Duplicate entry") {
+			return utils.ErrDuplicateEntry
 		}
 		return utils.ErrInternalServerError
 	}
@@ -191,6 +193,8 @@ func (tr *ThreadRepositoryImpl) DownvoteThread(downvote entity.ThreadDownvote) e
 		fmt.Println(res.Error)
 		if strings.HasPrefix(res.Error.Error(), "Error 1452: Cannot add or update a child row") {
 			return utils.ErrNotFound
+		} else if strings.HasPrefix(res.Error.Error(), "Error 1062: Duplicate entry") {
+			return utils.ErrDuplicateEntry
 		}
 		return utils.ErrInternalServerError
 	}
@@ -199,34 +203,74 @@ func (tr *ThreadRepositoryImpl) DownvoteThread(downvote entity.ThreadDownvote) e
 }
 
 func (tr *ThreadRepositoryImpl) UndoDownvoteThread(threadID, userID uint) error {
-	res := tr.db.Delete(&entity.ThreadDownvote{}, "thread_id = ? AND user_id = ?", threadID, userID)
+	res := tr.db.Unscoped().Delete(&entity.ThreadDownvote{}, "thread_id = ? AND user_id = ?", threadID, userID)
 
-	if res.RowsAffected < 1 {
-		return utils.ErrNotFound
+	if res.Error != nil {
+		fmt.Println(res.Error)
+		if res.Error.Error() == "record not found" {
+			return utils.ErrNotFound
+		}
+		return utils.ErrInternalServerError
 	}
 
-	fmt.Println(res.Error)
-	return utils.ErrInternalServerError
+	return nil
 }
 
 func (tr *ThreadRepositoryImpl) UnlikeComment(commentID, userID uint) error {
-	res := tr.db.Delete(&entity.CommentLikes{}, "thread_id = ? AND user_id = ?", commentID, userID)
+	res := tr.db.Unscoped().Delete(&entity.CommentLikes{}, "thread_id = ? AND user_id = ?", commentID, userID)
 
-	if res.RowsAffected < 1 {
-		return utils.ErrNotFound
+	if res.Error != nil {
+		fmt.Println(res.Error)
+		if res.Error.Error() == "record not found" {
+			return utils.ErrNotFound
+		}
+		return utils.ErrInternalServerError
 	}
 
-	fmt.Println(res.Error)
-	return utils.ErrInternalServerError
+	return nil
 }
 
 func (tr *ThreadRepositoryImpl) UndoUpvoteThread(commentID, userID uint) error {
-	res := tr.db.Delete(&entity.ThreadUpvote{}, "thread_id = ? AND user_id = ?", commentID, userID)
+	res := tr.db.Unscoped().Delete(&entity.ThreadUpvote{}, "thread_id = ? AND user_id = ?", commentID, userID)
 
-	if res.RowsAffected < 1 {
-		return utils.ErrNotFound
+	if res.Error != nil {
+		fmt.Println(res.Error)
+		if res.Error.Error() == "record not found" {
+			return utils.ErrNotFound
+		}
+		return utils.ErrInternalServerError
 	}
 
-	fmt.Println(res.Error)
-	return utils.ErrInternalServerError
+	return nil
+}
+
+func (tr *ThreadRepositoryImpl) GetThreadDownvotes(threadID, userID uint) (entity.ThreadDownvote, error) {
+	var threadDownvotes entity.ThreadDownvote
+	res := tr.db.First(&threadDownvotes, "thread_id = ? AND user_id = ?", threadID, userID)
+
+	if res.Error != nil {
+		fmt.Println(res.Error)
+		if res.Error.Error() == "record not found" {
+			return threadDownvotes, utils.ErrNotFound
+		}
+		return threadDownvotes, utils.ErrInternalServerError
+	}
+
+	return threadDownvotes, nil
+}
+
+func (tr *ThreadRepositoryImpl) GetThreadUpvotes(threadID, userID uint) (entity.ThreadUpvote, error) {
+	var threadUpvote entity.ThreadUpvote
+	res := tr.db.First(&threadUpvote, "thread_id = ? AND user_id = ?", threadID, userID)
+
+	if res.Error != nil {
+		fmt.Println(res.Error)
+		if res.Error.Error() == "record not found" {
+			return threadUpvote, utils.ErrNotFound
+		}
+
+		return threadUpvote, utils.ErrInternalServerError
+	}
+
+	return threadUpvote, nil
 }

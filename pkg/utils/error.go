@@ -32,6 +32,8 @@ var (
 	ErrPasswordDontMatch = errors.New("Password don't match")
 
 	ErrUnauthorizedAccess = errors.New("unauthorized access")
+
+	ErrDuplicateEntry = errors.New("Duplicate entry")
 )
 
 // unfinished
@@ -49,6 +51,8 @@ func GetStatusCode(err error) int {
 		return http.StatusBadRequest
 	case ErrEmailRequired:
 		return http.StatusBadRequest
+	case ErrDuplicateEntry:
+		return http.StatusConflict
 	case ErrReportCategoryNameRequired:
 		return http.StatusBadRequest
 	case ErrPasswordDontMatch:

@@ -178,11 +178,27 @@ func (tuc *ThreadUseCaseImpl) UpdateThread(thread dto.ThreadRequest, threadID ui
 }
 
 func (tuc *ThreadUseCaseImpl) UpvoteThread(threadID uint, userID uint) error {
+	downvote, err := tuc.tr.GetThreadDownvotes(threadID, userID)
+
+	if err != nil {
+		if err != utils.ErrNotFound {
+			return err
+		}
+	}
+
+	if downvote.ID != 0 {
+		err := tuc.tr.UndoDownvoteThread(threadID, userID)
+
+		if err != nil {
+			return err
+		}
+	}
+
 	threadUpvote := entity.ThreadUpvote{
 		ThreadID: threadID,
 		UserID:   userID,
 	}
-	err := tuc.tr.UpvoteThread(threadUpvote)
+	err = tuc.tr.UpvoteThread(threadUpvote)
 
 	return err
 }
@@ -357,11 +373,27 @@ func (tuc *ThreadUseCaseImpl) LikeComment(commentID, userID uint) error {
 }
 
 func (tuc *ThreadUseCaseImpl) DownvoteThread(threadID uint, userID uint) error {
+	upvote, err := tuc.tr.GetThreadUpvotes(threadID, userID)
+
+	if err != nil {
+		if err != utils.ErrNotFound {
+			return err
+		}
+	}
+
+	if upvote.ID != 0 {
+		err := tuc.tr.UndoUpvoteThread(threadID, userID)
+
+		if err != nil {
+			return err
+		}
+	}
+
 	threadDownvote := entity.ThreadDownvote{
 		ThreadID: threadID,
 		UserID:   userID,
 	}
-	err := tuc.tr.DownvoteThread(threadDownvote)
+	err = tuc.tr.DownvoteThread(threadDownvote)
 
 	return err
 }
