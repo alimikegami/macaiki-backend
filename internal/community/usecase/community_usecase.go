@@ -341,6 +341,9 @@ func (cu *CommunityUsecaseImpl) GetThreadCommunity(userID, communityID uint) ([]
 }
 
 func (cu *CommunityUsecaseImpl) AddModerator(moderatorReq dtoCommunity.CommunityModeratorRequest, role string) error {
+	if role != "Admin" {
+		return utils.ErrUnauthorizedAccess
+	}
 	if moderatorReq.UserID == 0 || moderatorReq.CommunityID == 0 {
 		return utils.ErrBadParamInput
 	}
@@ -371,6 +374,9 @@ func (cu *CommunityUsecaseImpl) AddModerator(moderatorReq dtoCommunity.Community
 }
 
 func (cu *CommunityUsecaseImpl) RemoveModerator(moderatorReq dtoCommunity.CommunityModeratorRequest, role string) error {
+	if role != "Admin" {
+		return utils.ErrUnauthorizedAccess
+	}
 	if moderatorReq.UserID == 0 || moderatorReq.CommunityID == 0 {
 		return utils.ErrBadParamInput
 	}
