@@ -208,8 +208,8 @@ func (tuc *ThreadUseCaseImpl) GetTrendingThreads(userID uint) ([]dto.DetailedThr
 			UserProfilePictureURL: thread.User.ProfileImageUrl,
 			CreatedAt:             thread.Thread.CreatedAt,
 			UpdatedAt:             thread.Thread.UpdatedAt,
-			LikesCount:            thread.LikesCount,
-			IsLiked:               thread.IsLiked,
+			UpvotesCount:          thread.UpvotesCount,
+			IsUpvoted:             thread.IsUpvoted,
 			IsFollowed:            thread.IsFollowed,
 		})
 	}
@@ -238,8 +238,8 @@ func (tuc *ThreadUseCaseImpl) GetThreadsFromFollowedCommunity(userID uint) ([]dt
 			UserProfilePictureURL: thread.User.ProfileImageUrl,
 			CreatedAt:             thread.Thread.CreatedAt,
 			UpdatedAt:             thread.Thread.UpdatedAt,
-			LikesCount:            thread.LikesCount,
-			IsLiked:               thread.IsLiked,
+			UpvotesCount:          thread.UpvotesCount,
+			IsUpvoted:             thread.IsUpvoted,
 			IsFollowed:            thread.IsFollowed,
 		})
 	}
@@ -268,8 +268,8 @@ func (tuc *ThreadUseCaseImpl) GetThreadsFromFollowedUsers(userID uint) ([]dto.De
 			UserProfilePictureURL: thread.User.ProfileImageUrl,
 			CreatedAt:             thread.Thread.CreatedAt,
 			UpdatedAt:             thread.Thread.UpdatedAt,
-			LikesCount:            thread.LikesCount,
-			IsLiked:               thread.IsLiked,
+			UpvotesCount:          thread.UpvotesCount,
+			IsUpvoted:             thread.IsUpvoted,
 			IsFollowed:            thread.IsFollowed,
 		})
 	}
@@ -334,8 +334,8 @@ func (tuc *ThreadUseCaseImpl) GetThreads(keyword string, userID uint) ([]dto.Det
 			UserProfilePictureURL: thread.User.ProfileImageUrl,
 			CreatedAt:             thread.Thread.CreatedAt,
 			UpdatedAt:             thread.Thread.UpdatedAt,
-			LikesCount:            thread.LikesCount,
-			IsLiked:               thread.IsLiked,
+			UpvotesCount:          thread.UpvotesCount,
+			IsUpvoted:             thread.IsUpvoted,
 			IsFollowed:            thread.IsFollowed,
 		})
 	}

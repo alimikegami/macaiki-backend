@@ -34,9 +34,10 @@ type ThreadDownvote struct {
 type ThreadWithDetails struct {
 	Thread
 	userEntity.User
-	LikesCount int
-	IsLiked    int
-	IsFollowed int
+	UpvotesCount int
+	IsUpvoted    int
+	IsFollowed   int
+	IsDownvoted  int
 }
 
 type ThreadFollower struct {
