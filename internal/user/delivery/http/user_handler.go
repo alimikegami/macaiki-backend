@@ -1,9 +1,10 @@
 package http
 
 import (
-	"macaiki/internal/domain"
+	"macaiki/internal/user"
 	"macaiki/internal/user/dto"
 	"macaiki/pkg/response"
+	"macaiki/pkg/utils"
 	"strconv"
 
 	"github.com/labstack/echo/v4"
@@ -13,11 +14,11 @@ import (
 )
 
 type UserHandler struct {
-	UserUsecase domain.UserUsecase
+	UserUsecase user.UserUsecase
 	JWTSecret   string
 }
 
-func NewUserHandler(e *echo.Echo, us domain.UserUsecase, JWTSecret string) {
+func NewUserHandler(e *echo.Echo, us user.UserUsecase, JWTSecret string) {
 	handler := &UserHandler{
 		UserUsecase: us,
 		JWTSecret:   JWTSecret,
@@ -25,16 +26,17 @@ func NewUserHandler(e *echo.Echo, us domain.UserUsecase, JWTSecret string) {
 
 	e.POST("/api/v1/login", handler.Login)
 	e.POST("/api/v1/register", handler.Register)
-	e.GET("/api/v1/users", handler.GetAllUsers)
-	e.GET("/api/v1/users/:userID", handler.GetUser)
-	e.PUT("/api/v1/users/:userID", handler.Update, middleware.JWT([]byte(JWTSecret)))
+	e.GET("/api/v1/users", handler.GetAllUsers, middleware.JWT([]byte(JWTSecret)))
+	e.GET("/api/v1/users/:userID", handler.GetUser, middleware.JWT([]byte(JWTSecret)))
 	e.DELETE("/api/v1/users/:userID", handler.Delete, middleware.JWT([]byte(JWTSecret)))
 
 	e.PUT("/api/v1/curent-user/email", handler.ChangeEmail, middleware.JWT([]byte(JWTSecret)))
 	e.PUT("/api/v1/curent-user/password", handler.ChangePassword, middleware.JWT([]byte(JWTSecret)))
 	e.GET("/api/v1/curent-user/profile", handler.GetUserByToken, middleware.JWT([]byte(JWTSecret)))
+	e.PUT("/api/v1/curent-user/profile", handler.Update, middleware.JWT([]byte(JWTSecret)))
 	e.PUT("/api/v1/curent-user/profile-images", handler.SetProfileImage, middleware.JWT([]byte(JWTSecret)))
 	e.PUT("/api/v1/curent-user/background-images", handler.SetBackgroundImage, middleware.JWT([]byte(JWTSecret)))
+	e.DELETE("/api/v1/curent-user/:userID", handler.DeleteUserByToken, middleware.JWT([]byte(JWTSecret)))
 
 	e.POST("/api/v1/curent-user/user-followers/:userID", handler.Follow, middleware.JWT([]byte(JWTSecret)))
 	e.DELETE("/api/v1/curent-user/user-followers/:userID", handler.Unfollow, middleware.JWT([]byte(JWTSecret)))
@@ -45,7 +47,7 @@ func NewUserHandler(e *echo.Echo, us domain.UserUsecase, JWTSecret string) {
 }
 
 func (u *UserHandler) Login(c echo.Context) error {
-	loginInfo := dto.LoginUserRequest{}
+	loginInfo := dto.UserLoginRequest{}
 
 	c.Bind(&loginInfo)
 
@@ -70,8 +72,10 @@ func (u *UserHandler) Register(c echo.Context) error {
 }
 
 func (u *UserHandler) GetAllUsers(c echo.Context) error {
-	key := c.QueryParam("search")
-	res, err := u.UserUsecase.GetAll(key)
+	search := c.QueryParam("search")
+
+	userID, _ := _middL.ExtractTokenUser(c)
+	res, err := u.UserUsecase.GetAll(uint(userID), search)
 	if err != nil {
 		return response.ErrorResponse(c, err)
 	}
@@ -86,7 +90,9 @@ func (u *UserHandler) GetUser(c echo.Context) error {
 		response.ErrorResponse(c, err)
 	}
 
-	res, err := u.UserUsecase.Get(uint(userID))
+	tokenUserID, _ := _middL.ExtractTokenUser(c)
+
+	res, err := u.UserUsecase.Get(uint(userID), uint(tokenUserID))
 	if err != nil {
 		return response.ErrorResponse(c, err)
 	}
@@ -97,7 +103,7 @@ func (u *UserHandler) GetUser(c echo.Context) error {
 func (u *UserHandler) GetUserByToken(c echo.Context) error {
 	userID, _ := _middL.ExtractTokenUser(c)
 
-	res, err := u.UserUsecase.Get(uint(userID))
+	res, err := u.UserUsecase.Get(uint(userID), uint(userID))
 	if err != nil {
 		return response.ErrorResponse(c, err)
 	}
@@ -106,18 +112,12 @@ func (u *UserHandler) GetUserByToken(c echo.Context) error {
 }
 
 func (u *UserHandler) Update(c echo.Context) error {
-	num := c.Param("userID")
-	userID, err := strconv.Atoi(num)
-	if err != nil {
-		response.ErrorResponse(c, domain.ErrBadParamInput)
-	}
-
-	user := dto.UpdateUserRequest{}
+	user := dto.UserUpdateRequest{}
 	c.Bind(&user)
 
-	curentUserID, _ := _middL.ExtractTokenUser(c)
+	userID, _ := _middL.ExtractTokenUser(c)
 
-	res, err := u.UserUsecase.Update(user, uint(userID), uint(curentUserID))
+	res, err := u.UserUsecase.Update(user, uint(userID))
 	if err != nil {
 		return response.ErrorResponse(c, err)
 	}
@@ -129,7 +129,24 @@ func (u *UserHandler) Delete(c echo.Context) error {
 	num := c.Param("userID")
 	userID, err := strconv.Atoi(num)
 	if err != nil {
-		response.ErrorResponse(c, domain.ErrBadParamInput)
+		response.ErrorResponse(c, utils.ErrBadParamInput)
+	}
+
+	curentUserID, curentUserRole := _middL.ExtractTokenUser(c)
+
+	err = u.UserUsecase.Delete(uint(userID), uint(curentUserID), curentUserRole)
+	if err != nil {
+		return response.ErrorResponse(c, err)
+	}
+
+	return response.SuccessResponse(c, nil)
+}
+
+func (u *UserHandler) DeleteUserByToken(c echo.Context) error {
+	num := c.Param("userID")
+	userID, err := strconv.Atoi(num)
+	if err != nil {
+		response.ErrorResponse(c, utils.ErrBadParamInput)
 	}
 
 	curentUserID, curentUserRole := _middL.ExtractTokenUser(c)
@@ -143,7 +160,7 @@ func (u *UserHandler) Delete(c echo.Context) error {
 }
 
 func (u *UserHandler) ChangeEmail(c echo.Context) error {
-	info := dto.LoginUserRequest{}
+	info := dto.UserLoginRequest{}
 	userID, _ := _middL.ExtractTokenUser(c)
 
 	c.Bind(&info)
@@ -157,7 +174,7 @@ func (u *UserHandler) ChangeEmail(c echo.Context) error {
 }
 
 func (u *UserHandler) ChangePassword(c echo.Context) error {
-	newPasswordInfo := dto.ChangePasswordUserRequest{}
+	newPasswordInfo := dto.UserChangePasswordRequest{}
 	userID, _ := _middL.ExtractTokenUser(c)
 
 	c.Bind(&newPasswordInfo)
@@ -210,7 +227,7 @@ func (u *UserHandler) GetUserFollowers(c echo.Context) error {
 	num := c.Param("userID")
 	userID, err := strconv.Atoi(num)
 	if err != nil {
-		return response.ErrorResponse(c, domain.ErrBadParamInput)
+		return response.ErrorResponse(c, utils.ErrBadParamInput)
 	}
 
 	followers, err := u.UserUsecase.GetUserFollowers(uint(userID))
@@ -225,7 +242,7 @@ func (u *UserHandler) GetUserFollowing(c echo.Context) error {
 	num := c.Param("userID")
 	userID, err := strconv.Atoi(num)
 	if err != nil {
-		return response.ErrorResponse(c, domain.ErrBadParamInput)
+		return response.ErrorResponse(c, utils.ErrBadParamInput)
 	}
 
 	followers, err := u.UserUsecase.GetUserFollowing(uint(userID))
@@ -240,7 +257,7 @@ func (u *UserHandler) Follow(c echo.Context) error {
 	num := c.Param("userID")
 	userID, err := strconv.Atoi(num)
 	if err != nil {
-		response.ErrorResponse(c, domain.ErrBadParamInput)
+		response.ErrorResponse(c, utils.ErrBadParamInput)
 	}
 
 	follower_id, _ := _middL.ExtractTokenUser(c)
@@ -255,7 +272,7 @@ func (u *UserHandler) Unfollow(c echo.Context) error {
 	num := c.Param("userID")
 	userID, err := strconv.Atoi(num)
 	if err != nil {
-		response.ErrorResponse(c, domain.ErrBadParamInput)
+		response.ErrorResponse(c, utils.ErrBadParamInput)
 	}
 
 	follower_id, _ := _middL.ExtractTokenUser(c)

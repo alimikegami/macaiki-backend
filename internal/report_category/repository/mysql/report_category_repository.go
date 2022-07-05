@@ -1,7 +1,8 @@
 package mysql
 
 import (
-	"macaiki/internal/domain"
+	reportcategory "macaiki/internal/report_category"
+	"macaiki/internal/report_category/entity"
 
 	"gorm.io/gorm"
 )
@@ -10,11 +11,11 @@ type ReportCategoryRepositoryImpl struct {
 	db *gorm.DB
 }
 
-func NewReportCategoryRepository(db *gorm.DB) domain.ReportCategoryRepository {
+func NewReportCategoryRepository(db *gorm.DB) reportcategory.ReportCategoryRepository {
 	return &ReportCategoryRepositoryImpl{db}
 }
 
-func (rcr *ReportCategoryRepositoryImpl) StoreReportCategory(reportCategory domain.ReportCategory) error {
+func (rcr *ReportCategoryRepositoryImpl) StoreReportCategory(reportCategory entity.ReportCategory) error {
 	tx := rcr.db.Create(&reportCategory)
 	err := tx.Error
 	if err != nil {
@@ -23,31 +24,31 @@ func (rcr *ReportCategoryRepositoryImpl) StoreReportCategory(reportCategory doma
 	return nil
 }
 
-func (rcr *ReportCategoryRepositoryImpl) GetAllReportCategory() ([]domain.ReportCategory, error) {
-	reportCategories := []domain.ReportCategory{}
+func (rcr *ReportCategoryRepositoryImpl) GetAllReportCategory() ([]entity.ReportCategory, error) {
+	reportCategories := []entity.ReportCategory{}
 
 	tx := rcr.db.Find(&reportCategories)
 	err := tx.Error
 	if err != nil {
-		return []domain.ReportCategory{}, err
+		return []entity.ReportCategory{}, err
 	}
 
 	return reportCategories, nil
 }
 
-func (rcr *ReportCategoryRepositoryImpl) GetReportCategory(id uint) (domain.ReportCategory, error) {
-	reportCategory := domain.ReportCategory{}
+func (rcr *ReportCategoryRepositoryImpl) GetReportCategory(id uint) (entity.ReportCategory, error) {
+	reportCategory := entity.ReportCategory{}
 
 	tx := rcr.db.Find(&reportCategory, id)
 	err := tx.Error
 	if err != nil {
-		return domain.ReportCategory{}, err
+		return entity.ReportCategory{}, err
 	}
 
 	return reportCategory, nil
 }
 
-func (rcr *ReportCategoryRepositoryImpl) UpdateReportCategory(reportCategory domain.ReportCategory) error {
+func (rcr *ReportCategoryRepositoryImpl) UpdateReportCategory(reportCategory entity.ReportCategory) error {
 	tx := rcr.db.Save(&reportCategory)
 	err := tx.Error
 	if err != nil {
@@ -56,7 +57,7 @@ func (rcr *ReportCategoryRepositoryImpl) UpdateReportCategory(reportCategory dom
 	return nil
 }
 
-func (rcr *ReportCategoryRepositoryImpl) DeleteReportCategory(reportCategory domain.ReportCategory) error {
+func (rcr *ReportCategoryRepositoryImpl) DeleteReportCategory(reportCategory entity.ReportCategory) error {
 	tx := rcr.db.Delete(&reportCategory)
 	err := tx.Error
 	if err != nil {

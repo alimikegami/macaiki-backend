@@ -2,11 +2,14 @@ package usercase
 
 import (
 	"log"
-	"macaiki/internal/domain"
+	reportcategory "macaiki/internal/report_category"
+	"macaiki/internal/user"
 	"macaiki/internal/user/delivery/http/helper"
 	"macaiki/internal/user/dto"
+	"macaiki/internal/user/entity"
 	cloudstorage "macaiki/pkg/cloud_storage"
 	"macaiki/pkg/middleware"
+	"macaiki/pkg/utils"
 	"mime/multipart"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -16,13 +19,13 @@ import (
 )
 
 type userUsecase struct {
-	userRepo           domain.UserRepository
-	reportCategoryRepo domain.ReportCategoryRepository
+	userRepo           user.UserRepository
+	reportCategoryRepo reportcategory.ReportCategoryRepository
 	validator          *validator.Validate
 	awsS3              *cloudstorage.S3
 }
 
-func NewUserUsecase(userRepo domain.UserRepository, reportCategoryRepo domain.ReportCategoryRepository, validator *validator.Validate, awsS3Instace *cloudstorage.S3) domain.UserUsecase {
+func NewUserUsecase(userRepo user.UserRepository, reportCategoryRepo reportcategory.ReportCategoryRepository, validator *validator.Validate, awsS3Instace *cloudstorage.S3) user.UserUsecase {
 	return &userUsecase{
 		userRepo:           userRepo,
 		reportCategoryRepo: reportCategoryRepo,
@@ -31,18 +34,18 @@ func NewUserUsecase(userRepo domain.UserRepository, reportCategoryRepo domain.Re
 	}
 }
 
-func (uu *userUsecase) Login(loginInfo dto.LoginUserRequest) (dto.LoginResponse, error) {
+func (uu *userUsecase) Login(loginInfo dto.UserLoginRequest) (dto.LoginResponse, error) {
 	if err := uu.validator.Struct(loginInfo); err != nil {
-		return dto.LoginResponse{}, domain.ErrBadParamInput
+		return dto.LoginResponse{}, utils.ErrBadParamInput
 	}
 
 	userEntity, err := uu.userRepo.GetByEmail(loginInfo.Email)
 	if err != nil {
-		return dto.LoginResponse{}, domain.ErrInternalServerError
+		return dto.LoginResponse{}, utils.ErrInternalServerError
 	}
 
 	if userEntity.ID == 0 || !comparePasswords(userEntity.Password, []byte(loginInfo.Password)) {
-		return dto.LoginResponse{}, domain.ErrLoginFailed
+		return dto.LoginResponse{}, utils.ErrLoginFailed
 	}
 
 	token, err := middleware.JWTCreateToken(int(userEntity.ID), userEntity.Role)
@@ -56,38 +59,38 @@ func (uu *userUsecase) Login(loginInfo dto.LoginUserRequest) (dto.LoginResponse,
 func (uu *userUsecase) Register(user dto.UserRequest) error {
 	// TO DO : error handling for existing username
 	if err := uu.validator.Struct(user); err != nil {
-		return domain.ErrBadParamInput
+		return utils.ErrBadParamInput
 	}
 
 	userEmail, err := uu.userRepo.GetByEmail(user.Email)
 	if err != nil {
-		return domain.ErrInternalServerError
+		return utils.ErrInternalServerError
 	}
 
 	if userEmail.ID != 0 {
-		return domain.ErrEmailAlreadyUsed
+		return utils.ErrEmailAlreadyUsed
 	}
 
 	userUsername, err := uu.userRepo.GetByUsername(user.Username)
 	if err != nil {
-		return domain.ErrInternalServerError
+		return utils.ErrInternalServerError
 	}
 
 	if userUsername.ID != 0 {
-		return domain.ErrUsernameAlreadyUsed
+		return utils.ErrUsernameAlreadyUsed
 	}
 
 	if user.Password != user.PasswordConfirmation {
-		return domain.ErrPasswordDontMatch
+		return utils.ErrPasswordDontMatch
 	}
 
-	userEntity := domain.User{
+	userEntity := entity.User{
 		Email:    user.Email,
 		Username: user.Username,
 		Password: hashAndSalt([]byte(user.Password)),
 		Role:     "User",
 		Name:     user.Username,
-		IsBanned: false,
+		IsBanned: 0,
 	}
 
 	err = uu.userRepo.Store(userEntity)
@@ -98,165 +101,147 @@ func (uu *userUsecase) Register(user dto.UserRequest) error {
 	return nil
 }
 
-func (uu *userUsecase) GetAll(username string) ([]dto.UserResponse, error) {
-	users, err := uu.userRepo.GetAll(username)
+func (uu *userUsecase) GetAll(userID uint, search string) ([]dto.UserResponse, error) {
+	users, err := uu.userRepo.GetAllWithDetail(userID, search)
 	if err != nil {
-		return []dto.UserResponse{}, domain.ErrInternalServerError
+		return []dto.UserResponse{}, utils.ErrInternalServerError
 	}
 
 	return helper.DomainUserToListUserResponse(users), err
 }
 
-func (uu *userUsecase) Get(id uint) (dto.UserDetailResponse, error) {
+func (uu *userUsecase) Get(id, tokenUserID uint) (dto.UserDetailResponse, error) {
 	userEntity, err := uu.userRepo.Get(id)
 	if err != nil {
-		return dto.UserDetailResponse{}, domain.ErrInternalServerError
+		return dto.UserDetailResponse{}, utils.ErrInternalServerError
 	}
 	if userEntity.ID == 0 {
-		return dto.UserDetailResponse{}, domain.ErrNotFound
+		return dto.UserDetailResponse{}, utils.ErrNotFound
 	}
 
 	totalFollowing, err := uu.userRepo.GetFollowingNumber(id)
 	if err != nil {
-		return dto.UserDetailResponse{}, domain.ErrInternalServerError
+		return dto.UserDetailResponse{}, utils.ErrInternalServerError
 	}
 
 	totalFollower, err := uu.userRepo.GetFollowerNumber(id)
 	if err != nil {
-		return dto.UserDetailResponse{}, domain.ErrInternalServerError
+		return dto.UserDetailResponse{}, utils.ErrInternalServerError
 	}
 
+	totalPost, err := uu.userRepo.GetThreadsNumber(id)
 	if err != nil {
-		return dto.UserDetailResponse{}, domain.ErrInternalServerError
-	}
-	return helper.DomainUserToUserDetailResponse(userEntity, totalFollowing, totalFollower), nil
-}
-func (uu *userUsecase) Update(user dto.UpdateUserRequest, id uint, curentUserID uint) (dto.UserResponse, error) {
-	// TODO: validation the username that has been used
-	if err := uu.validator.Struct(user); err != nil {
-		return dto.UserResponse{}, domain.ErrBadParamInput
+		return dto.UserDetailResponse{}, utils.ErrInternalServerError
 	}
 
-	// validation that accesses is the user itself
-	if id != curentUserID {
-		return dto.UserResponse{}, domain.ErrUnauthorizedAccess
+	userResp := helper.DomainUserToUserDetailResponse(userEntity, totalFollowing, totalFollower, totalPost)
+	return userResp, nil
+}
+func (uu *userUsecase) Update(user dto.UserUpdateRequest, id uint) (dto.UserUpdateResponse, error) {
+	if err := uu.validator.Struct(user); err != nil {
+		return dto.UserUpdateResponse{}, utils.ErrBadParamInput
 	}
 
 	// validation the user exist
 	userDB, err := uu.userRepo.Get(id)
 	if err != nil {
-		return dto.UserResponse{}, domain.ErrInternalServerError
+		return dto.UserUpdateResponse{}, utils.ErrInternalServerError
 	}
 	if userDB.ID == 0 {
-		return dto.UserResponse{}, domain.ErrNotFound
+		return dto.UserUpdateResponse{}, utils.ErrNotFound
 	}
 
-	// validation the username that has beed used
-	if userDB.Username != user.Username {
-		userUsername, err := uu.userRepo.GetByUsername(user.Username)
-		if err != nil {
-			return dto.UserResponse{}, domain.ErrInternalServerError
-		}
-
-		if userUsername.ID != 0 {
-			return dto.UserResponse{}, domain.ErrUsernameAlreadyUsed
-		}
+	userEntity := entity.User{
+		Name:       user.Name,
+		Bio:        user.Bio,
+		Profession: user.Profession,
 	}
 
-	userEntity := domain.User{
-		Username:           user.Username,
-		Name:               user.Name,
-		ProfileImageUrl:    user.ProfileImageUrl,
-		BackgroundImageUrl: user.BackgroundImageUrl,
-		Bio:                user.Bio,
-		Profession:         user.Profession,
-		IsBanned:           user.IsBanned,
-	}
 	userDB, err = uu.userRepo.Update(&userDB, userEntity)
 	if err != nil {
-		return dto.UserResponse{}, domain.ErrInternalServerError
+		return dto.UserUpdateResponse{}, utils.ErrInternalServerError
 	}
 
-	return helper.DomainUserToUserResponse(userDB), nil
+	return helper.DomainUserToUserUpdateResponse(userDB), nil
 }
 func (uu *userUsecase) Delete(id uint, curentUserID uint, curentUserRole string) error {
 	// validation the user exist
 	userEntity, err := uu.userRepo.Get(id)
 	if err != nil {
-		return domain.ErrInternalServerError
+		return utils.ErrInternalServerError
 	}
 	if userEntity.ID == 0 {
-		return domain.ErrNotFound
+		return utils.ErrNotFound
 	}
 
 	// validation that accesses is the user itself or Admin
 	if curentUserID != id && curentUserRole != "Admin" {
-		return domain.ErrUnauthorizedAccess
+		return utils.ErrUnauthorizedAccess
 	}
 
 	err = uu.userRepo.Delete(id)
 	if err != nil {
-		return domain.ErrInternalServerError
+		return utils.ErrInternalServerError
 	}
 	return nil
 
 }
 
-func (uu *userUsecase) ChangeEmail(id uint, info dto.LoginUserRequest) (dto.UserResponse, error) {
+func (uu *userUsecase) ChangeEmail(id uint, info dto.UserLoginRequest) (string, error) {
 	if err := uu.validator.Struct(info); err != nil {
-		return dto.UserResponse{}, domain.ErrBadParamInput
+		return "", utils.ErrBadParamInput
 	}
 
 	userDB, err := uu.userRepo.Get(id)
 	if err != nil {
-		return dto.UserResponse{}, domain.ErrInternalServerError
+		return "", utils.ErrInternalServerError
 	}
 
 	if userDB.Email != info.Email {
 		userEmail, err := uu.userRepo.GetByEmail(info.Email)
 		if err != nil {
-			return dto.UserResponse{}, domain.ErrInternalServerError
+			return "", utils.ErrInternalServerError
 		}
 		if userEmail.ID != 0 {
-			return dto.UserResponse{}, domain.ErrEmailAlreadyUsed
+			return "", utils.ErrEmailAlreadyUsed
 		}
 	}
 
 	if !comparePasswords(userDB.Password, []byte(info.Password)) {
-		return dto.UserResponse{}, domain.ErrForbidden
+		return "", utils.ErrForbidden
 	}
 
-	userEntity := domain.User{
+	userEntity := entity.User{
 		Email: info.Email,
 	}
 	userDB, err = uu.userRepo.Update(&userDB, userEntity)
 	if err != nil {
-		return dto.UserResponse{}, domain.ErrInternalServerError
+		return "", utils.ErrInternalServerError
 	}
 
-	return helper.DomainUserToUserResponse(userDB), nil
+	return info.Email, nil
 }
-func (uu *userUsecase) ChangePassword(id uint, passwordInfo dto.ChangePasswordUserRequest) error {
+func (uu *userUsecase) ChangePassword(id uint, passwordInfo dto.UserChangePasswordRequest) error {
 	if err := uu.validator.Struct(passwordInfo); err != nil {
-		return domain.ErrBadParamInput
+		return utils.ErrBadParamInput
 	}
 
 	if passwordInfo.NewPassword != passwordInfo.PasswordConfirmation {
-		return domain.ErrPasswordDontMatch
+		return utils.ErrPasswordDontMatch
 	}
 
 	userDB, err := uu.userRepo.Get(id)
 	if err != nil {
-		return domain.ErrInternalServerError
+		return utils.ErrInternalServerError
 	}
 
-	userEntity := domain.User{
+	userEntity := entity.User{
 		Password: hashAndSalt([]byte(passwordInfo.NewPassword)),
 	}
 
 	_, err = uu.userRepo.Update(&userDB, userEntity)
 	if err != nil {
-		return domain.ErrInternalServerError
+		return utils.ErrInternalServerError
 	}
 
 	return nil
@@ -265,15 +250,15 @@ func (uu *userUsecase) ChangePassword(id uint, passwordInfo dto.ChangePasswordUs
 func (uu *userUsecase) GetUserFollowers(id uint) ([]dto.UserResponse, error) {
 	userEntity, err := uu.userRepo.Get(id)
 	if err != nil {
-		return []dto.UserResponse{}, domain.ErrInternalServerError
+		return []dto.UserResponse{}, utils.ErrInternalServerError
 	}
 	if userEntity.ID == 0 {
-		return []dto.UserResponse{}, domain.ErrNotFound
+		return []dto.UserResponse{}, utils.ErrNotFound
 	}
 
 	followers, err := uu.userRepo.GetFollower(userEntity)
 	if err != nil {
-		return []dto.UserResponse{}, domain.ErrInternalServerError
+		return []dto.UserResponse{}, utils.ErrInternalServerError
 	}
 	return helper.DomainUserToListUserResponse(followers), nil
 }
@@ -281,15 +266,15 @@ func (uu *userUsecase) GetUserFollowers(id uint) ([]dto.UserResponse, error) {
 func (uu *userUsecase) GetUserFollowing(id uint) ([]dto.UserResponse, error) {
 	userEntity, err := uu.userRepo.Get(id)
 	if err != nil {
-		return []dto.UserResponse{}, domain.ErrInternalServerError
+		return []dto.UserResponse{}, utils.ErrInternalServerError
 	}
 	if userEntity.ID == 0 {
-		return []dto.UserResponse{}, domain.ErrNotFound
+		return []dto.UserResponse{}, utils.ErrNotFound
 	}
 
 	following, err := uu.userRepo.GetFollowing(userEntity)
 	if err != nil {
-		return []dto.UserResponse{}, domain.ErrInternalServerError
+		return []dto.UserResponse{}, utils.ErrInternalServerError
 	}
 	return helper.DomainUserToListUserResponse(following), nil
 }
@@ -297,7 +282,7 @@ func (uu *userUsecase) GetUserFollowing(id uint) ([]dto.UserResponse, error) {
 func (uu *userUsecase) SetProfileImage(id uint, img *multipart.FileHeader) (string, error) {
 	user, err := uu.userRepo.Get(id)
 	if err != nil {
-		return "", domain.ErrInternalServerError
+		return "", utils.ErrInternalServerError
 	}
 
 	if user.ProfileImageUrl != "" {
@@ -326,7 +311,7 @@ func (uu *userUsecase) SetProfileImage(id uint, img *multipart.FileHeader) (stri
 func (uu *userUsecase) SetBackgroundImage(id uint, img *multipart.FileHeader) (string, error) {
 	user, err := uu.userRepo.Get(id)
 	if err != nil {
-		return "", domain.ErrInternalServerError
+		return "", utils.ErrInternalServerError
 	}
 
 	if user.BackgroundImageUrl != "" {
@@ -354,29 +339,29 @@ func (uu *userUsecase) SetBackgroundImage(id uint, img *multipart.FileHeader) (s
 func (uu *userUsecase) Follow(userID, userFollowerID uint) error {
 	user, err := uu.userRepo.Get(userID)
 	if err != nil {
-		return domain.ErrInternalServerError
+		return utils.ErrInternalServerError
 	}
 	if user.ID == 0 {
-		return domain.ErrNotFound
+		return utils.ErrNotFound
 	}
 
 	user_follower, err := uu.userRepo.Get(userFollowerID)
 	if err != nil {
-		return domain.ErrInternalServerError
+		return utils.ErrInternalServerError
 	}
 	if user_follower.ID == 0 {
-		return domain.ErrNotFound
+		return utils.ErrNotFound
 	}
 
 	// if follow self account throw error bad param input
 	if user.ID == user_follower.ID {
-		return domain.ErrBadParamInput
+		return utils.ErrBadParamInput
 	}
 
 	// save to database
 	_, err = uu.userRepo.Follow(user, user_follower)
 	if err != nil {
-		return domain.ErrInternalServerError
+		return utils.ErrInternalServerError
 	}
 	return nil
 }
@@ -384,23 +369,23 @@ func (uu *userUsecase) Follow(userID, userFollowerID uint) error {
 func (uu *userUsecase) Unfollow(userID, userFollowerID uint) error {
 	user, err := uu.userRepo.Get(userID)
 	if err != nil {
-		return domain.ErrInternalServerError
+		return utils.ErrInternalServerError
 	}
 	if user.ID == 0 {
-		return domain.ErrNotFound
+		return utils.ErrNotFound
 	}
 
 	user_follower, err := uu.userRepo.Get(userFollowerID)
 	if err != nil {
-		return domain.ErrInternalServerError
+		return utils.ErrInternalServerError
 	}
 	if user_follower.ID == 0 {
-		return domain.ErrNotFound
+		return utils.ErrNotFound
 	}
 
 	_, err = uu.userRepo.Unfollow(user, user_follower)
 	if err != nil {
-		return domain.ErrInternalServerError
+		return utils.ErrInternalServerError
 	}
 	return nil
 }
@@ -409,25 +394,25 @@ func (uu *userUsecase) Report(userID, userReportedID, reportCategoryID uint) err
 	var err error
 
 	if userID == userReportedID {
-		return domain.ErrBadParamInput
+		return utils.ErrBadParamInput
 	}
 
 	_, err = uu.userRepo.Get(userID)
 	if err != nil {
-		return domain.ErrNotFound
+		return utils.ErrNotFound
 	}
 
 	_, err = uu.userRepo.Get(userReportedID)
 	if err != nil {
-		return domain.ErrNotFound
+		return utils.ErrNotFound
 	}
 
 	_, err = uu.reportCategoryRepo.GetReportCategory(reportCategoryID)
 	if err != nil {
-		return domain.ErrNotFound
+		return utils.ErrNotFound
 	}
 
-	userReport := domain.UserReport{
+	userReport := entity.UserReport{
 		UserID:           userID,
 		ReportedUserID:   userReportedID,
 		ReportCategoryID: reportCategoryID,
@@ -435,7 +420,7 @@ func (uu *userUsecase) Report(userID, userReportedID, reportCategoryID uint) err
 
 	err = uu.userRepo.StoreReport(userReport)
 	if err != nil {
-		return domain.ErrInternalServerError
+		return utils.ErrInternalServerError
 	}
 	return nil
 }

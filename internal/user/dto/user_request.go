@@ -7,22 +7,18 @@ type UserRequest struct {
 	PasswordConfirmation string `json:"passwordConfirmation" validate:"required"`
 }
 
-type UpdateUserRequest struct {
-	Username           string `json:"username"`
-	Name               string `json:"name"`
-	ProfileImageUrl    string `json:"profileImageURL"`
-	BackgroundImageUrl string `json:"backgroundImageURL"`
-	Bio                string `json:"bio"`
-	Profession         string `json:"profession"`
-	IsBanned           bool   `json:"isBanned"`
+type UserUpdateRequest struct {
+	Name       string `json:"name"`
+	Bio        string `json:"bio"`
+	Profession string `json:"profession"`
 }
 
-type ChangePasswordUserRequest struct {
+type UserChangePasswordRequest struct {
 	NewPassword          string `json:"password" validate:"required,min=6"`
 	PasswordConfirmation string `json:"passwordConfirmation" validate:"required"`
 }
 
-type LoginUserRequest struct {
+type UserLoginRequest struct {
 	Email    string `json:"email" validate:"required"`
 	Password string `json:"password" validate:"required"`
 }

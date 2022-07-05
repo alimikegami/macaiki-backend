@@ -27,5 +27,8 @@ type DetailedThreadResponse struct {
 	UserProfilePictureURL string    `json:"userProfilePictureURL"`
 	CreatedAt             time.Time `json:"createdAt"`
 	UpdatedAt             time.Time `json:"updatedAt"`
-	LikesCount            int       `json:"likesCount"`
+	UpvotesCount          int       `json:"upvotesCount"`
+	IsUpvoted             int       `json:"isUpvoted"`
+	IsDownVoted           int       `json:"isDownvoted"`
+	IsFollowed            int       `json:"isFollowed"`
 }

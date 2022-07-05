@@ -2,7 +2,8 @@ package mysql
 
 import (
 	"errors"
-	"macaiki/internal/domain"
+	"macaiki/internal/user"
+	"macaiki/internal/user/entity"
 
 	"gorm.io/gorm"
 )
@@ -11,23 +12,23 @@ type MysqlUserRepository struct {
 	Db *gorm.DB
 }
 
-func NewMysqlUserRepository(Db *gorm.DB) domain.UserRepository {
+func NewMysqlUserRepository(Db *gorm.DB) user.UserRepository {
 	return &MysqlUserRepository{Db}
 }
 
-func (ur *MysqlUserRepository) GetAll(username string) ([]domain.User, error) {
-	users := []domain.User{}
+func (ur *MysqlUserRepository) GetAllWithDetail(userID uint, search string) ([]entity.User, error) {
+	users := []entity.User{}
 
-	res := ur.Db.Where("username LIKE ?", "%"+username+"%").Find(&users)
+	res := ur.Db.Raw("SELECT u.*, !ISNULL(uf.user_id) AS is_followed, (u.id = ?) AS is_mine FROM `users` AS u LEFT JOIN (SELECT * FROM user_followers WHERE follower_id = ?) AS uf ON u.id = uf.user_id WHERE u.deleted_at IS NULL AND (u.username LIKE ? OR u.name LIKE ?) ", userID, userID, "%"+search+"%", "%"+search+"%").Find(&users)
 	err := res.Error
 	if err != nil {
-		return []domain.User{}, err
+		return []entity.User{}, err
 	}
 
 	return users, nil
 }
 
-func (ur *MysqlUserRepository) Store(user domain.User) error {
+func (ur *MysqlUserRepository) Store(user entity.User) error {
 	res := ur.Db.Create(&user)
 	err := res.Error
 	if err != nil {
@@ -37,20 +38,20 @@ func (ur *MysqlUserRepository) Store(user domain.User) error {
 	return nil
 }
 
-func (ur *MysqlUserRepository) Get(id uint) (domain.User, error) {
-	user := domain.User{}
+func (ur *MysqlUserRepository) Get(id uint) (entity.User, error) {
+	user := entity.User{}
 
-	res := ur.Db.Find(&user, id)
+	res := ur.Db.Raw("SELECT u.*, !ISNULL(uf.user_id) AS is_followed, (u.id = ?) AS is_mine  FROM `users` AS u LEFT JOIN (SELECT * FROM user_followers WHERE follower_id = ?) AS uf ON u.id = uf.user_id WHERE u.deleted_at IS NULL AND u.id = ?", id, id, id).Find(&user)
 	err := res.Error
 
 	if err != nil {
-		return domain.User{}, err
+		return entity.User{}, err
 	}
 
 	return user, nil
 }
 
-func (ur *MysqlUserRepository) Update(userDB *domain.User, user domain.User) (domain.User, error) {
+func (ur *MysqlUserRepository) Update(userDB *entity.User, user entity.User) (entity.User, error) {
 	if user.Password == "" {
 		user.Password = userDB.Password
 	}
@@ -59,7 +60,7 @@ func (ur *MysqlUserRepository) Update(userDB *domain.User, user domain.User) (do
 	res := ur.Db.Model(&userDB).Updates(user)
 	err := res.Error
 	if err != nil {
-		return domain.User{}, err
+		return entity.User{}, err
 	}
 
 	return user, nil
@@ -79,43 +80,43 @@ func (ur *MysqlUserRepository) Delete(id uint) error {
 	return nil
 }
 
-func (ur *MysqlUserRepository) GetByEmail(email string) (domain.User, error) {
-	user := domain.User{}
+func (ur *MysqlUserRepository) GetByEmail(email string) (entity.User, error) {
+	user := entity.User{}
 
 	res := ur.Db.Find(&user, "email = ?", email)
 	err := res.Error
 	if err != nil {
-		return domain.User{}, err
+		return entity.User{}, err
 	}
 
 	return user, nil
 }
 
-func (ur *MysqlUserRepository) GetByUsername(username string) (domain.User, error) {
-	user := domain.User{}
+func (ur *MysqlUserRepository) GetByUsername(username string) (entity.User, error) {
+	user := entity.User{}
 
 	res := ur.Db.Find(&user, "username = ?", username)
 	err := res.Error
 	if err != nil {
-		return domain.User{}, err
+		return entity.User{}, err
 	}
 
 	return user, nil
 }
 
-func (ur *MysqlUserRepository) Follow(user, userFollower domain.User) (domain.User, error) {
+func (ur *MysqlUserRepository) Follow(user, userFollower entity.User) (entity.User, error) {
 	err := ur.Db.Model(&user).Association("Followers").Append(&userFollower)
 	if err != nil {
-		return domain.User{}, err
+		return entity.User{}, err
 	}
 
 	return user, nil
 }
 
-func (ur *MysqlUserRepository) Unfollow(user, userFollower domain.User) (domain.User, error) {
+func (ur *MysqlUserRepository) Unfollow(user, userFollower entity.User) (entity.User, error) {
 	err := ur.Db.Model(&user).Association("Followers").Delete(&userFollower)
 	if err != nil {
-		return domain.User{}, err
+		return entity.User{}, err
 	}
 
 	return user, nil
@@ -123,7 +124,7 @@ func (ur *MysqlUserRepository) Unfollow(user, userFollower domain.User) (domain.
 
 func (ur *MysqlUserRepository) GetFollowerNumber(id uint) (int, error) {
 	var count int64
-	res := ur.Db.Table("user_followers").Where("user_id = ?", id).Count(&count)
+	res := ur.Db.Raw("SELECT COUNT(*) FROM `users` LEFT JOIN `user_followers` `Followers` ON `users`.`id` = `Followers`.`follower_id` WHERE `Followers`.`user_id` = ? AND `users`.`deleted_at` IS NULL", id).Scan(&count)
 	err := res.Error
 	if err != nil {
 		return 0, err
@@ -133,7 +134,7 @@ func (ur *MysqlUserRepository) GetFollowerNumber(id uint) (int, error) {
 
 func (ur *MysqlUserRepository) GetFollowingNumber(id uint) (int, error) {
 	var count int64
-	res := ur.Db.Table("user_followers").Where("follower_id = ?", id).Count(&count)
+	res := ur.Db.Raw("SELECT COUNT(*) FROM `users` LEFT JOIN `user_followers` `Followers` ON `users`.`id` = `Followers`.`user_id` WHERE `Followers`.`follower_id` = ? AND `users`.`deleted_at` IS NULL", id).Scan(&count)
 	err := res.Error
 	if err != nil {
 		return 0, err
@@ -141,33 +142,45 @@ func (ur *MysqlUserRepository) GetFollowingNumber(id uint) (int, error) {
 	return int(count), nil
 }
 
-func (ur *MysqlUserRepository) GetFollower(user domain.User) ([]domain.User, error) {
-	users := []domain.User{}
+func (ur *MysqlUserRepository) GetThreadsNumber(id uint) (int, error) {
+	var count int64
+	res := ur.Db.Table("threads").Where("user_id = ?", id).Count(&count)
+	err := res.Error
+	if err != nil {
+		return 0, err
+	}
+	return int(count), nil
+}
 
-	res := ur.Db.Raw("SELECT * FROM `users` LEFT JOIN `user_followers` `Followers` ON `users`.`id` = `Followers`.`follower_id` WHERE `Followers`.`user_id` = ?", user.ID).Scan(&users)
+func (ur *MysqlUserRepository) GetFollower(user entity.User) ([]entity.User, error) {
+	// TODO: implement isfollowed and ismine
+	users := []entity.User{}
+
+	res := ur.Db.Raw("SELECT * FROM `users` LEFT JOIN `user_followers` `Followers` ON `users`.`id` = `Followers`.`follower_id` WHERE `Followers`.`user_id` = ? AND `users`.`deleted_at` IS NULL", user.ID).Scan(&users)
 	err := res.Error
 
 	if err != nil {
-		return []domain.User{}, err
+		return []entity.User{}, err
 	}
 
 	return users, nil
 }
 
-func (ur *MysqlUserRepository) GetFollowing(user domain.User) ([]domain.User, error) {
-	users := []domain.User{}
-	res := ur.Db.Raw("SELECT * FROM `users` LEFT JOIN `user_followers` `Followers` ON `users`.`id` = `Followers`.`user_id` WHERE `Followers`.`follower_id` = ?", user.ID).Scan(&users)
+func (ur *MysqlUserRepository) GetFollowing(user entity.User) ([]entity.User, error) {
+	// TODO: implement isfollowed and ismine
+	users := []entity.User{}
+	res := ur.Db.Raw("SELECT * FROM `users` LEFT JOIN `user_followers` `Followers` ON `users`.`id` = `Followers`.`user_id` WHERE `Followers`.`follower_id` = ? AND `users`.`deleted_at` IS NULL", user.ID).Scan(&users)
 	err := res.Error
 
 	if err != nil {
-		return []domain.User{}, err
+		return []entity.User{}, err
 	}
 
 	return users, nil
 }
 
 func (ur *MysqlUserRepository) SetUserImage(id uint, imageURL string, tableName string) error {
-	res := ur.Db.Model(&domain.User{}).Where("id = ?", id).Update(tableName, imageURL)
+	res := ur.Db.Model(&entity.User{}).Where("id = ?", id).Update(tableName, imageURL)
 
 	if res.Error != nil {
 		return res.Error
@@ -180,7 +193,7 @@ func (ur *MysqlUserRepository) SetUserImage(id uint, imageURL string, tableName 
 	return nil
 }
 
-func (ur *MysqlUserRepository) StoreReport(userReport domain.UserReport) error {
+func (ur *MysqlUserRepository) StoreReport(userReport entity.UserReport) error {
 	res := ur.Db.Create(&userReport)
 	err := res.Error
 	if err != nil {

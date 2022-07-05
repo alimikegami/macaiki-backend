@@ -2,7 +2,7 @@ package http
 
 import (
 	"fmt"
-	"macaiki/internal/domain"
+	"macaiki/internal/thread"
 	"macaiki/internal/thread/dto"
 	_middL "macaiki/pkg/middleware"
 	"macaiki/pkg/response"
@@ -14,7 +14,7 @@ import (
 
 type ThreadHandler struct {
 	router *echo.Echo
-	tu     domain.ThreadUseCase
+	tu     thread.ThreadUseCase
 }
 
 func (th *ThreadHandler) GetThreads(c echo.Context) error {
@@ -23,17 +23,19 @@ func (th *ThreadHandler) GetThreads(c echo.Context) error {
 	trending := c.QueryParam("trending")
 	community := c.QueryParam("community")
 	forYou := c.QueryParam("forYou")
+	keyword := c.QueryParam("keyword")
+
 	var res interface{}
 	var err error
 
 	if trending == "true" {
-		res, err = th.tu.GetTrendingThreads()
+		res, err = th.tu.GetTrendingThreads(uint(userID))
 	} else if community == "true" {
 		res, err = th.tu.GetThreadsFromFollowedCommunity(uint(userID))
 	} else if forYou == "true" {
 		res, err = th.tu.GetThreadsFromFollowedUsers(uint(userID))
 	} else {
-		res, err = th.tu.GetThreads()
+		res, err = th.tu.GetThreads(keyword, uint(userID))
 	}
 
 	if err != nil {
@@ -106,7 +108,7 @@ func (th *ThreadHandler) SetThreadImage(c echo.Context) error {
 
 func (th *ThreadHandler) DeleteThread(c echo.Context) error {
 	// TODO: Allow admin to delete a thread
-	userID, _ := _middL.ExtractTokenUser(c)
+	userID, role := _middL.ExtractTokenUser(c)
 
 	threadID := c.Param("threadID")
 	u64, err := strconv.ParseUint(threadID, 10, 32)
@@ -115,7 +117,7 @@ func (th *ThreadHandler) DeleteThread(c echo.Context) error {
 		return response.ErrorResponse(c, err)
 	}
 	threadIDUint := uint(u64)
-	if err := th.tu.DeleteThread(threadIDUint, uint(userID)); err != nil {
+	if err := th.tu.DeleteThread(threadIDUint, uint(userID), role); err != nil {
 		return response.ErrorResponse(c, err)
 
 	}
@@ -147,7 +149,9 @@ func (th *ThreadHandler) UpdateThread(c echo.Context) error {
 	return response.SuccessResponse(c, res)
 }
 
-func (th *ThreadHandler) LikeThread(c echo.Context) error {
+func (th *ThreadHandler) UpvoteThread(c echo.Context) error {
+	userID, _ := _middL.ExtractTokenUser(c)
+
 	threadID := c.Param("threadID")
 	u64, err := strconv.ParseUint(threadID, 10, 32)
 	if err != nil {
@@ -156,7 +160,7 @@ func (th *ThreadHandler) LikeThread(c echo.Context) error {
 	}
 	threadIDUint := uint(u64)
 
-	err = th.tu.LikeThread(threadIDUint, 1)
+	err = th.tu.UpvoteThread(threadIDUint, uint(userID))
 	if err != nil {
 		fmt.Println(err)
 		return response.ErrorResponse(c, err)
@@ -208,7 +212,102 @@ func (th *ThreadHandler) GetCommentsByThreadID(c echo.Context) error {
 	return response.SuccessResponse(c, comments)
 }
 
-func CreateNewThreadHandler(e *echo.Echo, tu domain.ThreadUseCase, JWTSecret string) *ThreadHandler {
+func (th *ThreadHandler) LikeComment(c echo.Context) error {
+	userID, _ := _middL.ExtractTokenUser(c)
+
+	commentID := c.Param("commentID")
+	u64, err := strconv.ParseUint(commentID, 10, 32)
+	if err != nil {
+		fmt.Println(err)
+		return response.ErrorResponse(c, err)
+	}
+	commentIDUint := uint(u64)
+
+	err = th.tu.LikeComment(commentIDUint, uint(userID))
+	if err != nil {
+		fmt.Println(err)
+		return response.ErrorResponse(c, err)
+	}
+	return response.SuccessResponse(c, nil)
+}
+
+func (th *ThreadHandler) UnlikeComment(c echo.Context) error {
+	userID, _ := _middL.ExtractTokenUser(c)
+
+	commentID := c.Param("commentID")
+	u64, err := strconv.ParseUint(commentID, 10, 32)
+	if err != nil {
+		fmt.Println(err)
+		return response.ErrorResponse(c, err)
+	}
+	commentIDUint := uint(u64)
+
+	err = th.tu.UnlikeComment(commentIDUint, uint(userID))
+	if err != nil {
+		fmt.Println(err)
+		return response.ErrorResponse(c, err)
+	}
+	return response.SuccessResponse(c, nil)
+}
+
+func (th *ThreadHandler) DownvoteThread(c echo.Context) error {
+	userID, _ := _middL.ExtractTokenUser(c)
+
+	threadID := c.Param("threadID")
+	u64, err := strconv.ParseUint(threadID, 10, 32)
+	if err != nil {
+		fmt.Println(err)
+		return response.ErrorResponse(c, err)
+	}
+	threadIDUint := uint(u64)
+
+	err = th.tu.DownvoteThread(threadIDUint, uint(userID))
+	if err != nil {
+		fmt.Println(err)
+		return response.ErrorResponse(c, err)
+	}
+	return response.SuccessResponse(c, nil)
+}
+
+func (th *ThreadHandler) UndoDownvoteThread(c echo.Context) error {
+	userID, _ := _middL.ExtractTokenUser(c)
+
+	threadID := c.Param("threadID")
+	u64, err := strconv.ParseUint(threadID, 10, 32)
+	if err != nil {
+		fmt.Println(err)
+		return response.ErrorResponse(c, err)
+	}
+	threadIDUint := uint(u64)
+
+	err = th.tu.UndoDownvoteThread(threadIDUint, uint(userID))
+	if err != nil {
+		fmt.Println(err)
+		return response.ErrorResponse(c, err)
+	}
+	return response.SuccessResponse(c, nil)
+}
+
+func (th *ThreadHandler) UndoUpvoteThread(c echo.Context) error {
+	userID, _ := _middL.ExtractTokenUser(c)
+
+	threadID := c.Param("threadID")
+	u64, err := strconv.ParseUint(threadID, 10, 32)
+	if err != nil {
+		fmt.Println(err)
+		return response.ErrorResponse(c, err)
+	}
+	threadIDUint := uint(u64)
+
+	err = th.tu.UndoUpvoteThread(threadIDUint, uint(userID))
+	if err != nil {
+		fmt.Println(err)
+		return response.ErrorResponse(c, err)
+	}
+	return response.SuccessResponse(c, nil)
+}
+
+func CreateNewThreadHandler(e *echo.Echo, tu thread.ThreadUseCase, JWTSecret string) *ThreadHandler {
 	threadHandler := &ThreadHandler{router: e, tu: tu}
 	threadHandler.router.POST("/api/v1/threads", threadHandler.CreateThread, middleware.JWT([]byte(JWTSecret)))
 	threadHandler.router.DELETE("/api/v1/threads/:threadID", threadHandler.DeleteThread, middleware.JWT([]byte(JWTSecret)))
@@ -216,10 +315,14 @@ func CreateNewThreadHandler(e *echo.Echo, tu domain.ThreadUseCase, JWTSecret str
 	threadHandler.router.GET("/api/v1/threads/:threadID", threadHandler.GetThreadByID)
 	threadHandler.router.PUT("/api/v1/threads/:threadID", threadHandler.UpdateThread, middleware.JWT([]byte(JWTSecret)))
 	threadHandler.router.PUT("/api/v1/threads/:threadID/images", threadHandler.SetThreadImage, middleware.JWT([]byte(JWTSecret)))
-	threadHandler.router.POST("/api/v1/threads/:threadID/likes", threadHandler.LikeThread, middleware.JWT([]byte(JWTSecret)))
-	threadHandler.router.PUT("/api/v1/threads/:threadID", threadHandler.UpdateThread)
+	threadHandler.router.POST("/api/v1/threads/:threadID/upvotes", threadHandler.UpvoteThread, middleware.JWT([]byte(JWTSecret)))
 	threadHandler.router.POST("/api/v1/threads/:threadID/comments", threadHandler.AddThreadComment, middleware.JWT([]byte(JWTSecret)))
-	threadHandler.router.PUT("/api/v1/threads/:threadID/images", threadHandler.SetThreadImage)
 	threadHandler.router.GET("/api/v1/threads/:threadID/comments", threadHandler.GetCommentsByThreadID)
+	threadHandler.router.POST("/api/v1/threads/:threadID/comments/:commentID", threadHandler.LikeComment, middleware.JWT([]byte(JWTSecret)))
+	threadHandler.router.POST("/api/v1/threads/:threadID/downvotes", threadHandler.DownvoteThread, middleware.JWT([]byte(JWTSecret)))
+	threadHandler.router.DELETE("/api/v1/threads/:threadID/upvotes", threadHandler.UndoUpvoteThread, middleware.JWT([]byte(JWTSecret)))
+	threadHandler.router.DELETE("/api/v1/threads/:threadID/downvotes", threadHandler.UndoDownvoteThread, middleware.JWT([]byte(JWTSecret)))
+	threadHandler.router.DELETE("/api/v1/threads/:threadID/comments/:commentID", threadHandler.UnlikeComment, middleware.JWT([]byte(JWTSecret)))
+
 	return threadHandler
 }

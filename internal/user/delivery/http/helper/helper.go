@@ -1,48 +1,48 @@
 package helper
 
 import (
-	"macaiki/internal/domain"
 	"macaiki/internal/user/dto"
+	"macaiki/internal/user/entity"
 )
 
 // Response
-func DomainUserToUserResponse(user domain.User) dto.UserResponse {
+func DomainUserToUserResponse(user entity.User) dto.UserResponse {
 	return dto.UserResponse{
-		ID:                 user.ID,
-		Email:              user.Email,
-		Username:           user.Username,
-		Name:               user.Name,
-		ProfileImageUrl:    user.ProfileImageUrl,
-		BackgroundImageUrl: user.BackgroundImageUrl,
-		Bio:                user.Bio,
-		Profession:         user.Profession,
-		Role:               user.Role,
-		IsBanned:           user.IsBanned,
-		CreatedAt:          user.CreatedAt,
-		UpdatedAt:          user.UpdatedAt,
+		ID:              user.ID,
+		Username:        user.Username,
+		Name:            user.Name,
+		ProfileImageUrl: user.ProfileImageUrl,
+		IsFollowed:      user.IsFollowed,
+		IsMine:          user.IsMine,
 	}
 }
 
-func DomainUserToUserDetailResponse(user domain.User, totalFollowing, totalFollower int) dto.UserDetailResponse {
+func DomainUserToUserUpdateResponse(user entity.User) dto.UserUpdateResponse {
+	return dto.UserUpdateResponse{
+		Name:       user.Name,
+		Bio:        user.Bio,
+		Profession: user.Profession,
+	}
+}
+
+func DomainUserToUserDetailResponse(user entity.User, totalFollowing, totalFollower, totalPost int) dto.UserDetailResponse {
 	return dto.UserDetailResponse{
 		ID:                 user.ID,
-		Email:              user.Email,
 		Username:           user.Username,
 		Name:               user.Name,
 		ProfileImageUrl:    user.ProfileImageUrl,
 		BackgroundImageUrl: user.BackgroundImageUrl,
 		Bio:                user.Bio,
 		Profession:         user.Profession,
-		Role:               user.Role,
-		IsBanned:           user.IsBanned,
-		CreatedAt:          user.CreatedAt,
-		UpdatedAt:          user.UpdatedAt,
 		TotalFollower:      totalFollower,
 		TotalFollowing:     totalFollowing,
+		TotalPost:          totalPost,
+		IsFollowed:         user.IsFollowed,
+		IsMine:             user.IsMine,
 	}
 }
 
-func DomainUserToListUserResponse(users []domain.User) []dto.UserResponse {
+func DomainUserToListUserResponse(users []entity.User) []dto.UserResponse {
 	usersResponse := []dto.UserResponse{}
 
 	for _, val := range users {
