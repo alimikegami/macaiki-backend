@@ -10,6 +10,7 @@ import (
 	dtoCommunity "macaiki/internal/community/dto"
 	"macaiki/internal/community/entity"
 	dtoThread "macaiki/internal/thread/dto"
+	dtoUser "macaiki/internal/user/dto"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/go-playground/validator/v10"
@@ -47,6 +48,7 @@ func (cu *CommunityUsecaseImpl) GetAllCommunities(userID int, search string) ([]
 			CommunityBackgroundImageUrl: val.CommunityBackgroundImageUrl,
 			Description:                 val.Description,
 			IsFollowed:                  val.IsFollowed,
+			IsModerator:                 val.IsModerator,
 		})
 	}
 
@@ -70,10 +72,51 @@ func (cu *CommunityUsecaseImpl) GetCommunity(userID, communityID uint) (dtoCommu
 		CommunityBackgroundImageUrl: community.CommunityBackgroundImageUrl,
 		Description:                 community.Description,
 		IsFollowed:                  community.IsFollowed,
+		IsModerator:                 community.IsModerator,
 	}
 
 	return communityResp, err
 }
+
+func (cu *CommunityUsecaseImpl) GetCommunityAbout(userID, communityID uint) (dtoCommunity.CommunityAboutResponse, error) {
+	community, err := cu.communityRepo.GetCommunityAbout(userID, communityID)
+	if err != nil {
+		return dtoCommunity.CommunityAboutResponse{}, utils.ErrInternalServerError
+	}
+
+	moderators, err := cu.communityRepo.GetModeratorByCommunityID(userID, communityID)
+	if err != nil {
+		return dtoCommunity.CommunityAboutResponse{}, utils.ErrInternalServerError
+	}
+
+	dtoUserDetail := []dtoUser.UserResponse{}
+
+	for _, val := range moderators {
+		dtoUserDetail = append(dtoUserDetail, dtoUser.UserResponse{
+			ID:              val.ID,
+			Username:        val.Username,
+			Name:            val.Name,
+			ProfileImageUrl: val.ProfileImageUrl,
+			IsFollowed:      val.IsFollowed,
+			IsMine:          val.IsMine,
+		})
+	}
+
+	dtoCommunity := dtoCommunity.CommunityAboutResponse{
+		ID:                community.ID,
+		Name:              community.Name,
+		CommunityImageUrl: community.CommunityImageUrl,
+		Description:       community.Description,
+		IsFollowed:        community.IsFollowed,
+		IsModerator:       community.IsModerator,
+		TotalModerator:    community.TotalModerators,
+		TotalFollower:     community.TotalFollowers,
+		Moderator:         dtoUserDetail,
+	}
+
+	return dtoCommunity, nil
+}
+
 func (cu *CommunityUsecaseImpl) StoreCommunity(community dtoCommunity.CommunityRequest, role string) error {
 	if role != "Admin" {
 		return utils.ErrUnauthorizedAccess
@@ -95,22 +138,22 @@ func (cu *CommunityUsecaseImpl) StoreCommunity(community dtoCommunity.CommunityR
 
 	return nil
 }
-func (cu *CommunityUsecaseImpl) UpdateCommunity(id uint, community dtoCommunity.CommunityRequest, role string) (dtoCommunity.CommunityResponse, error) {
+func (cu *CommunityUsecaseImpl) UpdateCommunity(id uint, community dtoCommunity.CommunityRequest, role string) (dtoCommunity.CommunityUpdateResponse, error) {
 	if role != "Admin" {
-		return dtoCommunity.CommunityResponse{}, utils.ErrUnauthorizedAccess
+		return dtoCommunity.CommunityUpdateResponse{}, utils.ErrUnauthorizedAccess
 	}
 
 	if err := cu.validator.Struct(community); err != nil {
-		return dtoCommunity.CommunityResponse{}, utils.ErrBadParamInput
+		return dtoCommunity.CommunityUpdateResponse{}, utils.ErrBadParamInput
 	}
 
 	communityDB, err := cu.communityRepo.GetCommunity(id)
 	if err != nil {
-		return dtoCommunity.CommunityResponse{}, utils.ErrInternalServerError
+		return dtoCommunity.CommunityUpdateResponse{}, utils.ErrInternalServerError
 	}
 
 	if communityDB.ID == 0 {
-		return dtoCommunity.CommunityResponse{}, utils.ErrNotFound
+		return dtoCommunity.CommunityUpdateResponse{}, utils.ErrNotFound
 	}
 
 	newCommunity := entity.Community{
@@ -120,10 +163,10 @@ func (cu *CommunityUsecaseImpl) UpdateCommunity(id uint, community dtoCommunity.
 
 	communityDB, err = cu.communityRepo.UpdateCommunity(communityDB, newCommunity)
 	if err != nil {
-		return dtoCommunity.CommunityResponse{}, utils.ErrInternalServerError
+		return dtoCommunity.CommunityUpdateResponse{}, utils.ErrInternalServerError
 	}
 
-	communityResp := dtoCommunity.CommunityResponse{
+	communityResp := dtoCommunity.CommunityUpdateResponse{
 		ID:          communityDB.ID,
 		Name:        communityDB.Name,
 		Description: communityDB.Description,
@@ -268,7 +311,7 @@ func (cu *CommunityUsecaseImpl) SetBackgroundImage(id uint, img *multipart.FileH
 }
 
 func (cu *CommunityUsecaseImpl) GetThreadCommunity(userID, communityID uint) ([]dtoThread.DetailedThreadResponse, error) {
-	threadsEntity, err := cu.communityRepo.GetThreadCommunityByID(userID, communityID)
+	threadsEntity, err := cu.communityRepo.GetCommunityThread(userID, communityID)
 	if err != nil {
 		return []dtoThread.DetailedThreadResponse{}, utils.ErrInternalServerError
 	}

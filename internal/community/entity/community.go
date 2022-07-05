@@ -14,5 +14,8 @@ type Community struct {
 	Description                 string
 	Users                       []userEntity.User `gorm:"many2many:community_followers;"`
 	Moderators                  []userEntity.User `gorm:"many2many:community_moderators;"`
-	IsFollowed                  bool              `gorm:"-:migration;<-:false"`
+	IsFollowed                  int               `gorm:"-:migration;<-:false"`
+	IsModerator                 int               `gorm:"-:migration;<-:false"`
+	TotalFollowers              int               `gorm:"-:migration;<-:false"`
+	TotalModerators             int               `gorm:"-:migration;<-:false"`
 }
