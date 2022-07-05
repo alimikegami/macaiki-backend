@@ -9,8 +9,9 @@ import (
 type CommunityUsecase interface {
 	GetAllCommunities(userID int, search string) ([]dtoCommunity.CommunityDetailResponse, error)
 	GetCommunity(userID, communityID uint) (dtoCommunity.CommunityDetailResponse, error)
+	GetCommunityAbout(userID, communityID uint) (dtoCommunity.CommunityAboutResponse, error)
 	StoreCommunity(community dtoCommunity.CommunityRequest, role string) error
-	UpdateCommunity(id uint, community dtoCommunity.CommunityRequest, role string) (dtoCommunity.CommunityResponse, error)
+	UpdateCommunity(id uint, community dtoCommunity.CommunityRequest, role string) (dtoCommunity.CommunityUpdateResponse, error)
 	DeleteCommunity(id uint, role string) error
 
 	FollowCommunity(userID, communityID uint) error

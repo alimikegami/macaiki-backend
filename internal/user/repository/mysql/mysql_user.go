@@ -153,6 +153,7 @@ func (ur *MysqlUserRepository) GetThreadsNumber(id uint) (int, error) {
 }
 
 func (ur *MysqlUserRepository) GetFollower(user entity.User) ([]entity.User, error) {
+	// TODO: implement isfollowed and ismine
 	users := []entity.User{}
 
 	res := ur.Db.Raw("SELECT * FROM `users` LEFT JOIN `user_followers` `Followers` ON `users`.`id` = `Followers`.`follower_id` WHERE `Followers`.`user_id` = ? AND `users`.`deleted_at` IS NULL", user.ID).Scan(&users)
@@ -166,6 +167,7 @@ func (ur *MysqlUserRepository) GetFollower(user entity.User) ([]entity.User, err
 }
 
 func (ur *MysqlUserRepository) GetFollowing(user entity.User) ([]entity.User, error) {
+	// TODO: implement isfollowed and ismine
 	users := []entity.User{}
 	res := ur.Db.Raw("SELECT * FROM `users` LEFT JOIN `user_followers` `Followers` ON `users`.`id` = `Followers`.`user_id` WHERE `Followers`.`follower_id` = ? AND `users`.`deleted_at` IS NULL", user.ID).Scan(&users)
 	err := res.Error
