@@ -20,10 +20,14 @@ type ThreadUseCaseImpl struct {
 	awsS3 *cloudstorage.S3
 }
 
-func AuthorizeThreadAccess(threadID uint, userID uint, tuc *ThreadUseCaseImpl) (bool, entity.Thread, error) {
+func AuthorizeThreadAccess(threadID uint, userID uint, role string, tuc *ThreadUseCaseImpl) (bool, entity.Thread, error) {
 	thread, err := tuc.tr.GetThreadByID(threadID)
 	if err != nil {
 		return false, entity.Thread{}, err
+	}
+
+	if role == "Admin" {
+		return true, thread, nil
 	}
 
 	if thread.UserID != userID {
@@ -84,7 +88,7 @@ func (tuc *ThreadUseCaseImpl) CreateThread(thread dto.ThreadRequest, userID uint
 }
 
 func (tuc *ThreadUseCaseImpl) SetThreadImage(img *multipart.FileHeader, threadID uint, userID uint) error {
-	flag, thread, err := AuthorizeThreadAccess(threadID, userID, tuc)
+	flag, thread, err := AuthorizeThreadAccess(threadID, userID, "", tuc)
 	if err != nil {
 		return err
 	}
@@ -115,8 +119,8 @@ func (tuc *ThreadUseCaseImpl) SetThreadImage(img *multipart.FileHeader, threadID
 	return err
 }
 
-func (tuc *ThreadUseCaseImpl) DeleteThread(threadID uint, userID uint) error {
-	flag, _, err := AuthorizeThreadAccess(threadID, userID, tuc)
+func (tuc *ThreadUseCaseImpl) DeleteThread(threadID uint, userID uint, role string) error {
+	flag, _, err := AuthorizeThreadAccess(threadID, userID, role, tuc)
 	if err != nil {
 		return err
 	}
@@ -130,7 +134,7 @@ func (tuc *ThreadUseCaseImpl) DeleteThread(threadID uint, userID uint) error {
 }
 
 func (tuc *ThreadUseCaseImpl) UpdateThread(thread dto.ThreadRequest, threadID uint, userID uint) (dto.ThreadResponse, error) {
-	flag, _, err := AuthorizeThreadAccess(threadID, userID, tuc)
+	flag, _, err := AuthorizeThreadAccess(threadID, userID, "", tuc)
 	if err != nil {
 		return dto.ThreadResponse{}, err
 	}
@@ -174,11 +178,27 @@ func (tuc *ThreadUseCaseImpl) UpdateThread(thread dto.ThreadRequest, threadID ui
 }
 
 func (tuc *ThreadUseCaseImpl) UpvoteThread(threadID uint, userID uint) error {
+	downvote, err := tuc.tr.GetThreadDownvotes(threadID, userID)
+
+	if err != nil {
+		if err != utils.ErrNotFound {
+			return err
+		}
+	}
+
+	if downvote.ID != 0 {
+		err := tuc.tr.UndoDownvoteThread(threadID, userID)
+
+		if err != nil {
+			return err
+		}
+	}
+
 	threadUpvote := entity.ThreadUpvote{
 		ThreadID: threadID,
 		UserID:   userID,
 	}
-	err := tuc.tr.UpvoteThread(threadUpvote)
+	err = tuc.tr.UpvoteThread(threadUpvote)
 
 	return err
 }
@@ -204,9 +224,10 @@ func (tuc *ThreadUseCaseImpl) GetTrendingThreads(userID uint) ([]dto.DetailedThr
 			UserProfilePictureURL: thread.User.ProfileImageUrl,
 			CreatedAt:             thread.Thread.CreatedAt,
 			UpdatedAt:             thread.Thread.UpdatedAt,
-			LikesCount:            thread.LikesCount,
-			IsLiked:               thread.IsLiked,
+			UpvotesCount:          thread.UpvotesCount,
+			IsUpvoted:             thread.IsUpvoted,
 			IsFollowed:            thread.IsFollowed,
+			IsDownVoted:           thread.IsDownvoted,
 		})
 	}
 
@@ -234,9 +255,10 @@ func (tuc *ThreadUseCaseImpl) GetThreadsFromFollowedCommunity(userID uint) ([]dt
 			UserProfilePictureURL: thread.User.ProfileImageUrl,
 			CreatedAt:             thread.Thread.CreatedAt,
 			UpdatedAt:             thread.Thread.UpdatedAt,
-			LikesCount:            thread.LikesCount,
-			IsLiked:               thread.IsLiked,
+			UpvotesCount:          thread.UpvotesCount,
+			IsUpvoted:             thread.IsUpvoted,
 			IsFollowed:            thread.IsFollowed,
+			IsDownVoted:           thread.IsDownvoted,
 		})
 	}
 
@@ -264,9 +286,10 @@ func (tuc *ThreadUseCaseImpl) GetThreadsFromFollowedUsers(userID uint) ([]dto.De
 			UserProfilePictureURL: thread.User.ProfileImageUrl,
 			CreatedAt:             thread.Thread.CreatedAt,
 			UpdatedAt:             thread.Thread.UpdatedAt,
-			LikesCount:            thread.LikesCount,
-			IsLiked:               thread.IsLiked,
+			UpvotesCount:          thread.UpvotesCount,
+			IsUpvoted:             thread.IsUpvoted,
 			IsFollowed:            thread.IsFollowed,
+			IsDownVoted:           thread.IsDownvoted,
 		})
 	}
 
@@ -330,9 +353,10 @@ func (tuc *ThreadUseCaseImpl) GetThreads(keyword string, userID uint) ([]dto.Det
 			UserProfilePictureURL: thread.User.ProfileImageUrl,
 			CreatedAt:             thread.Thread.CreatedAt,
 			UpdatedAt:             thread.Thread.UpdatedAt,
-			LikesCount:            thread.LikesCount,
-			IsLiked:               thread.IsLiked,
+			UpvotesCount:          thread.UpvotesCount,
+			IsUpvoted:             thread.IsUpvoted,
 			IsFollowed:            thread.IsFollowed,
+			IsDownVoted:           thread.IsDownvoted,
 		})
 	}
 
@@ -349,11 +373,45 @@ func (tuc *ThreadUseCaseImpl) LikeComment(commentID, userID uint) error {
 }
 
 func (tuc *ThreadUseCaseImpl) DownvoteThread(threadID uint, userID uint) error {
+	upvote, err := tuc.tr.GetThreadUpvotes(threadID, userID)
+
+	if err != nil {
+		if err != utils.ErrNotFound {
+			return err
+		}
+	}
+
+	if upvote.ID != 0 {
+		err := tuc.tr.UndoUpvoteThread(threadID, userID)
+
+		if err != nil {
+			return err
+		}
+	}
+
 	threadDownvote := entity.ThreadDownvote{
 		ThreadID: threadID,
 		UserID:   userID,
 	}
-	err := tuc.tr.DownvoteThread(threadDownvote)
+	err = tuc.tr.DownvoteThread(threadDownvote)
+
+	return err
+}
+
+func (tuc *ThreadUseCaseImpl) UndoDownvoteThread(threadID, userID uint) error {
+	err := tuc.tr.UndoDownvoteThread(threadID, userID)
+
+	return err
+}
+
+func (tuc *ThreadUseCaseImpl) UndoUpvoteThread(threadID, userID uint) error {
+	err := tuc.tr.UndoUpvoteThread(threadID, userID)
+
+	return err
+}
+
+func (tuc *ThreadUseCaseImpl) UnlikeComment(commentID, userID uint) error {
+	err := tuc.tr.UnlikeComment(commentID, userID)
 
 	return err
 }
