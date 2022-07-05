@@ -7,7 +7,7 @@ import (
 
 type ThreadUseCase interface {
 	CreateThread(thread dto.ThreadRequest, userID uint) (dto.ThreadResponse, error)
-	DeleteThread(threadID uint, userID uint) error
+	DeleteThread(threadID uint, userID uint, role string) error
 	UpdateThread(thread dto.ThreadRequest, threadID uint, userID uint) (dto.ThreadResponse, error)
 	GetThreadByID(threadID uint) (dto.ThreadResponse, error)
 	SetThreadImage(img *multipart.FileHeader, threadID uint, userID uint) error

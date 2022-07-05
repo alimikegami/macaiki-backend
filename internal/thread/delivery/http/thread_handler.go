@@ -108,7 +108,7 @@ func (th *ThreadHandler) SetThreadImage(c echo.Context) error {
 
 func (th *ThreadHandler) DeleteThread(c echo.Context) error {
 	// TODO: Allow admin to delete a thread
-	userID, _ := _middL.ExtractTokenUser(c)
+	userID, role := _middL.ExtractTokenUser(c)
 
 	threadID := c.Param("threadID")
 	u64, err := strconv.ParseUint(threadID, 10, 32)
@@ -117,7 +117,7 @@ func (th *ThreadHandler) DeleteThread(c echo.Context) error {
 		return response.ErrorResponse(c, err)
 	}
 	threadIDUint := uint(u64)
-	if err := th.tu.DeleteThread(threadIDUint, uint(userID)); err != nil {
+	if err := th.tu.DeleteThread(threadIDUint, uint(userID), role); err != nil {
 		return response.ErrorResponse(c, err)
 
 	}

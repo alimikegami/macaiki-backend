@@ -20,10 +20,14 @@ type ThreadUseCaseImpl struct {
 	awsS3 *cloudstorage.S3
 }
 
-func AuthorizeThreadAccess(threadID uint, userID uint, tuc *ThreadUseCaseImpl) (bool, entity.Thread, error) {
+func AuthorizeThreadAccess(threadID uint, userID uint, role string, tuc *ThreadUseCaseImpl) (bool, entity.Thread, error) {
 	thread, err := tuc.tr.GetThreadByID(threadID)
 	if err != nil {
 		return false, entity.Thread{}, err
+	}
+
+	if role == "Admin" {
+		return true, thread, nil
 	}
 
 	if thread.UserID != userID {
@@ -84,7 +88,7 @@ func (tuc *ThreadUseCaseImpl) CreateThread(thread dto.ThreadRequest, userID uint
 }
 
 func (tuc *ThreadUseCaseImpl) SetThreadImage(img *multipart.FileHeader, threadID uint, userID uint) error {
-	flag, thread, err := AuthorizeThreadAccess(threadID, userID, tuc)
+	flag, thread, err := AuthorizeThreadAccess(threadID, userID, "", tuc)
 	if err != nil {
 		return err
 	}
@@ -115,8 +119,8 @@ func (tuc *ThreadUseCaseImpl) SetThreadImage(img *multipart.FileHeader, threadID
 	return err
 }
 
-func (tuc *ThreadUseCaseImpl) DeleteThread(threadID uint, userID uint) error {
-	flag, _, err := AuthorizeThreadAccess(threadID, userID, tuc)
+func (tuc *ThreadUseCaseImpl) DeleteThread(threadID uint, userID uint, role string) error {
+	flag, _, err := AuthorizeThreadAccess(threadID, userID, role, tuc)
 	if err != nil {
 		return err
 	}
@@ -130,7 +134,7 @@ func (tuc *ThreadUseCaseImpl) DeleteThread(threadID uint, userID uint) error {
 }
 
 func (tuc *ThreadUseCaseImpl) UpdateThread(thread dto.ThreadRequest, threadID uint, userID uint) (dto.ThreadResponse, error) {
-	flag, _, err := AuthorizeThreadAccess(threadID, userID, tuc)
+	flag, _, err := AuthorizeThreadAccess(threadID, userID, "", tuc)
 	if err != nil {
 		return dto.ThreadResponse{}, err
 	}
