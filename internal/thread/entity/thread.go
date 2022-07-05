@@ -15,7 +15,7 @@ type Thread struct {
 	CommunityID uint
 }
 
-type ThreadLikes struct {
+type ThreadUpvote struct {
 	gorm.Model
 	UserID   uint
 	ThreadID uint

@@ -149,7 +149,7 @@ func (th *ThreadHandler) UpdateThread(c echo.Context) error {
 	return response.SuccessResponse(c, res)
 }
 
-func (th *ThreadHandler) LikeThread(c echo.Context) error {
+func (th *ThreadHandler) UpvoteThread(c echo.Context) error {
 	userID, _ := _middL.ExtractTokenUser(c)
 
 	threadID := c.Param("threadID")
@@ -160,7 +160,7 @@ func (th *ThreadHandler) LikeThread(c echo.Context) error {
 	}
 	threadIDUint := uint(u64)
 
-	err = th.tu.LikeThread(threadIDUint, uint(userID))
+	err = th.tu.UpvoteThread(threadIDUint, uint(userID))
 	if err != nil {
 		fmt.Println(err)
 		return response.ErrorResponse(c, err)
@@ -258,7 +258,7 @@ func CreateNewThreadHandler(e *echo.Echo, tu thread.ThreadUseCase, JWTSecret str
 	threadHandler.router.GET("/api/v1/threads/:threadID", threadHandler.GetThreadByID)
 	threadHandler.router.PUT("/api/v1/threads/:threadID", threadHandler.UpdateThread, middleware.JWT([]byte(JWTSecret)))
 	threadHandler.router.PUT("/api/v1/threads/:threadID/images", threadHandler.SetThreadImage, middleware.JWT([]byte(JWTSecret)))
-	threadHandler.router.POST("/api/v1/threads/:threadID/likes", threadHandler.LikeThread, middleware.JWT([]byte(JWTSecret)))
+	threadHandler.router.POST("/api/v1/threads/:threadID/upvote", threadHandler.UpvoteThread, middleware.JWT([]byte(JWTSecret)))
 	threadHandler.router.PUT("/api/v1/threads/:threadID", threadHandler.UpdateThread)
 	threadHandler.router.POST("/api/v1/threads/:threadID/comments", threadHandler.AddThreadComment, middleware.JWT([]byte(JWTSecret)))
 	threadHandler.router.GET("/api/v1/threads/:threadID/comments", threadHandler.GetCommentsByThreadID)
