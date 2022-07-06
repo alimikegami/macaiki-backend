@@ -9,6 +9,9 @@ import (
 	_communityRepo "macaiki/internal/community/repository/mysql"
 	_communityUsecase "macaiki/internal/community/usecase"
 	_driver "macaiki/internal/driver"
+	_notificationHttpDelivery "macaiki/internal/notification/delivery/http"
+	_notificationRepo "macaiki/internal/notification/repository"
+	_notificationUsecase "macaiki/internal/notification/usecase"
 	_reportCategoryHttpDeliver "macaiki/internal/report_category/delivery/http"
 	_reportCategoryRepo "macaiki/internal/report_category/repository/mysql"
 	_reportCategoryUsecase "macaiki/internal/report_category/usecase"
@@ -50,12 +53,14 @@ func main() {
 	reportCategoryRepo := _reportCategoryRepo.NewReportCategoryRepository(_driver.DB)
 	threadRepo := _threadRepo.CreateNewThreadRepository(_driver.DB)
 	communityRepo := _communityRepo.NewCommunityRepository(_driver.DB)
+	notificationRepo := _notificationRepo.NewNotificaionRepository(_driver.DB)
 
 	// setup usecase
-	userUsecase := _userUsecase.NewUserUsecase(userRepo, reportCategoryRepo, v, s3Instance)
+	userUsecase := _userUsecase.NewUserUsecase(userRepo, reportCategoryRepo, notificationRepo, v, s3Instance)
 	reportCategoryUsecase := _reportCategoryUsecase.NewReportCategoryUsecase(reportCategoryRepo, v)
 	threadUseCase := _threadUsecase.CreateNewThreadUseCase(threadRepo, s3Instance)
 	communityUsecase := _communityUsecase.NewCommunityUsecase(communityRepo, userRepo, reportCategoryRepo, v, s3Instance)
+	notificationUsecase := _notificationUsecase.NewNotificationUsecase(notificationRepo, userRepo)
 
 	// setup middleware
 	JWTSecret, err := _config.LoadJWTSecret(".")
@@ -68,6 +73,7 @@ func main() {
 	_ = _threadHttpDelivery.CreateNewThreadHandler(e, threadUseCase, JWTSecret.Secret)
 	_reportCategoryHttpDeliver.NewReportCategoryHandler(e, reportCategoryUsecase, JWTSecret.Secret)
 	_communityHttpDelivery.NewCommunityHandler(e, communityUsecase, JWTSecret.Secret)
+	_notificationHttpDelivery.NewNotificationHandler(e, notificationUsecase, JWTSecret.Secret)
 
 	log.Fatal(e.Start(":" + config.ServerPort))
 }

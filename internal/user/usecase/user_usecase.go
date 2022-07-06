@@ -1,7 +1,10 @@
 package usercase
 
 import (
+	"fmt"
 	"log"
+	"macaiki/internal/notification"
+	notificationEntity "macaiki/internal/notification/entity"
 	reportcategory "macaiki/internal/report_category"
 	"macaiki/internal/user"
 	"macaiki/internal/user/delivery/http/helper"
@@ -21,14 +24,16 @@ import (
 type userUsecase struct {
 	userRepo           user.UserRepository
 	reportCategoryRepo reportcategory.ReportCategoryRepository
+	notificationRepo   notification.NotificationRepository
 	validator          *validator.Validate
 	awsS3              *cloudstorage.S3
 }
 
-func NewUserUsecase(userRepo user.UserRepository, reportCategoryRepo reportcategory.ReportCategoryRepository, validator *validator.Validate, awsS3Instace *cloudstorage.S3) user.UserUsecase {
+func NewUserUsecase(userRepo user.UserRepository, reportCategoryRepo reportcategory.ReportCategoryRepository, notificationRepo notification.NotificationRepository, validator *validator.Validate, awsS3Instace *cloudstorage.S3) user.UserUsecase {
 	return &userUsecase{
 		userRepo:           userRepo,
 		reportCategoryRepo: reportCategoryRepo,
+		notificationRepo:   notificationRepo,
 		validator:          validator,
 		awsS3:              awsS3Instace,
 	}
@@ -363,6 +368,16 @@ func (uu *userUsecase) Follow(userID, userFollowerID uint) error {
 	if err != nil {
 		return utils.ErrInternalServerError
 	}
+	err = uu.notificationRepo.StoreNotification(notificationEntity.Notification{
+		UserID:            userID,
+		NotificationType:  "Follow You",
+		NotificationRefID: userFollowerID,
+		IsReaded:          0,
+	})
+	if err != nil {
+		fmt.Println("failed to send notification")
+	}
+
 	return nil
 }
 
