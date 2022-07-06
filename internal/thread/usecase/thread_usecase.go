@@ -451,3 +451,13 @@ func (tuc *ThreadUseCaseImpl) CreateThreadReport(threadReport dto.ThreadReportRe
 
 	return err
 }
+
+func (tuc *ThreadUseCaseImpl) CreateCommentReport(commentReport dto.CommentReportRequest) error {
+	err := tuc.tr.CreateCommentReport(entity.CommentReport{
+		CommentID:        commentReport.CommentID,
+		UserID:           commentReport.UserID,
+		ReportCategoryID: commentReport.ReportCategoryID,
+	})
+
+	return err
+}
