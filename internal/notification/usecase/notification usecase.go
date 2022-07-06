@@ -24,15 +24,26 @@ func (nu *NotificationUsecaseImpl) GetAllNotifications(userID uint) ([]dtoNotif.
 	user, _ := nu.userRepo.Get(userID)
 
 	notifResp := []dtoNotif.NotificationResponse{}
+
 	for _, val := range notifs {
+		title := user.Username
+		body := ""
+		if val.NotificationType == "Follow You" {
+			title += " started following you"
+		} else if val.NotificationType == "Like Thread" {
+			title += " like your thread"
+		} else if val.NotificationType == "Comment Thread" {
+			// TODO: get comment from thread
+			title += " comment on your thread"
+		}
 		notifResp = append(notifResp, dtoNotif.NotificationResponse{
 			ID:                 val.ID,
 			UserID:             user.ID,
 			UserImageUrl:       user.ProfileImageUrl,
 			NotificationTypeID: val.NotificationRefID,
 			NotificationType:   val.NotificationType,
-			Title:              val.Title,
-			Body:               val.Body,
+			Title:              title,
+			Body:               body,
 			IsReaded:           val.IsReaded,
 			CreatedAt:          val.CreatedAt,
 		})

@@ -7,7 +7,5 @@ type Notification struct {
 	UserID            uint
 	NotificationType  string
 	NotificationRefID uint
-	Title             string
-	Body              string
 	IsReaded          int
 }

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 	"macaiki/internal/notification"
-	helperNotification "macaiki/internal/notification/entity/helper"
+	notificationEntity "macaiki/internal/notification/entity"
 	reportcategory "macaiki/internal/report_category"
 	"macaiki/internal/user"
 	"macaiki/internal/user/delivery/http/helper"
@@ -368,7 +368,12 @@ func (uu *userUsecase) Follow(userID, userFollowerID uint) error {
 	if err != nil {
 		return utils.ErrInternalServerError
 	}
-	err = uu.notificationRepo.StoreNotification(helperNotification.ToNotificationEntity(userID, userFollowerID, "Follow You", ""))
+	err = uu.notificationRepo.StoreNotification(notificationEntity.Notification{
+		UserID:            userID,
+		NotificationType:  "Follow You",
+		NotificationRefID: userFollowerID,
+		IsReaded:          0,
+	})
 	if err != nil {
 		fmt.Println("failed to send notification")
 	}
