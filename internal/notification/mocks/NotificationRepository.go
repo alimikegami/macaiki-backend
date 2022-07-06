@@ -10,10 +10,18 @@ type NotificationRepository struct {
 	mock.Mock
 }
 
-func (_m *NotificationRepository) StoreNotification(notification entity.Notification) error
-func (_m *NotificationRepository) GetAllNotifications(userID uint) ([]entity.Notification, error)
-func (_m *NotificationRepository) ReadAllNotifications(userID uint) error
-func (_m *NotificationRepository) DeleleteAllNotifications(userID uint) error
+func (_m *NotificationRepository) StoreNotification(notification entity.Notification) error {
+	return nil
+}
+func (_m *NotificationRepository) GetAllNotifications(userID uint) ([]entity.Notification, error) {
+	return []entity.Notification{}, nil
+}
+func (_m *NotificationRepository) ReadAllNotifications(userID uint) error {
+	return nil
+}
+func (_m *NotificationRepository) DeleleteAllNotifications(userID uint) error {
+	return nil
+}
 
 type mockConstructorTestingTNewNotificationRepository interface {
 	mock.TestingT
