@@ -1,8 +1,9 @@
 package usecase
 
 import (
-	"macaiki/internal/community"
-	"macaiki/internal/user"
+	community "macaiki/internal/community"
+	reportCategory "macaiki/internal/report_category"
+	user "macaiki/internal/user"
 	cloudstorage "macaiki/pkg/cloud_storage"
 	"macaiki/pkg/utils"
 	"mime/multipart"
@@ -20,14 +21,16 @@ import (
 type CommunityUsecaseImpl struct {
 	communityRepo community.CommunityRepository
 	userRepo      user.UserRepository
+	rcRepo        reportCategory.ReportCategoryRepository
 	validator     *validator.Validate
 	awsS3         *cloudstorage.S3
 }
 
-func NewCommunityUsecase(communityRepo community.CommunityRepository, userRepo user.UserRepository, validator *validator.Validate, awsS3 *cloudstorage.S3) community.CommunityUsecase {
+func NewCommunityUsecase(communityRepo community.CommunityRepository, userRepo user.UserRepository, rcRepo reportCategory.ReportCategoryRepository, validator *validator.Validate, awsS3 *cloudstorage.S3) community.CommunityUsecase {
 	return &CommunityUsecaseImpl{
 		communityRepo: communityRepo,
 		userRepo:      userRepo,
+		rcRepo:        rcRepo,
 		validator:     validator,
 		awsS3:         awsS3,
 	}
@@ -399,6 +402,37 @@ func (cu *CommunityUsecaseImpl) RemoveModerator(moderatorReq dtoCommunity.Commun
 	}
 
 	err = cu.communityRepo.RemoveModerator(user, community)
+	if err != nil {
+		return utils.ErrInternalServerError
+	}
+
+	return nil
+}
+
+func (cu *CommunityUsecaseImpl) ReportCommunity(userID, communityID, reportCategoryID uint) error {
+	community, err := cu.communityRepo.GetCommunity(communityID)
+	if err != nil {
+		return utils.ErrInternalServerError
+	}
+
+	if community.ID == 0 {
+		return utils.ErrNotFound
+	}
+
+	reportCategory, err := cu.rcRepo.GetReportCategory(reportCategoryID)
+	if err != nil {
+		return utils.ErrInternalServerError
+	}
+
+	if reportCategory.ID == 0 {
+		return utils.ErrNotFound
+	}
+
+	err = cu.communityRepo.StoreReportCommunity(entity.CommunityReport{
+		UserID:              userID,
+		CommunityReportedID: communityID,
+		ReportCategoryID:    reportCategoryID,
+	})
 	if err != nil {
 		return utils.ErrInternalServerError
 	}

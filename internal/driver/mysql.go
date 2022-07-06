@@ -41,11 +41,14 @@ func InitialMigration(DB *gorm.DB) {
 		&userEntity.User{},
 		&userEntity.UserReport{},
 		&notifEntity.Notification{},
+		&communityEntity.CommunityReport{},
 		&threadEntity.Thread{},
 		&threadEntity.ThreadUpvote{},
 		&threadEntity.ThreadFollower{},
 		&threadEntity.Comment{},
 		&threadEntity.CommentLikes{},
 		&threadEntity.ThreadDownvote{},
+		&threadEntity.ThreadReport{},
+		&threadEntity.CommentReport{},
 	)
 }

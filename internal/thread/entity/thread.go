@@ -1,6 +1,7 @@
 package entity
 
 import (
+	reportCategoryEntity "macaiki/internal/report_category/entity"
 	userEntity "macaiki/internal/user/entity"
 
 	"gorm.io/gorm"
@@ -52,6 +53,7 @@ type Comment struct {
 	UserID    uint
 	ThreadID  uint
 	CommentID uint
+	Thread    Thread
 }
 
 type CommentDetails struct {
@@ -65,4 +67,24 @@ type CommentLikes struct {
 	gorm.Model
 	UserID    uint `gorm:"index:unique_likes,unique"`
 	CommentID uint `gorm:"index:unique_likes,unique"`
+}
+
+type ThreadReport struct {
+	gorm.Model
+	UserID           uint
+	ThreadID         uint
+	ReportCategoryID uint
+	User             userEntity.User
+	Thread           Thread
+	ReportCategory   reportCategoryEntity.ReportCategory
+}
+
+type CommentReport struct {
+	gorm.Model
+	UserID           uint
+	CommentID        uint
+	ReportCategoryID uint
+	User             userEntity.User
+	Comment          Comment
+	ReportCategory   reportCategoryEntity.ReportCategory
 }

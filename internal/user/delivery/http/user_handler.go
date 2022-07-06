@@ -40,10 +40,10 @@ func NewUserHandler(e *echo.Echo, us user.UserUsecase, JWTSecret string) {
 
 	e.POST("/api/v1/curent-user/user-followers/:userID", handler.Follow, middleware.JWT([]byte(JWTSecret)))
 	e.DELETE("/api/v1/curent-user/user-followers/:userID", handler.Unfollow, middleware.JWT([]byte(JWTSecret)))
-	e.POST("/api/v1/curent-user/reports", handler.ReportUser, middleware.JWT([]byte(JWTSecret)))
+	e.POST("/api/v1/users/:userID/report", handler.ReportUser, middleware.JWT([]byte(JWTSecret)))
 
-	e.GET("/api/v1/users/:userID/followers", handler.GetUserFollowers)
-	e.GET("/api/v1/users/:userID/following", handler.GetUserFollowing)
+	e.GET("/api/v1/users/:userID/followers", handler.GetUserFollowers, middleware.JWT([]byte(JWTSecret)))
+	e.GET("/api/v1/users/:userID/following", handler.GetUserFollowing, middleware.JWT([]byte(JWTSecret)))
 }
 
 func (u *UserHandler) Login(c echo.Context) error {
@@ -230,7 +230,8 @@ func (u *UserHandler) GetUserFollowers(c echo.Context) error {
 		return response.ErrorResponse(c, utils.ErrBadParamInput)
 	}
 
-	followers, err := u.UserUsecase.GetUserFollowers(uint(userID))
+	tokenUserID, _ := _middL.ExtractTokenUser(c)
+	followers, err := u.UserUsecase.GetUserFollowers(uint(tokenUserID), uint(userID))
 	if err != nil {
 		return response.ErrorResponse(c, err)
 	}
@@ -245,7 +246,8 @@ func (u *UserHandler) GetUserFollowing(c echo.Context) error {
 		return response.ErrorResponse(c, utils.ErrBadParamInput)
 	}
 
-	followers, err := u.UserUsecase.GetUserFollowing(uint(userID))
+	tokenUserID, _ := _middL.ExtractTokenUser(c)
+	followers, err := u.UserUsecase.GetUserFollowing(uint(tokenUserID), uint(userID))
 	if err != nil {
 		return response.ErrorResponse(c, err)
 	}
@@ -284,12 +286,16 @@ func (u *UserHandler) Unfollow(c echo.Context) error {
 }
 
 func (u *UserHandler) ReportUser(c echo.Context) error {
+	reportedUserID, err := strconv.Atoi(c.Param("userID"))
+	if err != nil {
+		return response.ErrorResponse(c, utils.ErrBadParamInput)
+	}
 	reportInfo := dto.UserReportRequest{}
 
 	c.Bind(&reportInfo)
 
 	userID, _ := _middL.ExtractTokenUser(c)
-	err := u.UserUsecase.Report(uint(userID), reportInfo.UserID, reportInfo.ReportCategoryID)
+	err = u.UserUsecase.Report(uint(userID), uint(reportedUserID), reportInfo.ReportCategoryID)
 	if err != nil {
 		return response.ErrorResponse(c, err)
 	}
