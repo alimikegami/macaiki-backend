@@ -289,6 +289,16 @@ func (tr *ThreadRepositoryImpl) DeleteComment(commentID uint) error {
 	return nil
 }
 
+func (tr *ThreadRepositoryImpl) CreateThreadReport(threadReport entity.ThreadReport) error {
+	res := tr.db.Create(&threadReport)
+
+	if res.Error != nil {
+		return utils.ErrInternalServerError
+	}
+
+	return nil
+}
+
 func (tr *ThreadRepositoryImpl) GetCommentByID(commentID uint) (entity.Comment, error) {
 	var comment entity.Comment
 	res := tr.db.First(&comment, commentID)
