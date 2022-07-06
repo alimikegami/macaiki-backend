@@ -3,7 +3,6 @@ package usecase
 import (
 	notification "macaiki/internal/notification"
 	dtoNotif "macaiki/internal/notification/dto"
-	entityNotif "macaiki/internal/notification/entity"
 	user "macaiki/internal/user"
 	"macaiki/pkg/utils"
 )
@@ -15,31 +14,6 @@ type NotificationUsecaseImpl struct {
 
 func NewNotificationUsecase(notifRepo notification.NotificationRepository, userRepo user.UserRepository) notification.NotificationUsecase {
 	return &NotificationUsecaseImpl{notifRepo: notifRepo, userRepo: userRepo}
-}
-
-func (nu *NotificationUsecaseImpl) CreateNotification(userID, notificationRefID uint, notificationType, body string) error {
-	title := ""
-	if title == "Follow You" {
-		title += " started following you"
-	} else if title == "Like Thread" {
-		title += " like your thread"
-	} else if title == "Comment Thread" {
-		title += " comment on your thread"
-	}
-	notifEntity := entityNotif.Notification{
-		UserID:            userID,
-		NotificationType:  notificationType,
-		NotificationRefID: notificationRefID,
-		Title:             title,
-		Body:              body,
-		IsReaded:          0,
-	}
-	err := nu.notifRepo.StoreNotification(notifEntity)
-	if err != nil {
-		return utils.ErrInternalServerError
-	}
-
-	return nil
 }
 
 func (nu *NotificationUsecaseImpl) GetAllNotifications(userID uint) ([]dtoNotif.NotificationResponse, error) {
