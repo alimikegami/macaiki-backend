@@ -22,4 +22,6 @@ type CommunityUsecase interface {
 	GetThreadCommunity(userID, communityID uint) ([]dtoThread.DetailedThreadResponse, error)
 	AddModerator(moderatorReq dtoCommunity.CommunityModeratorRequest, role string) error
 	RemoveModerator(moderatorReq dtoCommunity.CommunityModeratorRequest, role string) error
+
+	ReportCommunity(userID, communityID, reportCategoryID uint) error
 }
