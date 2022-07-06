@@ -415,3 +415,29 @@ func (tuc *ThreadUseCaseImpl) UnlikeComment(commentID, userID uint) error {
 
 	return err
 }
+
+func (tuc *ThreadUseCaseImpl) DeleteComment(commentID uint, threadID uint, userID uint, role string) error {
+	thread, err := tuc.tr.GetThreadByID(threadID)
+
+	if err != nil {
+		return err
+	}
+
+	comment, err := tuc.tr.GetCommentByID(commentID)
+
+	if err != nil {
+		return err
+	}
+
+	if thread.UserID == userID || role == "Admin" || comment.UserID == userID {
+		err := tuc.tr.DeleteComment(commentID)
+
+		if err != nil {
+			return err
+		}
+
+		return nil
+	}
+
+	return utils.ErrUnauthorizedAccess
+}
