@@ -11,3 +11,9 @@ type ThreadReportRequest struct {
 	ThreadID         uint `json:"threadID"`
 	UserID           uint `json:"userID"`
 }
+
+type CommentReportRequest struct {
+	ReportCategoryID uint `json:"reportCategoryID"`
+	CommentID        uint `json:"commentID"`
+	UserID           uint `json:"userID"`
+}

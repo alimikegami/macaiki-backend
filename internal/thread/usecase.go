@@ -25,4 +25,5 @@ type ThreadUseCase interface {
 	UndoDownvoteThread(threadID, userID uint) error
 	DeleteComment(commentID uint, threadID uint, userID uint, role string) error
 	CreateThreadReport(threadReport dto.ThreadReportRequest) error
+	CreateCommentReport(commentReport dto.CommentReportRequest) error
 }

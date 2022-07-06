@@ -314,3 +314,13 @@ func (tr *ThreadRepositoryImpl) GetCommentByID(commentID uint) (entity.Comment, 
 
 	return comment, nil
 }
+
+func (tr *ThreadRepositoryImpl) CreateCommentReport(commentReport entity.CommentReport) error {
+	res := tr.db.Create(&commentReport)
+
+	if res.Error != nil {
+		return utils.ErrInternalServerError
+	}
+
+	return nil
+}
