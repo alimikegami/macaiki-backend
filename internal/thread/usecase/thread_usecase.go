@@ -441,3 +441,13 @@ func (tuc *ThreadUseCaseImpl) DeleteComment(commentID uint, threadID uint, userI
 
 	return utils.ErrUnauthorizedAccess
 }
+
+func (tuc *ThreadUseCaseImpl) CreateThreadReport(threadReport dto.ThreadReportRequest) error {
+	err := tuc.tr.CreateThreadReport(entity.ThreadReport{
+		ThreadID:         threadReport.ThreadID,
+		UserID:           threadReport.UserID,
+		ReportCategoryID: threadReport.ReportCategoryID,
+	})
+
+	return err
+}

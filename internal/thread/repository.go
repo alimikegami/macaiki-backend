@@ -24,4 +24,5 @@ type ThreadRepository interface {
 	GetThreadUpvotes(threadID, userID uint) (entity.ThreadUpvote, error)
 	DeleteComment(commentID uint) error
 	GetCommentByID(commentID uint) (entity.Comment, error)
+	CreateThreadReport(threadReport entity.ThreadReport) error
 }

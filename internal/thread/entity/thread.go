@@ -67,3 +67,10 @@ type CommentLikes struct {
 	UserID    uint `gorm:"index:unique_likes,unique"`
 	CommentID uint `gorm:"index:unique_likes,unique"`
 }
+
+type ThreadReport struct {
+	gorm.Model
+	UserID           uint
+	ThreadID         uint
+	ReportCategoryID uint
+}
