@@ -60,11 +60,11 @@ func (tr *ThreadRepositoryImpl) CreateThread(thread entity.Thread) (entity.Threa
 func (tr *ThreadRepositoryImpl) DeleteThread(threadID uint) error {
 	res := tr.db.Delete(&entity.Thread{}, threadID)
 	if res.Error != nil {
-		fmt.Println(res.Error)
-		if res.Error.Error() == "record not found" {
-			return utils.ErrNotFound
-		}
 		return utils.ErrInternalServerError
+	}
+
+	if res.RowsAffected < 1 {
+		return utils.ErrNotFound
 	}
 
 	return nil
@@ -273,4 +273,34 @@ func (tr *ThreadRepositoryImpl) GetThreadUpvotes(threadID, userID uint) (entity.
 	}
 
 	return threadUpvote, nil
+}
+
+func (tr *ThreadRepositoryImpl) DeleteComment(commentID uint) error {
+	res := tr.db.Delete(&entity.Comment{}, commentID)
+
+	if res.Error != nil {
+		return utils.ErrInternalServerError
+	}
+
+	if res.RowsAffected < 1 {
+		return utils.ErrNotFound
+	}
+
+	return nil
+}
+
+func (tr *ThreadRepositoryImpl) GetCommentByID(commentID uint) (entity.Comment, error) {
+	var comment entity.Comment
+	res := tr.db.First(&comment, commentID)
+
+	if res.Error != nil {
+		fmt.Println(res.Error)
+		if res.Error.Error() == "record not found" {
+			return comment, utils.ErrNotFound
+		}
+
+		return comment, utils.ErrInternalServerError
+	}
+
+	return comment, nil
 }

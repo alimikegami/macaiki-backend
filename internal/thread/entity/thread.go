@@ -52,6 +52,7 @@ type Comment struct {
 	UserID    uint
 	ThreadID  uint
 	CommentID uint
+	Thread    Thread
 }
 
 type CommentDetails struct {

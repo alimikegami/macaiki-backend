@@ -23,4 +23,5 @@ type ThreadUseCase interface {
 	UnlikeComment(commentID, userID uint) error
 	DownvoteThread(threadID uint, userID uint) error
 	UndoDownvoteThread(threadID, userID uint) error
+	DeleteComment(commentID uint, threadID uint, userID uint, role string) error
 }
