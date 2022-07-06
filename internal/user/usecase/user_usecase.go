@@ -391,34 +391,28 @@ func (uu *userUsecase) Unfollow(userID, userFollowerID uint) error {
 }
 
 func (uu *userUsecase) Report(userID, userReportedID, reportCategoryID uint) error {
-	var err error
+	user, err := uu.userRepo.Get(userReportedID)
+	if err != nil {
+		return utils.ErrInternalServerError
+	}
 
-	if userID == userReportedID {
+	if user.ID == 0 {
+		return utils.ErrNotFound
+	}
+
+	reportCategory, err := uu.reportCategoryRepo.GetReportCategory(reportCategoryID)
+	if err != nil {
 		return utils.ErrBadParamInput
 	}
-
-	_, err = uu.userRepo.Get(userID)
-	if err != nil {
+	if reportCategory.ID == 0 {
 		return utils.ErrNotFound
 	}
 
-	_, err = uu.userRepo.Get(userReportedID)
-	if err != nil {
-		return utils.ErrNotFound
-	}
-
-	_, err = uu.reportCategoryRepo.GetReportCategory(reportCategoryID)
-	if err != nil {
-		return utils.ErrNotFound
-	}
-
-	userReport := entity.UserReport{
+	err = uu.userRepo.StoreReport(entity.UserReport{
 		UserID:           userID,
 		ReportedUserID:   userReportedID,
 		ReportCategoryID: reportCategoryID,
-	}
-
-	err = uu.userRepo.StoreReport(userReport)
+	})
 	if err != nil {
 		return utils.ErrInternalServerError
 	}
