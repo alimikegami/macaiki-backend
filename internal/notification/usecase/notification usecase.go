@@ -30,8 +30,8 @@ func (nu *NotificationUsecaseImpl) GetAllNotifications(userID uint) ([]dtoNotif.
 		body := ""
 		if val.NotificationType == "Follow You" {
 			title += " started following you"
-		} else if val.NotificationType == "Like Thread" {
-			title += " like your thread"
+		} else if val.NotificationType == "Upvote Thread" {
+			title += " upvote your thread"
 		} else if val.NotificationType == "Comment Thread" {
 			// TODO: get comment from thread
 			title += " comment on your thread"

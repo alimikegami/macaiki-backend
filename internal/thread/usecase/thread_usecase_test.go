@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	entityMocks "macaiki/internal/notification/mocks"
 	"macaiki/internal/thread/dto"
 	"macaiki/internal/thread/entity"
 	"macaiki/internal/thread/mocks"
@@ -12,6 +13,7 @@ import (
 
 func TestCreateThreadReport(t *testing.T) {
 	mockThreadRepo := mocks.NewThreadRepository(t)
+	mockNotifRepo := entityMocks.NewNotificationRepository(t)
 
 	mockThreadReportReq := dto.ThreadReportRequest{
 		UserID:           1,
@@ -28,7 +30,7 @@ func TestCreateThreadReport(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		mockThreadRepo.On("CreateThreadReport", mockThreadReportEntity).Return(nil).Once()
 
-		testThreadUseCase := CreateNewThreadUseCase(mockThreadRepo, nil)
+		testThreadUseCase := CreateNewThreadUseCase(mockThreadRepo, mockNotifRepo, nil)
 
 		err := testThreadUseCase.CreateThreadReport(mockThreadReportReq)
 		assert.NoError(t, err)
@@ -37,7 +39,7 @@ func TestCreateThreadReport(t *testing.T) {
 	t.Run("internal-server-error", func(t *testing.T) {
 		mockThreadRepo.On("CreateThreadReport", mockThreadReportEntity).Return(utils.ErrInternalServerError).Once()
 
-		testThreadUseCase := CreateNewThreadUseCase(mockThreadRepo, nil)
+		testThreadUseCase := CreateNewThreadUseCase(mockThreadRepo, mockNotifRepo, nil)
 
 		err := testThreadUseCase.CreateThreadReport(mockThreadReportReq)
 		assert.Error(t, err)
