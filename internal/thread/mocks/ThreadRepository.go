@@ -248,6 +248,29 @@ func (_m *ThreadRepository) GetThreads(keyword string, userID uint) ([]entity.Th
 	return r0, r1
 }
 
+// GetThreadsByUserID provides a mock function with given fields: userID
+func (_m *ThreadRepository) GetThreadsByUserID(userID uint) ([]entity.Thread, error) {
+	ret := _m.Called(userID)
+
+	var r0 []entity.Thread
+	if rf, ok := ret.Get(0).(func(uint) []entity.Thread); ok {
+		r0 = rf(userID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]entity.Thread)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(uint) error); ok {
+		r1 = rf(userID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetThreadsFromFollowedCommunity provides a mock function with given fields: userID
 func (_m *ThreadRepository) GetThreadsFromFollowedCommunity(userID uint) ([]entity.ThreadWithDetails, error) {
 	ret := _m.Called(userID)
