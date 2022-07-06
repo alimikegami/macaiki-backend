@@ -18,8 +18,8 @@ type UserUsecase interface {
 
 	SetProfileImage(id uint, img *multipart.FileHeader) (string, error)
 	SetBackgroundImage(id uint, img *multipart.FileHeader) (string, error)
-	GetUserFollowers(id uint) ([]dto.UserResponse, error)
-	GetUserFollowing(id uint) ([]dto.UserResponse, error)
+	GetUserFollowers(tokenUserID, getFollowingUserID uint) ([]dto.UserResponse, error)
+	GetUserFollowing(tokenUserID, getFollowingUserID uint) ([]dto.UserResponse, error)
 	Follow(userID, userFollowerID uint) error
 	Unfollow(userID, userFollowerID uint) error
 

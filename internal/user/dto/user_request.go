@@ -24,6 +24,5 @@ type UserLoginRequest struct {
 }
 
 type UserReportRequest struct {
-	UserID           uint `json:"userID"`
 	ReportCategoryID uint `json:"reportCategoryID"`
 }

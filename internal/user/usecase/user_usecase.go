@@ -247,8 +247,8 @@ func (uu *userUsecase) ChangePassword(id uint, passwordInfo dto.UserChangePasswo
 	return nil
 }
 
-func (uu *userUsecase) GetUserFollowers(id uint) ([]dto.UserResponse, error) {
-	userEntity, err := uu.userRepo.Get(id)
+func (uu *userUsecase) GetUserFollowers(tokenUserID, getFollowingUserID uint) ([]dto.UserResponse, error) {
+	userEntity, err := uu.userRepo.Get(getFollowingUserID)
 	if err != nil {
 		return []dto.UserResponse{}, utils.ErrInternalServerError
 	}
@@ -256,15 +256,15 @@ func (uu *userUsecase) GetUserFollowers(id uint) ([]dto.UserResponse, error) {
 		return []dto.UserResponse{}, utils.ErrNotFound
 	}
 
-	followers, err := uu.userRepo.GetFollower(userEntity)
+	followers, err := uu.userRepo.GetFollower(tokenUserID, getFollowingUserID)
 	if err != nil {
 		return []dto.UserResponse{}, utils.ErrInternalServerError
 	}
 	return helper.DomainUserToListUserResponse(followers), nil
 }
 
-func (uu *userUsecase) GetUserFollowing(id uint) ([]dto.UserResponse, error) {
-	userEntity, err := uu.userRepo.Get(id)
+func (uu *userUsecase) GetUserFollowing(tokenUserID, getFollowingUserID uint) ([]dto.UserResponse, error) {
+	userEntity, err := uu.userRepo.Get(getFollowingUserID)
 	if err != nil {
 		return []dto.UserResponse{}, utils.ErrInternalServerError
 	}
@@ -272,7 +272,7 @@ func (uu *userUsecase) GetUserFollowing(id uint) ([]dto.UserResponse, error) {
 		return []dto.UserResponse{}, utils.ErrNotFound
 	}
 
-	following, err := uu.userRepo.GetFollowing(userEntity)
+	following, err := uu.userRepo.GetFollowing(tokenUserID, getFollowingUserID)
 	if err != nil {
 		return []dto.UserResponse{}, utils.ErrInternalServerError
 	}
@@ -391,34 +391,28 @@ func (uu *userUsecase) Unfollow(userID, userFollowerID uint) error {
 }
 
 func (uu *userUsecase) Report(userID, userReportedID, reportCategoryID uint) error {
-	var err error
+	user, err := uu.userRepo.Get(userReportedID)
+	if err != nil {
+		return utils.ErrInternalServerError
+	}
 
-	if userID == userReportedID {
+	if user.ID == 0 {
+		return utils.ErrNotFound
+	}
+
+	reportCategory, err := uu.reportCategoryRepo.GetReportCategory(reportCategoryID)
+	if err != nil {
 		return utils.ErrBadParamInput
 	}
-
-	_, err = uu.userRepo.Get(userID)
-	if err != nil {
+	if reportCategory.ID == 0 {
 		return utils.ErrNotFound
 	}
 
-	_, err = uu.userRepo.Get(userReportedID)
-	if err != nil {
-		return utils.ErrNotFound
-	}
-
-	_, err = uu.reportCategoryRepo.GetReportCategory(reportCategoryID)
-	if err != nil {
-		return utils.ErrNotFound
-	}
-
-	userReport := entity.UserReport{
+	err = uu.userRepo.StoreReport(entity.UserReport{
 		UserID:           userID,
 		ReportedUserID:   userReportedID,
 		ReportCategoryID: reportCategoryID,
-	}
-
-	err = uu.userRepo.StoreReport(userReport)
+	})
 	if err != nil {
 		return utils.ErrInternalServerError
 	}

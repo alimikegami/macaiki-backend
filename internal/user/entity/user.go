@@ -1,8 +1,6 @@
 package entity
 
 import (
-	"time"
-
 	"gorm.io/gorm"
 )
 
@@ -26,9 +24,8 @@ type User struct {
 }
 
 type UserReport struct {
-	UserID           uint `gorm:"primaryKey"`
-	ReportedUserID   uint `gorm:"primaryKey"`
+	gorm.Model
+	UserID           uint
+	ReportedUserID   uint
 	ReportCategoryID uint
-	CreatedAt        time.Time
-	UpdatedAt        time.Time
 }
