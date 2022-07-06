@@ -17,14 +17,36 @@ type NotificationHandler struct {
 func NewNotificationHandler(e *echo.Echo, notifUsecase notification.NotificationUsecase, JWTSecret string) {
 	notifHandler := NotificationHandler{notifUsecase, JWTSecret}
 	e.GET("api/v1/notifications", notifHandler.GetAllNotifications, middleware.JWT([]byte(JWTSecret)))
+	e.PUT("api/v1/notifications", notifHandler.ReadAllNotifications, middleware.JWT([]byte(JWTSecret)))
+	e.DELETE("api/v1/notifications", notifHandler.DeleteAllNotifications, middleware.JWT([]byte(JWTSecret)))
 }
 
 func (notifHandler *NotificationHandler) GetAllNotifications(c echo.Context) error {
 	userID, _ := _middL.ExtractTokenUser(c)
-	notifications, err := notifHandler.notifUsecase.GetAllNotification(uint(userID))
+	notifications, err := notifHandler.notifUsecase.GetAllNotifications(uint(userID))
 	if err != nil {
 		return response.ErrorResponse(c, err)
 	}
 
 	return response.SuccessResponse(c, notifications)
+}
+
+func (notifHandler *NotificationHandler) ReadAllNotifications(c echo.Context) error {
+	userID, _ := _middL.ExtractTokenUser(c)
+	notifResp, err := notifHandler.notifUsecase.ReadAllNotifications(uint(userID))
+	if err != nil {
+		return response.ErrorResponse(c, err)
+	}
+
+	return response.SuccessResponse(c, notifResp)
+}
+
+func (notifHandler *NotificationHandler) DeleteAllNotifications(c echo.Context) error {
+	userID, _ := _middL.ExtractTokenUser(c)
+	notifResp, err := notifHandler.notifUsecase.DeleteAllNotifications(uint(userID))
+	if err != nil {
+		return response.ErrorResponse(c, err)
+	}
+
+	return response.SuccessResponse(c, notifResp)
 }

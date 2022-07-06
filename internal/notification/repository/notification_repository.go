@@ -23,12 +23,30 @@ func (nr *NotificationRepositoryImpl) StoreNotification(notification entity.Noti
 	}
 	return nil
 }
-func (nr *NotificationRepositoryImpl) GetAllNotification(userID uint) ([]entity.Notification, error) {
+func (nr *NotificationRepositoryImpl) GetAllNotifications(userID uint) ([]entity.Notification, error) {
 	notifications := []entity.Notification{}
-	res := nr.db.Where("user_id = ?", userID).Find(&notifications)
+	res := nr.db.Where("user_id = ?", userID).Order("created_at desc").Find(&notifications)
 	err := res.Error
 	if err != nil {
 		return []entity.Notification{}, err
 	}
 	return notifications, nil
+}
+
+func (nr *NotificationRepositoryImpl) ReadAllNotifications(userID uint) error {
+	res := nr.db.Model(&entity.Notification{}).Where("user_id = ?", userID).Update("is_readed", 1)
+	err := res.Error
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (nr *NotificationRepositoryImpl) DeleleteAllNotifications(userID uint) error {
+	res := nr.db.Where("user_id = ?", userID).Delete(&entity.Notification{})
+	err := res.Error
+	if err != nil {
+		return err
+	}
+	return nil
 }

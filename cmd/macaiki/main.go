@@ -56,7 +56,7 @@ func main() {
 	notificationRepo := _notificationRepo.NewNotificaionRepository(_driver.DB)
 
 	// setup usecase
-	userUsecase := _userUsecase.NewUserUsecase(userRepo, reportCategoryRepo, v, s3Instance)
+	userUsecase := _userUsecase.NewUserUsecase(userRepo, reportCategoryRepo, notificationRepo, v, s3Instance)
 	reportCategoryUsecase := _reportCategoryUsecase.NewReportCategoryUsecase(reportCategoryRepo, v)
 	threadUseCase := _threadUsecase.CreateNewThreadUseCase(threadRepo, s3Instance)
 	communityUsecase := _communityUsecase.NewCommunityUsecase(communityRepo, userRepo, v, s3Instance)

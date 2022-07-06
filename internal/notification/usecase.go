@@ -6,5 +6,8 @@ import (
 
 type NotificationUsecase interface {
 	CreateNotification(notification dto.NotificationRequest) error
-	GetAllNotification(userID uint) ([]dto.NotificationResponse, error)
+	GetAllNotifications(userID uint) ([]dto.NotificationResponse, error)
+	ReadAllNotifications(userID uint) ([]dto.NotificationResponse, error)
+	DeleteAllNotifications(userID uint) ([]dto.NotificationResponse, error)
+	// GetNotificatoinDetail(notificationID uint) (interface{}, error)
 }
