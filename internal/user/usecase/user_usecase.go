@@ -247,8 +247,8 @@ func (uu *userUsecase) ChangePassword(id uint, passwordInfo dto.UserChangePasswo
 	return nil
 }
 
-func (uu *userUsecase) GetUserFollowers(id uint) ([]dto.UserResponse, error) {
-	userEntity, err := uu.userRepo.Get(id)
+func (uu *userUsecase) GetUserFollowers(tokenUserID, getFollowingUserID uint) ([]dto.UserResponse, error) {
+	userEntity, err := uu.userRepo.Get(getFollowingUserID)
 	if err != nil {
 		return []dto.UserResponse{}, utils.ErrInternalServerError
 	}
@@ -256,15 +256,15 @@ func (uu *userUsecase) GetUserFollowers(id uint) ([]dto.UserResponse, error) {
 		return []dto.UserResponse{}, utils.ErrNotFound
 	}
 
-	followers, err := uu.userRepo.GetFollower(userEntity)
+	followers, err := uu.userRepo.GetFollower(tokenUserID, getFollowingUserID)
 	if err != nil {
 		return []dto.UserResponse{}, utils.ErrInternalServerError
 	}
 	return helper.DomainUserToListUserResponse(followers), nil
 }
 
-func (uu *userUsecase) GetUserFollowing(id uint) ([]dto.UserResponse, error) {
-	userEntity, err := uu.userRepo.Get(id)
+func (uu *userUsecase) GetUserFollowing(tokenUserID, getFollowingUserID uint) ([]dto.UserResponse, error) {
+	userEntity, err := uu.userRepo.Get(getFollowingUserID)
 	if err != nil {
 		return []dto.UserResponse{}, utils.ErrInternalServerError
 	}
@@ -272,7 +272,7 @@ func (uu *userUsecase) GetUserFollowing(id uint) ([]dto.UserResponse, error) {
 		return []dto.UserResponse{}, utils.ErrNotFound
 	}
 
-	following, err := uu.userRepo.GetFollowing(userEntity)
+	following, err := uu.userRepo.GetFollowing(tokenUserID, getFollowingUserID)
 	if err != nil {
 		return []dto.UserResponse{}, utils.ErrInternalServerError
 	}
