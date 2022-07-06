@@ -5,7 +5,6 @@ import (
 	dtoNotif "macaiki/internal/notification/dto"
 	entityNotif "macaiki/internal/notification/entity"
 	user "macaiki/internal/user"
-	entityUser "macaiki/internal/user/entity"
 	"macaiki/pkg/utils"
 )
 
@@ -18,12 +17,22 @@ func NewNotificationUsecase(notifRepo notification.NotificationRepository, userR
 	return &NotificationUsecaseImpl{notifRepo: notifRepo, userRepo: userRepo}
 }
 
-func (nu *NotificationUsecaseImpl) CreateNotification(notification dtoNotif.NotificationRequest) error {
+func (nu *NotificationUsecaseImpl) CreateNotification(userID, notificationRefID uint, notificationType, body string) error {
+	title := ""
+	if title == "Follow You" {
+		title += " started following you"
+	} else if title == "Like Thread" {
+		title += " like your thread"
+	} else if title == "Comment Thread" {
+		title += " comment on your thread"
+	}
 	notifEntity := entityNotif.Notification{
-		UserID:             notification.UserID,
-		NotificationType:   notification.NotificationType,
-		NotificationTypeID: notification.NotificationTypeID,
-		IsReaded:           notification.IsReaded,
+		UserID:            userID,
+		NotificationType:  notificationType,
+		NotificationRefID: notificationRefID,
+		Title:             title,
+		Body:              body,
+		IsReaded:          0,
 	}
 	err := nu.notifRepo.StoreNotification(notifEntity)
 	if err != nil {
@@ -40,7 +49,22 @@ func (nu *NotificationUsecaseImpl) GetAllNotifications(userID uint) ([]dtoNotif.
 	}
 	user, _ := nu.userRepo.Get(userID)
 
-	return ToNotificationResponse(user, notifs), err
+	notifResp := []dtoNotif.NotificationResponse{}
+	for _, val := range notifs {
+		notifResp = append(notifResp, dtoNotif.NotificationResponse{
+			ID:                 val.ID,
+			UserID:             user.ID,
+			UserImageUrl:       user.ProfileImageUrl,
+			NotificationTypeID: val.NotificationRefID,
+			NotificationType:   val.NotificationType,
+			Title:              val.Title,
+			Body:               val.Body,
+			IsReaded:           val.IsReaded,
+			CreatedAt:          val.CreatedAt,
+		})
+	}
+
+	return notifResp, err
 }
 
 func (nu *NotificationUsecaseImpl) ReadAllNotifications(userID uint) ([]dtoNotif.NotificationResponse, error) {
@@ -59,30 +83,4 @@ func (nu *NotificationUsecaseImpl) DeleteAllNotifications(userID uint) ([]dtoNot
 	}
 
 	return nu.GetAllNotifications(userID)
-}
-
-func ToNotificationResponse(user entityUser.User, notifs []entityNotif.Notification) []dtoNotif.NotificationResponse {
-	notifResp := []dtoNotif.NotificationResponse{}
-	title := user.Username
-	for _, val := range notifs {
-		if val.NotificationType == "Follow You" {
-			title += " started following you"
-		} else if val.NotificationType == "Like Thread" {
-			title += " like your thread"
-		} else if val.NotificationType == "Comment Thread" {
-			title += " comment on your thread"
-		}
-		notifResp = append(notifResp, dtoNotif.NotificationResponse{
-			ID:                 val.ID,
-			UserID:             user.ID,
-			UserImageUrl:       user.ProfileImageUrl,
-			NotificationTypeID: val.NotificationTypeID,
-			NotificationType:   val.NotificationType,
-			Title:              title,
-			IsReaded:           val.IsReaded,
-			CreatedAt:          val.CreatedAt,
-		})
-	}
-
-	return notifResp
 }
