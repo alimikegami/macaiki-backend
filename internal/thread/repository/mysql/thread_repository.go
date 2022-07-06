@@ -324,3 +324,15 @@ func (tr *ThreadRepositoryImpl) CreateCommentReport(commentReport entity.Comment
 
 	return nil
 }
+
+func (tr *ThreadRepositoryImpl) GetThreadsByUserID(userID uint) ([]entity.Thread, error) {
+	var threads []entity.Thread
+
+	res := tr.db.Find(&threads, "user_id = ?", userID)
+
+	if res.Error != nil {
+		return []entity.Thread{}, utils.ErrInternalServerError
+	}
+
+	return threads, nil
+}

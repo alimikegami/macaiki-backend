@@ -26,4 +26,5 @@ type ThreadRepository interface {
 	GetCommentByID(commentID uint) (entity.Comment, error)
 	CreateThreadReport(threadReport entity.ThreadReport) error
 	CreateCommentReport(commentReport entity.CommentReport) error
+	GetThreadsByUserID(userID uint) ([]entity.Thread, error)
 }
