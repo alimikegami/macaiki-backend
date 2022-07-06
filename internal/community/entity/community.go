@@ -19,3 +19,10 @@ type Community struct {
 	TotalFollowers              int               `gorm:"-:migration;<-:false"`
 	TotalModerators             int               `gorm:"-:migration;<-:false"`
 }
+
+type CommunityReport struct {
+	gorm.Model
+	UserID              uint
+	CommunityReportedID uint
+	ReportCategoryID    uint
+}

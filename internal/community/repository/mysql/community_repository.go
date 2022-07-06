@@ -170,3 +170,13 @@ func (cr *CommunityRepositoryImpl) GetModeratorByCommunityID(userID, communityID
 
 	return users, nil
 }
+
+func (cr *CommunityRepositoryImpl) StoreReportCommunity(communityReport communityEntity.CommunityReport) error {
+	res := cr.db.Create(&communityReport)
+	err := res.Error
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

@@ -23,4 +23,6 @@ type CommunityRepository interface {
 	AddModerator(user userEntity.User, community communityEntity.Community) error
 	RemoveModerator(user userEntity.User, community communityEntity.Community) error
 	GetModeratorByCommunityID(userID, communityID uint) ([]userEntity.User, error)
+
+	StoreReportCommunity(communityReport communityEntity.CommunityReport) error
 }
