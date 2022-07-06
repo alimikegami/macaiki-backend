@@ -26,4 +26,5 @@ type ThreadUseCase interface {
 	DeleteComment(commentID uint, threadID uint, userID uint, role string) error
 	CreateThreadReport(threadReport dto.ThreadReportRequest) error
 	CreateCommentReport(commentReport dto.CommentReportRequest) error
+	StoreSavedThread(savedThread dto.SavedThreadRequest) error
 }

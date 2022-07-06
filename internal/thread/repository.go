@@ -27,4 +27,5 @@ type ThreadRepository interface {
 	CreateThreadReport(threadReport entity.ThreadReport) error
 	CreateCommentReport(commentReport entity.CommentReport) error
 	GetThreadsByUserID(userID uint) ([]entity.Thread, error)
+	StoreSavedThread(savedThread entity.SavedThread) error
 }

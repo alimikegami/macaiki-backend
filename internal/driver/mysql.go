@@ -50,5 +50,6 @@ func InitialMigration(DB *gorm.DB) {
 		&threadEntity.ThreadDownvote{},
 		&threadEntity.ThreadReport{},
 		&threadEntity.CommentReport{},
+		&threadEntity.SavedThread{},
 	)
 }
