@@ -5,3 +5,13 @@ type CommunityRequest struct {
 	Name        string `json:"name" validate:"required"`
 	Description string `json:"description"  validate:"required"`
 }
+
+type CommunityModeratorRequest struct {
+	UserID      uint `json:"userID"`
+	CommunityID uint `json:"communityID"`
+}
+
+type CommunityReportRequest struct {
+	ReportCategoryID uint `json:"reportCategoryID" validate:"required"`
+	CommunityID      uint `validate:"required"`
+}
