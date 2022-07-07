@@ -88,3 +88,11 @@ type CommentReport struct {
 	Comment          Comment
 	ReportCategory   reportCategoryEntity.ReportCategory
 }
+
+type SavedThread struct {
+	gorm.Model
+	UserID   uint `gorm:"index:unique_saved_thread,unique"`
+	ThreadID uint `gorm:"index:unique_saved_thread,unique"`
+	User     userEntity.User
+	Thread   Thread
+}

@@ -368,6 +368,20 @@ func (_m *ThreadRepository) SetThreadImage(imageURL string, threadID uint) error
 	return r0
 }
 
+// StoreSavedThread provides a mock function with given fields: savedThread
+func (_m *ThreadRepository) StoreSavedThread(savedThread entity.SavedThread) error {
+	ret := _m.Called(savedThread)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(entity.SavedThread) error); ok {
+		r0 = rf(savedThread)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // UndoDownvoteThread provides a mock function with given fields: threadID, userID
 func (_m *ThreadRepository) UndoDownvoteThread(threadID uint, userID uint) error {
 	ret := _m.Called(threadID, userID)
