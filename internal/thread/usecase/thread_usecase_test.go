@@ -37,6 +37,17 @@ var (
 		Body:        "Body",
 		CommunityID: uint(1),
 	}
+
+	// mockedDTOResponse = dto.ThreadResponse{
+	// 	ID:          1,
+	// 	CreatedAt:   time.Now(),
+	// 	UpdatedAt:   time.Now(),
+	// 	Title:       "Title",
+	// 	Body:        "Body",
+	// 	ImageURL:    "ImageURL",
+	// 	UserID:      uint(1),
+	// 	CommunityID: uint(1),
+	// }
 )
 
 func TestCreateThreadReport(t *testing.T) {
@@ -207,5 +218,36 @@ func TestUpdateThread(t *testing.T) {
 
 		assert.Error(t, err)
 		assert.Empty(t, res)
+	})
+}
+
+func TestGetThreadByID(t *testing.T) {
+	mockThreadRepo := mocks.NewThreadRepository(t)
+
+	t.Run("success", func(t *testing.T) {
+		mockThreadRepo.On("GetThreadByID", uint(1)).Return(mockedEntity, nil).Once()
+
+		testThreadUseCase := CreateNewThreadUseCase(mockThreadRepo, nil)
+		res, err := testThreadUseCase.GetThreadByID(uint(1))
+		assert.NotEmpty(t, res)
+		assert.NoError(t, err)
+	})
+
+	t.Run("internal-server-error", func(t *testing.T) {
+		mockThreadRepo.On("GetThreadByID", uint(1)).Return(entity.Thread{}, utils.ErrInternalServerError).Once()
+
+		testThreadUseCase := CreateNewThreadUseCase(mockThreadRepo, nil)
+		res, err := testThreadUseCase.GetThreadByID(uint(1))
+		assert.Empty(t, res)
+		assert.Error(t, err)
+	})
+
+	t.Run("record-not-found", func(t *testing.T) {
+		mockThreadRepo.On("GetThreadByID", uint(1)).Return(entity.Thread{}, utils.ErrNotFound).Once()
+
+		testThreadUseCase := CreateNewThreadUseCase(mockThreadRepo, nil)
+		res, err := testThreadUseCase.GetThreadByID(uint(1))
+		assert.Empty(t, res)
+		assert.Error(t, err)
 	})
 }
