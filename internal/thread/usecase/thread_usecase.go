@@ -2,6 +2,8 @@ package usecase
 
 import (
 	"fmt"
+	"macaiki/internal/notification"
+	entityNotif "macaiki/internal/notification/entity"
 	"macaiki/internal/thread"
 	"macaiki/internal/thread/dto"
 	"macaiki/internal/thread/entity"
@@ -17,6 +19,7 @@ import (
 
 type ThreadUseCaseImpl struct {
 	tr    thread.ThreadRepository
+	nr    notification.NotificationRepository
 	awsS3 *cloudstorage.S3
 }
 
@@ -37,8 +40,8 @@ func AuthorizeThreadAccess(threadID uint, userID uint, role string, tuc *ThreadU
 	return true, thread, nil
 }
 
-func CreateNewThreadUseCase(tr thread.ThreadRepository, awsS3Instance *cloudstorage.S3) thread.ThreadUseCase {
-	return &ThreadUseCaseImpl{tr: tr, awsS3: awsS3Instance}
+func CreateNewThreadUseCase(tr thread.ThreadRepository, nr notification.NotificationRepository, awsS3Instance *cloudstorage.S3) thread.ThreadUseCase {
+	return &ThreadUseCaseImpl{tr: tr, nr: nr, awsS3: awsS3Instance}
 }
 
 func (tuc *ThreadUseCaseImpl) GetThreadByID(threadID uint) (dto.ThreadResponse, error) {
@@ -199,7 +202,12 @@ func (tuc *ThreadUseCaseImpl) UpvoteThread(threadID uint, userID uint) error {
 		UserID:   userID,
 	}
 	err = tuc.tr.UpvoteThread(threadUpvote)
-
+	_ = tuc.nr.StoreNotification(entityNotif.Notification{
+		UserID:            userID,
+		NotificationRefID: threadID,
+		NotificationType:  "Upvote Thread",
+		IsReaded:          0,
+	})
 	return err
 }
 
@@ -302,6 +310,15 @@ func (tuc *ThreadUseCaseImpl) AddThreadComment(comment dto.CommentRequest) error
 		UserID:    comment.UserID,
 		ThreadID:  comment.ThreadID,
 		CommentID: comment.CommentID,
+	})
+
+	thread, _ := tuc.tr.GetThreadByID(uint(comment.ThreadID))
+
+	_ = tuc.nr.StoreNotification(entityNotif.Notification{
+		UserID:            thread.UserID,
+		NotificationRefID: comment.CommentID,
+		NotificationType:  "Comment Thread",
+		IsReaded:          0,
 	})
 
 	return err

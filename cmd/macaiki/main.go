@@ -58,7 +58,7 @@ func main() {
 	// setup usecase
 	userUsecase := _userUsecase.NewUserUsecase(userRepo, reportCategoryRepo, notificationRepo, v, s3Instance)
 	reportCategoryUsecase := _reportCategoryUsecase.NewReportCategoryUsecase(reportCategoryRepo, v)
-	threadUseCase := _threadUsecase.CreateNewThreadUseCase(threadRepo, s3Instance)
+	threadUseCase := _threadUsecase.CreateNewThreadUseCase(threadRepo, notificationRepo, s3Instance)
 	communityUsecase := _communityUsecase.NewCommunityUsecase(communityRepo, userRepo, reportCategoryRepo, v, s3Instance)
 	notificationUsecase := _notificationUsecase.NewNotificationUsecase(notificationRepo, userRepo)
 
