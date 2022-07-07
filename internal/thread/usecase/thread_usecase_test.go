@@ -95,3 +95,111 @@ func TestCreateThread(t *testing.T) {
 		assert.Empty(t, res)
 	})
 }
+
+func TestDeleteThread(t *testing.T) {
+	mockThreadRepo := mocks.NewThreadRepository(t)
+
+	t.Run("success", func(t *testing.T) {
+		mockThreadRepo.On("GetThreadByID", uint(1)).Return(entity.Thread{
+			Model: gorm.Model{
+				ID:        1,
+				CreatedAt: time.Now(),
+				UpdatedAt: time.Now(),
+			},
+			Title:       "Title",
+			Body:        "Body",
+			ImageURL:    "ImageURL",
+			UserID:      uint(1),
+			CommunityID: uint(1),
+		}, nil).Once()
+
+		mockThreadRepo.On("DeleteThread", uint(1)).Return(nil).Once()
+
+		testThreadUseCase := CreateNewThreadUseCase(mockThreadRepo, nil)
+
+		err := testThreadUseCase.DeleteThread(uint(1), uint(1), "")
+		assert.NoError(t, err)
+	})
+
+	t.Run("internal-server-error-on-get-threads-by-ID", func(t *testing.T) {
+		mockThreadRepo.On("GetThreadByID", uint(1)).Return(entity.Thread{}, utils.ErrInternalServerError).Once()
+
+		testThreadUseCase := CreateNewThreadUseCase(mockThreadRepo, nil)
+
+		err := testThreadUseCase.DeleteThread(uint(1), uint(1), "")
+		assert.Error(t, err)
+	})
+
+	t.Run("internal-server-error-on-delete-thread", func(t *testing.T) {
+		mockThreadRepo.On("GetThreadByID", uint(1)).Return(entity.Thread{
+			Model: gorm.Model{
+				ID:        1,
+				CreatedAt: time.Now(),
+				UpdatedAt: time.Now(),
+			},
+			Title:       "Title",
+			Body:        "Body",
+			ImageURL:    "ImageURL",
+			UserID:      uint(1),
+			CommunityID: uint(1),
+		}, nil).Once()
+
+		mockThreadRepo.On("DeleteThread", uint(1)).Return(utils.ErrInternalServerError).Once()
+
+		testThreadUseCase := CreateNewThreadUseCase(mockThreadRepo, nil)
+
+		err := testThreadUseCase.DeleteThread(uint(1), uint(1), "")
+		assert.Error(t, err)
+	})
+
+	t.Run("record-not-found", func(t *testing.T) {
+		mockThreadRepo.On("GetThreadByID", uint(1)).Return(entity.Thread{}, utils.ErrNotFound).Once()
+
+		testThreadUseCase := CreateNewThreadUseCase(mockThreadRepo, nil)
+
+		err := testThreadUseCase.DeleteThread(uint(1), uint(1), "")
+		assert.Error(t, err)
+	})
+
+	t.Run("unauthorized-access", func(t *testing.T) {
+		mockThreadRepo.On("GetThreadByID", uint(1)).Return(entity.Thread{
+			Model: gorm.Model{
+				ID:        1,
+				CreatedAt: time.Now(),
+				UpdatedAt: time.Now(),
+			},
+			Title:       "Title",
+			Body:        "Body",
+			ImageURL:    "ImageURL",
+			UserID:      uint(1),
+			CommunityID: uint(1),
+		}, nil).Once()
+
+		testThreadUseCase := CreateNewThreadUseCase(mockThreadRepo, nil)
+
+		err := testThreadUseCase.DeleteThread(uint(1), uint(2), "")
+		assert.Error(t, err)
+	})
+
+	t.Run("success-admin-deletion", func(t *testing.T) {
+		mockThreadRepo.On("GetThreadByID", uint(1)).Return(entity.Thread{
+			Model: gorm.Model{
+				ID:        1,
+				CreatedAt: time.Now(),
+				UpdatedAt: time.Now(),
+			},
+			Title:       "Title",
+			Body:        "Body",
+			ImageURL:    "ImageURL",
+			UserID:      uint(1),
+			CommunityID: uint(1),
+		}, nil).Once()
+
+		mockThreadRepo.On("DeleteThread", uint(1)).Return(nil).Once()
+
+		testThreadUseCase := CreateNewThreadUseCase(mockThreadRepo, nil)
+
+		err := testThreadUseCase.DeleteThread(uint(1), uint(3), "Admin")
+		assert.NoError(t, err)
+	})
+}
