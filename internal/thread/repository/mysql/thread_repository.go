@@ -336,3 +336,13 @@ func (tr *ThreadRepositoryImpl) GetThreadsByUserID(userID uint) ([]entity.Thread
 
 	return threads, nil
 }
+
+func (tr *ThreadRepositoryImpl) StoreSavedThread(savedThread entity.SavedThread) error {
+	res := tr.db.Create(&savedThread)
+
+	if res.Error != nil {
+		return utils.ErrInternalServerError
+	}
+
+	return nil
+}

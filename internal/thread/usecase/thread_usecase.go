@@ -461,3 +461,12 @@ func (tuc *ThreadUseCaseImpl) CreateCommentReport(commentReport dto.CommentRepor
 
 	return err
 }
+
+func (tuc *ThreadUseCaseImpl) StoreSavedThread(savedThread dto.SavedThreadRequest) error {
+	err := tuc.tr.StoreSavedThread(entity.SavedThread{
+		UserID:   savedThread.UserID,
+		ThreadID: savedThread.ThreadID,
+	})
+
+	return err
+}

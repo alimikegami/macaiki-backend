@@ -284,6 +284,20 @@ func (_m *ThreadUseCase) SetThreadImage(img *multipart.FileHeader, threadID uint
 	return r0
 }
 
+// StoreSavedThread provides a mock function with given fields: savedThread
+func (_m *ThreadUseCase) StoreSavedThread(savedThread dto.SavedThreadRequest) error {
+	ret := _m.Called(savedThread)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(dto.SavedThreadRequest) error); ok {
+		r0 = rf(savedThread)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // UndoDownvoteThread provides a mock function with given fields: threadID, userID
 func (_m *ThreadUseCase) UndoDownvoteThread(threadID uint, userID uint) error {
 	ret := _m.Called(threadID, userID)
