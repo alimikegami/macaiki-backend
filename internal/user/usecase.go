@@ -1,6 +1,7 @@
 package user
 
 import (
+	dtoThread "macaiki/internal/thread/dto"
 	"macaiki/internal/user/dto"
 	"mime/multipart"
 )
@@ -24,4 +25,5 @@ type UserUsecase interface {
 	Unfollow(userID, userFollowerID uint) error
 
 	Report(userID, userReportedID, ReportCategoryID uint) error
+	GetThreadByToken(tokenUserID uint) ([]dtoThread.ThreadResponse, error)
 }

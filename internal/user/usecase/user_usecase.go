@@ -6,6 +6,8 @@ import (
 	"macaiki/internal/notification"
 	notificationEntity "macaiki/internal/notification/entity"
 	reportcategory "macaiki/internal/report_category"
+	"macaiki/internal/thread"
+	dtoThread "macaiki/internal/thread/dto"
 	"macaiki/internal/user"
 	"macaiki/internal/user/delivery/http/helper"
 	"macaiki/internal/user/dto"
@@ -25,15 +27,17 @@ type userUsecase struct {
 	userRepo           user.UserRepository
 	reportCategoryRepo reportcategory.ReportCategoryRepository
 	notificationRepo   notification.NotificationRepository
+	threadRepo         thread.ThreadRepository
 	validator          *validator.Validate
 	awsS3              *cloudstorage.S3
 }
 
-func NewUserUsecase(userRepo user.UserRepository, reportCategoryRepo reportcategory.ReportCategoryRepository, notificationRepo notification.NotificationRepository, validator *validator.Validate, awsS3Instace *cloudstorage.S3) user.UserUsecase {
+func NewUserUsecase(userRepo user.UserRepository, reportCategoryRepo reportcategory.ReportCategoryRepository, notificationRepo notification.NotificationRepository, threadRepo thread.ThreadRepository, validator *validator.Validate, awsS3Instace *cloudstorage.S3) user.UserUsecase {
 	return &userUsecase{
 		userRepo:           userRepo,
 		reportCategoryRepo: reportCategoryRepo,
 		notificationRepo:   notificationRepo,
+		threadRepo:         threadRepo,
 		validator:          validator,
 		awsS3:              awsS3Instace,
 	}
@@ -432,6 +436,30 @@ func (uu *userUsecase) Report(userID, userReportedID, reportCategoryID uint) err
 		return utils.ErrInternalServerError
 	}
 	return nil
+}
+
+func (uu *userUsecase) GetThreadByToken(tokenUserID uint) ([]dtoThread.ThreadResponse, error) {
+
+	threads, err := uu.threadRepo.GetThreadsByUserID(tokenUserID)
+	if err != nil {
+		return []dtoThread.ThreadResponse{}, utils.ErrInternalServerError
+	}
+
+	dtoThreads := []dtoThread.ThreadResponse{}
+	for _, val := range threads {
+		dtoThreads = append(dtoThreads, dtoThread.ThreadResponse{
+			ID:          val.ID,
+			Title:       val.Title,
+			Body:        val.Body,
+			CommunityID: val.CommunityID,
+			ImageURL:    val.ImageURL,
+			UserID:      val.UserID,
+			CreatedAt:   val.CreatedAt,
+			UpdatedAt:   val.UpdatedAt,
+		})
+	}
+
+	return dtoThreads, nil
 }
 
 func hashAndSalt(pwd []byte) string {
