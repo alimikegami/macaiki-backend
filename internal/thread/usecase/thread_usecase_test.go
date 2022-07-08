@@ -66,6 +66,16 @@ var (
 		UserID:           1,
 		ReportCategoryID: 1,
 	}
+
+	mockedSavedThreadDTO = dto.SavedThreadRequest{
+		UserID:   1,
+		ThreadID: 1,
+	}
+
+	mockedSavedThreadEntity = entity.SavedThread{
+		UserID:   1,
+		ThreadID: 1,
+	}
 )
 
 func TestCreateThreadReport(t *testing.T) {
@@ -314,6 +324,29 @@ func TestCreateCommentReport(t *testing.T) {
 
 		testThreadUseCase := CreateNewThreadUseCase(mockThreadRepo, mockNotifRepo, nil)
 		err := testThreadUseCase.CreateCommentReport(mockedCommentReportDTO)
+
+		assert.Error(t, err)
+	})
+}
+
+func TestStoreSavedThread(t *testing.T) {
+	mockThreadRepo := mocks.NewThreadRepository(t)
+	mockNotifRepo := entityMocks.NewNotificationRepository(t)
+
+	t.Run("success", func(t *testing.T) {
+		mockThreadRepo.On("StoreSavedThread", mockedSavedThreadEntity).Return(nil).Once()
+
+		testThreadUseCase := CreateNewThreadUseCase(mockThreadRepo, mockNotifRepo, nil)
+		err := testThreadUseCase.StoreSavedThread(mockedSavedThreadDTO)
+
+		assert.NoError(t, err)
+	})
+
+	t.Run("internal-server-error", func(t *testing.T) {
+		mockThreadRepo.On("StoreSavedThread", mockedSavedThreadEntity).Return(utils.ErrInternalServerError).Once()
+
+		testThreadUseCase := CreateNewThreadUseCase(mockThreadRepo, mockNotifRepo, nil)
+		err := testThreadUseCase.StoreSavedThread(mockedSavedThreadDTO)
 
 		assert.Error(t, err)
 	})
