@@ -54,6 +54,18 @@ var (
 		UserID:    1,
 		CommentID: 1,
 	}
+
+	mockedCommentReportDTO = dto.CommentReportRequest{
+		CommentID:        1,
+		UserID:           1,
+		ReportCategoryID: 1,
+	}
+
+	mockedCommentReportEntity = entity.CommentReport{
+		CommentID:        1,
+		UserID:           1,
+		ReportCategoryID: 1,
+	}
 )
 
 func TestCreateThreadReport(t *testing.T) {
@@ -280,6 +292,29 @@ func TestLikeComment(t *testing.T) {
 
 		testThreadUseCase := CreateNewThreadUseCase(mockThreadRepo, mockNotifRepo, nil)
 		err := testThreadUseCase.LikeComment(uint(1), uint(1))
+		assert.Error(t, err)
+	})
+}
+
+func TestCreateCommentReport(t *testing.T) {
+	mockThreadRepo := mocks.NewThreadRepository(t)
+	mockNotifRepo := entityMocks.NewNotificationRepository(t)
+
+	t.Run("success", func(t *testing.T) {
+		mockThreadRepo.On("CreateCommentReport", mockedCommentReportEntity).Return(nil).Once()
+
+		testThreadUseCase := CreateNewThreadUseCase(mockThreadRepo, mockNotifRepo, nil)
+		err := testThreadUseCase.CreateCommentReport(mockedCommentReportDTO)
+
+		assert.NoError(t, err)
+	})
+
+	t.Run("internal-server-error", func(t *testing.T) {
+		mockThreadRepo.On("CreateCommentReport", mockedCommentReportEntity).Return(utils.ErrInternalServerError).Once()
+
+		testThreadUseCase := CreateNewThreadUseCase(mockThreadRepo, mockNotifRepo, nil)
+		err := testThreadUseCase.CreateCommentReport(mockedCommentReportDTO)
+
 		assert.Error(t, err)
 	})
 }
