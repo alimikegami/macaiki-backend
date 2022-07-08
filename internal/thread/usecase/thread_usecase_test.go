@@ -49,6 +49,11 @@ var (
 	// 	UserID:      uint(1),
 	// 	CommunityID: uint(1),
 	// }
+
+	mockedLikeCommentEntity = entity.CommentLikes{
+		UserID:    1,
+		CommentID: 1,
+	}
 )
 
 func TestCreateThreadReport(t *testing.T) {
@@ -254,6 +259,27 @@ func TestGetThreadByID(t *testing.T) {
 		testThreadUseCase := CreateNewThreadUseCase(mockThreadRepo, mockNotifRepo, nil)
 		res, err := testThreadUseCase.GetThreadByID(uint(1))
 		assert.Empty(t, res)
+		assert.Error(t, err)
+	})
+}
+
+func TestLikeComment(t *testing.T) {
+	mockThreadRepo := mocks.NewThreadRepository(t)
+	mockNotifRepo := entityMocks.NewNotificationRepository(t)
+
+	t.Run("success", func(t *testing.T) {
+		mockThreadRepo.On("LikeComment", mockedLikeCommentEntity).Return(nil).Once()
+
+		testThreadUseCase := CreateNewThreadUseCase(mockThreadRepo, mockNotifRepo, nil)
+		err := testThreadUseCase.LikeComment(uint(1), uint(1))
+		assert.NoError(t, err)
+	})
+
+	t.Run("internal-server-error", func(t *testing.T) {
+		mockThreadRepo.On("LikeComment", mockedLikeCommentEntity).Return(utils.ErrInternalServerError).Once()
+
+		testThreadUseCase := CreateNewThreadUseCase(mockThreadRepo, mockNotifRepo, nil)
+		err := testThreadUseCase.LikeComment(uint(1), uint(1))
 		assert.Error(t, err)
 	})
 }
