@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	communityEntity "macaiki/internal/community/entity"
+	notifEntity "macaiki/internal/notification/entity"
 	reportCategoryEntity "macaiki/internal/report_category/entity"
 	threadEntity "macaiki/internal/thread/entity"
 	userEntity "macaiki/internal/user/entity"
@@ -39,11 +40,16 @@ func InitialMigration(DB *gorm.DB) {
 		&communityEntity.Community{},
 		&userEntity.User{},
 		&userEntity.UserReport{},
+		&notifEntity.Notification{},
+		&communityEntity.CommunityReport{},
 		&threadEntity.Thread{},
 		&threadEntity.ThreadUpvote{},
 		&threadEntity.ThreadFollower{},
 		&threadEntity.Comment{},
 		&threadEntity.CommentLikes{},
 		&threadEntity.ThreadDownvote{},
+		&threadEntity.ThreadReport{},
+		&threadEntity.CommentReport{},
+		&threadEntity.SavedThread{},
 	)
 }

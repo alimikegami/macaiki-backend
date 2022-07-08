@@ -1,7 +1,10 @@
 package usercase
 
 import (
+	"fmt"
 	"log"
+	"macaiki/internal/notification"
+	notificationEntity "macaiki/internal/notification/entity"
 	reportcategory "macaiki/internal/report_category"
 	"macaiki/internal/user"
 	"macaiki/internal/user/delivery/http/helper"
@@ -21,14 +24,16 @@ import (
 type userUsecase struct {
 	userRepo           user.UserRepository
 	reportCategoryRepo reportcategory.ReportCategoryRepository
+	notificationRepo   notification.NotificationRepository
 	validator          *validator.Validate
 	awsS3              *cloudstorage.S3
 }
 
-func NewUserUsecase(userRepo user.UserRepository, reportCategoryRepo reportcategory.ReportCategoryRepository, validator *validator.Validate, awsS3Instace *cloudstorage.S3) user.UserUsecase {
+func NewUserUsecase(userRepo user.UserRepository, reportCategoryRepo reportcategory.ReportCategoryRepository, notificationRepo notification.NotificationRepository, validator *validator.Validate, awsS3Instace *cloudstorage.S3) user.UserUsecase {
 	return &userUsecase{
 		userRepo:           userRepo,
 		reportCategoryRepo: reportCategoryRepo,
+		notificationRepo:   notificationRepo,
 		validator:          validator,
 		awsS3:              awsS3Instace,
 	}
@@ -247,8 +252,8 @@ func (uu *userUsecase) ChangePassword(id uint, passwordInfo dto.UserChangePasswo
 	return nil
 }
 
-func (uu *userUsecase) GetUserFollowers(id uint) ([]dto.UserResponse, error) {
-	userEntity, err := uu.userRepo.Get(id)
+func (uu *userUsecase) GetUserFollowers(tokenUserID, getFollowingUserID uint) ([]dto.UserResponse, error) {
+	userEntity, err := uu.userRepo.Get(getFollowingUserID)
 	if err != nil {
 		return []dto.UserResponse{}, utils.ErrInternalServerError
 	}
@@ -256,15 +261,15 @@ func (uu *userUsecase) GetUserFollowers(id uint) ([]dto.UserResponse, error) {
 		return []dto.UserResponse{}, utils.ErrNotFound
 	}
 
-	followers, err := uu.userRepo.GetFollower(userEntity)
+	followers, err := uu.userRepo.GetFollower(tokenUserID, getFollowingUserID)
 	if err != nil {
 		return []dto.UserResponse{}, utils.ErrInternalServerError
 	}
 	return helper.DomainUserToListUserResponse(followers), nil
 }
 
-func (uu *userUsecase) GetUserFollowing(id uint) ([]dto.UserResponse, error) {
-	userEntity, err := uu.userRepo.Get(id)
+func (uu *userUsecase) GetUserFollowing(tokenUserID, getFollowingUserID uint) ([]dto.UserResponse, error) {
+	userEntity, err := uu.userRepo.Get(getFollowingUserID)
 	if err != nil {
 		return []dto.UserResponse{}, utils.ErrInternalServerError
 	}
@@ -272,7 +277,7 @@ func (uu *userUsecase) GetUserFollowing(id uint) ([]dto.UserResponse, error) {
 		return []dto.UserResponse{}, utils.ErrNotFound
 	}
 
-	following, err := uu.userRepo.GetFollowing(userEntity)
+	following, err := uu.userRepo.GetFollowing(tokenUserID, getFollowingUserID)
 	if err != nil {
 		return []dto.UserResponse{}, utils.ErrInternalServerError
 	}
@@ -363,6 +368,16 @@ func (uu *userUsecase) Follow(userID, userFollowerID uint) error {
 	if err != nil {
 		return utils.ErrInternalServerError
 	}
+	err = uu.notificationRepo.StoreNotification(notificationEntity.Notification{
+		UserID:            userID,
+		NotificationType:  "Follow You",
+		NotificationRefID: userFollowerID,
+		IsReaded:          0,
+	})
+	if err != nil {
+		fmt.Println("failed to send notification")
+	}
+
 	return nil
 }
 
@@ -391,34 +406,28 @@ func (uu *userUsecase) Unfollow(userID, userFollowerID uint) error {
 }
 
 func (uu *userUsecase) Report(userID, userReportedID, reportCategoryID uint) error {
-	var err error
+	user, err := uu.userRepo.Get(userReportedID)
+	if err != nil {
+		return utils.ErrInternalServerError
+	}
 
-	if userID == userReportedID {
+	if user.ID == 0 {
+		return utils.ErrNotFound
+	}
+
+	reportCategory, err := uu.reportCategoryRepo.GetReportCategory(reportCategoryID)
+	if err != nil {
 		return utils.ErrBadParamInput
 	}
-
-	_, err = uu.userRepo.Get(userID)
-	if err != nil {
+	if reportCategory.ID == 0 {
 		return utils.ErrNotFound
 	}
 
-	_, err = uu.userRepo.Get(userReportedID)
-	if err != nil {
-		return utils.ErrNotFound
-	}
-
-	_, err = uu.reportCategoryRepo.GetReportCategory(reportCategoryID)
-	if err != nil {
-		return utils.ErrNotFound
-	}
-
-	userReport := entity.UserReport{
+	err = uu.userRepo.StoreReport(entity.UserReport{
 		UserID:           userID,
 		ReportedUserID:   userReportedID,
 		ReportCategoryID: reportCategoryID,
-	}
-
-	err = uu.userRepo.StoreReport(userReport)
+	})
 	if err != nil {
 		return utils.ErrInternalServerError
 	}

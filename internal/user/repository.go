@@ -16,8 +16,8 @@ type UserRepository interface {
 	GetThreadsNumber(id uint) (int, error)
 	Follow(user, userFollower entity.User) (entity.User, error)
 	Unfollow(user, userFollower entity.User) (entity.User, error)
-	GetFollower(user entity.User) ([]entity.User, error)
-	GetFollowing(user entity.User) ([]entity.User, error)
+	GetFollower(userID, getFollowingUserID uint) ([]entity.User, error)
+	GetFollowing(userID, getFollowingUserID uint) ([]entity.User, error)
 	SetUserImage(id uint, imageURL string, tableName string) error
 
 	StoreReport(userReport entity.UserReport) error

@@ -2,6 +2,8 @@ package usecase
 
 import (
 	"fmt"
+	"macaiki/internal/notification"
+	entityNotif "macaiki/internal/notification/entity"
 	"macaiki/internal/thread"
 	"macaiki/internal/thread/dto"
 	"macaiki/internal/thread/entity"
@@ -17,6 +19,7 @@ import (
 
 type ThreadUseCaseImpl struct {
 	tr    thread.ThreadRepository
+	nr    notification.NotificationRepository
 	awsS3 *cloudstorage.S3
 }
 
@@ -37,8 +40,8 @@ func AuthorizeThreadAccess(threadID uint, userID uint, role string, tuc *ThreadU
 	return true, thread, nil
 }
 
-func CreateNewThreadUseCase(tr thread.ThreadRepository, awsS3Instance *cloudstorage.S3) thread.ThreadUseCase {
-	return &ThreadUseCaseImpl{tr: tr, awsS3: awsS3Instance}
+func CreateNewThreadUseCase(tr thread.ThreadRepository, nr notification.NotificationRepository, awsS3Instance *cloudstorage.S3) thread.ThreadUseCase {
+	return &ThreadUseCaseImpl{tr: tr, nr: nr, awsS3: awsS3Instance}
 }
 
 func (tuc *ThreadUseCaseImpl) GetThreadByID(threadID uint) (dto.ThreadResponse, error) {
@@ -199,7 +202,12 @@ func (tuc *ThreadUseCaseImpl) UpvoteThread(threadID uint, userID uint) error {
 		UserID:   userID,
 	}
 	err = tuc.tr.UpvoteThread(threadUpvote)
-
+	_ = tuc.nr.StoreNotification(entityNotif.Notification{
+		UserID:            userID,
+		NotificationRefID: threadID,
+		NotificationType:  "Upvote Thread",
+		IsReaded:          0,
+	})
 	return err
 }
 
@@ -302,6 +310,15 @@ func (tuc *ThreadUseCaseImpl) AddThreadComment(comment dto.CommentRequest) error
 		UserID:    comment.UserID,
 		ThreadID:  comment.ThreadID,
 		CommentID: comment.CommentID,
+	})
+
+	thread, _ := tuc.tr.GetThreadByID(uint(comment.ThreadID))
+
+	_ = tuc.nr.StoreNotification(entityNotif.Notification{
+		UserID:            thread.UserID,
+		NotificationRefID: comment.CommentID,
+		NotificationType:  "Comment Thread",
+		IsReaded:          0,
 	})
 
 	return err
@@ -412,6 +429,61 @@ func (tuc *ThreadUseCaseImpl) UndoUpvoteThread(threadID, userID uint) error {
 
 func (tuc *ThreadUseCaseImpl) UnlikeComment(commentID, userID uint) error {
 	err := tuc.tr.UnlikeComment(commentID, userID)
+
+	return err
+}
+
+func (tuc *ThreadUseCaseImpl) DeleteComment(commentID uint, threadID uint, userID uint, role string) error {
+	thread, err := tuc.tr.GetThreadByID(threadID)
+
+	if err != nil {
+		return err
+	}
+
+	comment, err := tuc.tr.GetCommentByID(commentID)
+
+	if err != nil {
+		return err
+	}
+
+	if thread.UserID == userID || role == "Admin" || comment.UserID == userID {
+		err := tuc.tr.DeleteComment(commentID)
+
+		if err != nil {
+			return err
+		}
+
+		return nil
+	}
+
+	return utils.ErrUnauthorizedAccess
+}
+
+func (tuc *ThreadUseCaseImpl) CreateThreadReport(threadReport dto.ThreadReportRequest) error {
+	err := tuc.tr.CreateThreadReport(entity.ThreadReport{
+		ThreadID:         threadReport.ThreadID,
+		UserID:           threadReport.UserID,
+		ReportCategoryID: threadReport.ReportCategoryID,
+	})
+
+	return err
+}
+
+func (tuc *ThreadUseCaseImpl) CreateCommentReport(commentReport dto.CommentReportRequest) error {
+	err := tuc.tr.CreateCommentReport(entity.CommentReport{
+		CommentID:        commentReport.CommentID,
+		UserID:           commentReport.UserID,
+		ReportCategoryID: commentReport.ReportCategoryID,
+	})
+
+	return err
+}
+
+func (tuc *ThreadUseCaseImpl) StoreSavedThread(savedThread dto.SavedThreadRequest) error {
+	err := tuc.tr.StoreSavedThread(entity.SavedThread{
+		UserID:   savedThread.UserID,
+		ThreadID: savedThread.ThreadID,
+	})
 
 	return err
 }

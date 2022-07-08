@@ -152,11 +152,10 @@ func (ur *MysqlUserRepository) GetThreadsNumber(id uint) (int, error) {
 	return int(count), nil
 }
 
-func (ur *MysqlUserRepository) GetFollower(user entity.User) ([]entity.User, error) {
-	// TODO: implement isfollowed and ismine
+func (ur *MysqlUserRepository) GetFollower(userID, getFollowingUserID uint) ([]entity.User, error) {
 	users := []entity.User{}
 
-	res := ur.Db.Raw("SELECT * FROM `users` LEFT JOIN `user_followers` `Followers` ON `users`.`id` = `Followers`.`follower_id` WHERE `Followers`.`user_id` = ? AND `users`.`deleted_at` IS NULL", user.ID).Scan(&users)
+	res := ur.Db.Raw("SELECT u.*, !ISNULL(uf2.user_id) AS is_followed, (u.id=?) AS is_mine FROM users AS u LEFT JOIN user_followers AS uf ON u.id = uf.follower_id LEFT JOIN (SELECT * FROM user_followers WHERE user_followers.follower_id = ?) AS uf2 ON u.id = uf2.user_id WHERE uf.user_id = ? AND u.deleted_at IS NULL", userID, userID, getFollowingUserID).Scan(&users)
 	err := res.Error
 
 	if err != nil {
@@ -166,10 +165,9 @@ func (ur *MysqlUserRepository) GetFollower(user entity.User) ([]entity.User, err
 	return users, nil
 }
 
-func (ur *MysqlUserRepository) GetFollowing(user entity.User) ([]entity.User, error) {
-	// TODO: implement isfollowed and ismine
+func (ur *MysqlUserRepository) GetFollowing(userID, getFollowingUserID uint) ([]entity.User, error) {
 	users := []entity.User{}
-	res := ur.Db.Raw("SELECT * FROM `users` LEFT JOIN `user_followers` `Followers` ON `users`.`id` = `Followers`.`user_id` WHERE `Followers`.`follower_id` = ? AND `users`.`deleted_at` IS NULL", user.ID).Scan(&users)
+	res := ur.Db.Raw("SELECT u.*, !ISNULL(uf2.user_id) AS is_followed, (u.id=?) AS is_mine FROM users AS u LEFT JOIN user_followers uf ON u.id = uf.user_id LEFT JOIN (SELECT * FROM user_followers WHERE user_followers.follower_id = ?) AS uf2 ON u.id = uf2.user_id WHERE uf.follower_id = ? AND u.deleted_at IS NULL", userID, userID, getFollowingUserID).Scan(&users)
 	err := res.Error
 
 	if err != nil {
