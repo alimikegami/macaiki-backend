@@ -213,7 +213,7 @@ func (ur *MysqlUserRepository) StoreOTP(VerifyEmail entity.VerificationEmail) er
 
 func (ur *MysqlUserRepository) GetOTP(email string) (entity.VerificationEmail, error) {
 	VerifyEmail := entity.VerificationEmail{}
-	res := ur.Db.Where("email = ?", email).Find(&VerifyEmail)
+	res := ur.Db.Where("email = ?", email).Order("id desc").First(&VerifyEmail)
 	err := res.Error
 	if err != nil {
 		return entity.VerificationEmail{}, err

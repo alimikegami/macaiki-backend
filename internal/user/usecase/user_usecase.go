@@ -467,10 +467,19 @@ func (uu *userUsecase) GetThreadByToken(tokenUserID uint) ([]dtoThread.ThreadRes
 	return dtoThreads, nil
 }
 
-func (uu *userUsecase) SendOTP(email dto.SendOTPRequest) error {
+func (uu *userUsecase) SendOTP(otpReq dto.SendOTPRequest) error {
+	user, err := uu.userRepo.GetByEmail(otpReq.Email)
+	if err != nil {
+		return utils.ErrInternalServerError
+	}
+
+	if user.ID == 0 {
+		return utils.ErrNotFound
+	}
+
 	OTPCode := uu.goMail.GenerateSecureToken(3)
-	err := uu.userRepo.StoreOTP(entity.VerificationEmail{
-		Email:     email.Email,
+	err = uu.userRepo.StoreOTP(entity.VerificationEmail{
+		Email:     user.Email,
 		OTPCode:   OTPCode,
 		ExpiredAt: time.Now().Add(1 * time.Minute),
 	})
@@ -478,7 +487,7 @@ func (uu *userUsecase) SendOTP(email dto.SendOTPRequest) error {
 		return utils.ErrInternalServerError
 	}
 
-	err = uu.goMail.SendMail(email.Email, email.Email, fmt.Sprintf("Cobain ini <b>%s<b> %s", OTPCode, email))
+	err = uu.goMail.SendMail(user.Email, user.Username, fmt.Sprintf("Thank you for registering on the Macaiki application to verify your email please <a href=\"%s\">click here</a>", otpReq.Link+"?email="+user.Email+"&otp="+OTPCode))
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -492,7 +501,10 @@ func (uu *userUsecase) VerifyOTP(email, OTPCode string) error {
 		return utils.ErrInternalServerError
 	}
 
-	if EmailVerif.OTPCode == OTPCode && time.Now().Before(EmailVerif.ExpiredAt) {
+	if EmailVerif.OTPCode == OTPCode {
+		if time.Now().Before(EmailVerif.ExpiredAt) {
+			return errors.New("OTP Is Expired")
+		}
 		user, err := uu.userRepo.GetByEmail(email)
 		if err != nil {
 			return utils.ErrInternalServerError

@@ -29,4 +29,5 @@ type UserReportRequest struct {
 
 type SendOTPRequest struct {
 	Email string `json:"email"`
+	Link  string `json:"link"`
 }
