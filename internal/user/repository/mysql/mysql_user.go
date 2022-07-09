@@ -200,3 +200,24 @@ func (ur *MysqlUserRepository) StoreReport(userReport entity.UserReport) error {
 
 	return nil
 }
+
+func (ur *MysqlUserRepository) StoreOTP(VerifyEmail entity.VerificationEmail) error {
+	res := ur.Db.Create(&VerifyEmail)
+	err := res.Error
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (ur *MysqlUserRepository) GetOTP(email string) (entity.VerificationEmail, error) {
+	VerifyEmail := entity.VerificationEmail{}
+	res := ur.Db.Where("email = ?", email).Find(&VerifyEmail)
+	err := res.Error
+	if err != nil {
+		return entity.VerificationEmail{}, err
+	}
+
+	return VerifyEmail, nil
+}

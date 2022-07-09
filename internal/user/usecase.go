@@ -26,4 +26,6 @@ type UserUsecase interface {
 
 	Report(userID, userReportedID, ReportCategoryID uint) error
 	GetThreadByToken(tokenUserID uint) ([]dtoThread.ThreadResponse, error)
+	SendOTP(email dto.SendOTPRequest) error
+	VerifyOTP(email, OTPCode string) error
 }

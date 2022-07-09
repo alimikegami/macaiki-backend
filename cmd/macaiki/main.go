@@ -22,6 +22,7 @@ import (
 	_userRepo "macaiki/internal/user/repository/mysql"
 	_userUsecase "macaiki/internal/user/usecase"
 	_cloudstorage "macaiki/pkg/cloud_storage"
+	_gomail "macaiki/pkg/gomail"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
@@ -48,6 +49,8 @@ func main() {
 	v := validator.New()
 
 	s3Instance := _cloudstorage.CreateNewS3Instance(config.AWSAccessKeyId, config.AWSSecretKey, config.AWSRegion, config.BucketName)
+
+	goMail := _gomail.NewGomail(config.GomailEmail, config.GomailPassword)
 	// setup Repo
 	userRepo := _userRepo.NewMysqlUserRepository(_driver.DB)
 	reportCategoryRepo := _reportCategoryRepo.NewReportCategoryRepository(_driver.DB)
@@ -56,7 +59,7 @@ func main() {
 	notificationRepo := _notificationRepo.NewNotificaionRepository(_driver.DB)
 
 	// setup usecase
-	userUsecase := _userUsecase.NewUserUsecase(userRepo, reportCategoryRepo, notificationRepo, threadRepo, v, s3Instance)
+	userUsecase := _userUsecase.NewUserUsecase(userRepo, reportCategoryRepo, notificationRepo, threadRepo, v, s3Instance, goMail)
 	reportCategoryUsecase := _reportCategoryUsecase.NewReportCategoryUsecase(reportCategoryRepo, v)
 	threadUseCase := _threadUsecase.CreateNewThreadUseCase(threadRepo, notificationRepo, s3Instance)
 	communityUsecase := _communityUsecase.NewCommunityUsecase(communityRepo, userRepo, reportCategoryRepo, v, s3Instance)

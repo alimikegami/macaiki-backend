@@ -1,6 +1,7 @@
 package usercase
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"macaiki/internal/notification"
@@ -13,9 +14,11 @@ import (
 	"macaiki/internal/user/dto"
 	"macaiki/internal/user/entity"
 	cloudstorage "macaiki/pkg/cloud_storage"
+	goMail "macaiki/pkg/gomail"
 	"macaiki/pkg/middleware"
 	"macaiki/pkg/utils"
 	"mime/multipart"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/go-playground/validator/v10"
@@ -30,9 +33,10 @@ type userUsecase struct {
 	threadRepo         thread.ThreadRepository
 	validator          *validator.Validate
 	awsS3              *cloudstorage.S3
+	goMail             *goMail.Gomail
 }
 
-func NewUserUsecase(userRepo user.UserRepository, reportCategoryRepo reportcategory.ReportCategoryRepository, notificationRepo notification.NotificationRepository, threadRepo thread.ThreadRepository, validator *validator.Validate, awsS3Instace *cloudstorage.S3) user.UserUsecase {
+func NewUserUsecase(userRepo user.UserRepository, reportCategoryRepo reportcategory.ReportCategoryRepository, notificationRepo notification.NotificationRepository, threadRepo thread.ThreadRepository, validator *validator.Validate, awsS3Instace *cloudstorage.S3, goMail *goMail.Gomail) user.UserUsecase {
 	return &userUsecase{
 		userRepo:           userRepo,
 		reportCategoryRepo: reportCategoryRepo,
@@ -40,6 +44,7 @@ func NewUserUsecase(userRepo user.UserRepository, reportCategoryRepo reportcateg
 		threadRepo:         threadRepo,
 		validator:          validator,
 		awsS3:              awsS3Instace,
+		goMail:             goMail,
 	}
 }
 
@@ -460,6 +465,46 @@ func (uu *userUsecase) GetThreadByToken(tokenUserID uint) ([]dtoThread.ThreadRes
 	}
 
 	return dtoThreads, nil
+}
+
+func (uu *userUsecase) SendOTP(email dto.SendOTPRequest) error {
+	OTPCode := uu.goMail.GenerateSecureToken(3)
+	err := uu.userRepo.StoreOTP(entity.VerificationEmail{
+		Email:     email.Email,
+		OTPCode:   OTPCode,
+		ExpiredAt: time.Now().Add(1 * time.Minute),
+	})
+	if err != nil {
+		return utils.ErrInternalServerError
+	}
+
+	err = uu.goMail.SendMail(email.Email, email.Email, fmt.Sprintf("Cobain ini <b>%s<b> %s", OTPCode, email))
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	return nil
+}
+
+func (uu *userUsecase) VerifyOTP(email, OTPCode string) error {
+	EmailVerif, err := uu.userRepo.GetOTP(email)
+	if err != nil {
+		return utils.ErrInternalServerError
+	}
+
+	if EmailVerif.OTPCode == OTPCode && time.Now().Before(EmailVerif.ExpiredAt) {
+		user, err := uu.userRepo.GetByEmail(email)
+		if err != nil {
+			return utils.ErrInternalServerError
+		}
+		_, _ = uu.userRepo.Update(&user, entity.User{
+			EmailVerifiedAt: time.Now(),
+		})
+	} else {
+		return errors.New("OTP Not Valid")
+	}
+
+	return nil
 }
 
 func hashAndSalt(pwd []byte) string {

@@ -26,3 +26,7 @@ type UserLoginRequest struct {
 type UserReportRequest struct {
 	ReportCategoryID uint `json:"reportCategoryID"`
 }
+
+type SendOTPRequest struct {
+	Email string `json:"email"`
+}

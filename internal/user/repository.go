@@ -21,4 +21,6 @@ type UserRepository interface {
 	SetUserImage(id uint, imageURL string, tableName string) error
 
 	StoreReport(userReport entity.UserReport) error
+	StoreOTP(VerifyEmail entity.VerificationEmail) error
+	GetOTP(email string) (entity.VerificationEmail, error)
 }

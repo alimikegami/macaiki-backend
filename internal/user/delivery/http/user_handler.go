@@ -46,6 +46,9 @@ func NewUserHandler(e *echo.Echo, us user.UserUsecase, JWTSecret string) {
 	e.GET("/api/v1/users/:userID/followers", handler.GetUserFollowers, middleware.JWT([]byte(JWTSecret)))
 	e.GET("/api/v1/users/:userID/following", handler.GetUserFollowing, middleware.JWT([]byte(JWTSecret)))
 	e.GET("/api/v1/users/:userID/threads", handler.GetThreadByUserID)
+
+	e.POST("api/v1/curent-user/email-verification", handler.SendOTP)
+	e.GET("api/v1/curent-user/email-verification", handler.VerifyOTP)
 }
 
 func (u *UserHandler) Login(c echo.Context) error {
@@ -322,4 +325,29 @@ func (u *UserHandler) GetThreadByToken(c echo.Context) error {
 	}
 
 	return response.SuccessResponse(c, threadResp)
+}
+
+func (u *UserHandler) SendOTP(c echo.Context) error {
+	email := dto.SendOTPRequest{}
+
+	c.Bind(&email)
+
+	err := u.UserUsecase.SendOTP(email)
+	if err != nil {
+		return response.ErrorResponse(c, err)
+	}
+
+	return response.SuccessResponse(c, nil)
+}
+
+func (u *UserHandler) VerifyOTP(c echo.Context) error {
+	email := c.QueryParam("email")
+	otp := c.QueryParam("otp")
+
+	err := u.UserUsecase.VerifyOTP(email, otp)
+	if err != nil {
+		return response.ErrorResponse(c, err)
+	}
+
+	return response.SuccessResponse(c, nil)
 }
