@@ -24,6 +24,7 @@ func (th *ThreadHandler) GetThreads(c echo.Context) error {
 	community := c.QueryParam("community")
 	forYou := c.QueryParam("forYou")
 	keyword := c.QueryParam("keyword")
+	saved := c.QueryParam("saved")
 
 	var res interface{}
 	var err error
@@ -34,6 +35,8 @@ func (th *ThreadHandler) GetThreads(c echo.Context) error {
 		res, err = th.tu.GetThreadsFromFollowedCommunity(uint(userID))
 	} else if forYou == "true" {
 		res, err = th.tu.GetThreadsFromFollowedUsers(uint(userID))
+	} else if saved == "true" {
+		res, err = th.tu.GetSavedThread(uint(userID))
 	} else {
 		res, err = th.tu.GetThreads(keyword, uint(userID))
 	}
@@ -430,6 +433,5 @@ func CreateNewThreadHandler(e *echo.Echo, tu thread.ThreadUseCase, JWTSecret str
 	threadHandler.router.POST("/api/v1/threads/:threadID/reports", threadHandler.CreateThreadReport, middleware.JWT([]byte(JWTSecret)))
 	threadHandler.router.POST("/api/v1/threads/:threadID/comments/:commentID/reports", threadHandler.CreateCommentReport, middleware.JWT([]byte(JWTSecret)))
 	threadHandler.router.POST("/api/v1/threads/:threadID/saved", threadHandler.StoreSavedThread, middleware.JWT([]byte(JWTSecret)))
-
 	return threadHandler
 }

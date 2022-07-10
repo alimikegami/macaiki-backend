@@ -27,4 +27,5 @@ type ThreadUseCase interface {
 	CreateThreadReport(threadReport dto.ThreadReportRequest) error
 	CreateCommentReport(commentReport dto.CommentReportRequest) error
 	StoreSavedThread(savedThread dto.SavedThreadRequest) error
+	GetSavedThread(userID uint) ([]dto.DetailedThreadResponse, error)
 }

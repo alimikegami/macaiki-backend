@@ -487,3 +487,34 @@ func (tuc *ThreadUseCaseImpl) StoreSavedThread(savedThread dto.SavedThreadReques
 
 	return err
 }
+
+func (tuc *ThreadUseCaseImpl) GetSavedThread(userID uint) ([]dto.DetailedThreadResponse, error) {
+	var threads []dto.DetailedThreadResponse
+	res, err := tuc.tr.GetSavedThread(userID)
+
+	if err != nil {
+		return []dto.DetailedThreadResponse{}, nil
+	}
+
+	for _, thread := range res {
+		threads = append(threads, dto.DetailedThreadResponse{
+			ID:                    thread.Thread.ID,
+			Title:                 thread.Title,
+			Body:                  thread.Body,
+			CommunityID:           thread.CommunityID,
+			ImageURL:              thread.ImageURL,
+			UserID:                thread.UserID,
+			UserName:              thread.User.Name,
+			UserProfession:        thread.User.Profession,
+			UserProfilePictureURL: thread.User.ProfileImageUrl,
+			CreatedAt:             thread.Thread.CreatedAt,
+			UpdatedAt:             thread.Thread.UpdatedAt,
+			UpvotesCount:          thread.UpvotesCount,
+			IsUpvoted:             thread.IsUpvoted,
+			IsFollowed:            thread.IsFollowed,
+			IsDownVoted:           thread.IsDownvoted,
+		})
+	}
+
+	return threads, nil
+}
