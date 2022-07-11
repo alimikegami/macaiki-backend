@@ -466,6 +466,24 @@ func (uu *userUsecase) GetReports(curentUserRole string) ([]dto.BriefReportRespo
 	return reportsResp, nil
 }
 
+func (uu *userUsecase) GetDashboardAnalytics(userRole string) (dto.AdminDashboardAnalytics, error) {
+	if userRole != "Admin" {
+		return dto.AdminDashboardAnalytics{}, utils.ErrUnauthorizedAccess
+	}
+
+	analytics, err := uu.userRepo.GetDashboardAnalytics()
+
+	if err != nil {
+		return dto.AdminDashboardAnalytics{}, utils.ErrInternalServerError
+	}
+
+	return dto.AdminDashboardAnalytics{
+		UsersCount:      analytics.UsersCount,
+		ModeratorsCount: analytics.ModeratorsCount,
+		ReportsCount:    analytics.ReportsCount,
+	}, nil
+}
+
 func hashAndSalt(pwd []byte) string {
 
 	// Use GenerateFromPassword to hash & salt pwd.

@@ -25,4 +25,6 @@ type UserUsecase interface {
 
 	Report(userID, userReportedID, ReportCategoryID uint) error
 	GetReports(curentUserRole string) ([]dto.BriefReportResponse, error)
+
+	GetDashboardAnalytics(userRole string) (dto.AdminDashboardAnalytics, error)
 }

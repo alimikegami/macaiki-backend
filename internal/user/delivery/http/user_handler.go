@@ -28,9 +28,11 @@ func NewUserHandler(e *echo.Echo, us user.UserUsecase, JWTSecret string) {
 	e.POST("/api/v1/register", handler.Register)
 	e.GET("/api/v1/users", handler.GetAllUsers, middleware.JWT([]byte(JWTSecret)))
 	e.GET("/api/v1/users/:userID", handler.GetUser, middleware.JWT([]byte(JWTSecret)))
-	e.GET("/api/v1/admin/reports", handler.GetReports, middleware.JWT([]byte(JWTSecret)))
 	e.DELETE("/api/v1/users/:userID", handler.Delete, middleware.JWT([]byte(JWTSecret)))
 	e.DELETE("/api/v1/users", handler.DeleteUserByToken, middleware.JWT([]byte(JWTSecret)))
+
+	e.GET("/api/v1/admin/reports", handler.GetReports, middleware.JWT([]byte(JWTSecret)))
+	e.GET("/api/v1/admin/analytics", handler.GetDashboardAnalytics, middleware.JWT([]byte(JWTSecret)))
 
 	e.PUT("/api/v1/curent-user/email", handler.ChangeEmail, middleware.JWT([]byte(JWTSecret)))
 	e.PUT("/api/v1/curent-user/password", handler.ChangePassword, middleware.JWT([]byte(JWTSecret)))
@@ -307,4 +309,15 @@ func (u *UserHandler) GetReports(c echo.Context) error {
 	}
 
 	return response.SuccessResponse(c, reports)
+}
+
+func (u *UserHandler) GetDashboardAnalytics(c echo.Context) error {
+	_, role := _middL.ExtractTokenUser(c)
+	analytics, err := u.UserUsecase.GetDashboardAnalytics(role)
+
+	if err != nil {
+		return response.ErrorResponse(c, err)
+	}
+
+	return response.SuccessResponse(c, analytics)
 }

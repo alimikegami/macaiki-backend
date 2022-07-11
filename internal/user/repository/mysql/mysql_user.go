@@ -212,3 +212,15 @@ func (ur *MysqlUserRepository) GetReports() ([]entity.BriefReport, error) {
 
 	return reports, nil
 }
+
+func (ur *MysqlUserRepository) GetDashboardAnalytics() (entity.AdminDashboardAnalytics, error) {
+	var adminAnalytics entity.AdminDashboardAnalytics
+
+	res := ur.Db.Raw("SELECT (SELECT COUNT(*) FROM users WHERE deleted_at IS NULL) AS users_count, (SELECT COUNT(*) FROM users WHERE `role` = 'Moderator') AS moderators_count, (SELECT COUNT(*) FROM thread_reports) + (SELECT COUNT(*) FROM user_reports) + (SELECT COUNT(*) FROM comment_reports) AS reports_count;").Scan(&adminAnalytics)
+
+	if res.Error != nil {
+		return entity.AdminDashboardAnalytics{}, utils.ErrInternalServerError
+	}
+
+	return adminAnalytics, nil
+}
