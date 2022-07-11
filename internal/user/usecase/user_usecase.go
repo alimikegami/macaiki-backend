@@ -443,7 +443,6 @@ func (uu *userUsecase) Report(userID, userReportedID, reportCategoryID uint) err
 	return nil
 }
 
-<<<<<<< feature/email-verification
 func (uu *userUsecase) GetThreadByToken(tokenUserID uint) ([]dtoThread.ThreadResponse, error) {
 
 	threads, err := uu.threadRepo.GetThreadsByUserID(tokenUserID)
@@ -518,7 +517,7 @@ func (uu *userUsecase) VerifyOTP(email, OTPCode string) error {
 	}
 
 	return nil
-=======
+}
 func (uu *userUsecase) GetReports(curentUserRole string) ([]dto.BriefReportResponse, error) {
 	if curentUserRole != "Admin" {
 		return []dto.BriefReportResponse{}, utils.ErrUnauthorizedAccess
@@ -567,7 +566,6 @@ func (uu *userUsecase) GetDashboardAnalytics(userRole string) (dto.AdminDashboar
 		ModeratorsCount: analytics.ModeratorsCount,
 		ReportsCount:    analytics.ReportsCount,
 	}, nil
->>>>>>> development
 }
 
 func hashAndSalt(pwd []byte) string {

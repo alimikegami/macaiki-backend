@@ -305,7 +305,6 @@ func (u *UserHandler) ReportUser(c echo.Context) error {
 	return response.SuccessResponse(c, nil)
 }
 
-<<<<<<< feature/email-verification
 func (u *UserHandler) GetThreadByUserID(c echo.Context) error {
 	userID, err := strconv.Atoi(c.Param("userID"))
 	if err != nil {
@@ -337,18 +336,21 @@ func (u *UserHandler) SendOTP(c echo.Context) error {
 	c.Bind(&email)
 
 	err := u.UserUsecase.SendOTP(email)
-=======
-func (u *UserHandler) GetReports(c echo.Context) error {
-	_, role := _middL.ExtractTokenUser(c)
-	reports, err := u.UserUsecase.GetReports(role)
-
->>>>>>> development
 	if err != nil {
 		return response.ErrorResponse(c, err)
 	}
 
-<<<<<<< feature/email-verification
 	return response.SuccessResponse(c, nil)
+}
+
+func (u *UserHandler) GetReports(c echo.Context) error {
+	_, role := _middL.ExtractTokenUser(c)
+	reports, err := u.UserUsecase.GetReports(role)
+	if err != nil {
+		return response.ErrorResponse(c, err)
+	}
+
+	return response.SuccessResponse(c, reports)
 }
 
 func (u *UserHandler) VerifyOTP(c echo.Context) error {
@@ -356,22 +358,19 @@ func (u *UserHandler) VerifyOTP(c echo.Context) error {
 	otp := c.QueryParam("otp")
 
 	err := u.UserUsecase.VerifyOTP(email, otp)
-=======
-	return response.SuccessResponse(c, reports)
+	if err != nil {
+		return response.ErrorResponse(c, err)
+	}
+
+	return response.SuccessResponse(c, nil)
 }
 
 func (u *UserHandler) GetDashboardAnalytics(c echo.Context) error {
 	_, role := _middL.ExtractTokenUser(c)
 	analytics, err := u.UserUsecase.GetDashboardAnalytics(role)
-
->>>>>>> development
 	if err != nil {
 		return response.ErrorResponse(c, err)
 	}
 
-<<<<<<< feature/email-verification
-	return response.SuccessResponse(c, nil)
-=======
 	return response.SuccessResponse(c, analytics)
->>>>>>> development
 }
