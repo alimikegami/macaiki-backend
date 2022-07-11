@@ -1,6 +1,7 @@
 package community
 
 import (
+	"macaiki/internal/community/dto"
 	dtoCommunity "macaiki/internal/community/dto"
 	dtoThread "macaiki/internal/thread/dto"
 	"mime/multipart"
@@ -24,4 +25,5 @@ type CommunityUsecase interface {
 	RemoveModerator(moderatorReq dtoCommunity.CommunityModeratorRequest, role string) error
 
 	ReportCommunity(userID, communityID, reportCategoryID uint) error
+	GetReports(userID, communityID uint) ([]dto.BriefReportResponse, error)
 }

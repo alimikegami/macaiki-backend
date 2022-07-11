@@ -43,6 +43,7 @@ func NewCommunityHandler(e *echo.Echo, communityUsecase community.CommunityUseca
 	e.DELETE("api/v1/community-moderators", communityHandler.RemoveModerator, middleware.JWT([]byte(JWTSecret)))
 
 	e.POST("api/v1/communities/:communityID/report", communityHandler.ReportCommunity, middleware.JWT([]byte(JWTSecret)))
+	e.GET("/api/v1/communities/:communityID/reports", communityHandler.GetReports, middleware.JWT([]byte(JWTSecret)))
 }
 
 func (communityHandler *CommunityHandler) CreateCommunity(c echo.Context) error {
@@ -264,4 +265,19 @@ func (CommunityHandler *CommunityHandler) ReportCommunity(c echo.Context) error 
 	}
 
 	return response.SuccessResponse(c, nil)
+}
+
+func (CommunityHandler *CommunityHandler) GetReports(c echo.Context) error {
+	communityID, err := strconv.Atoi(c.Param("communityID"))
+	if err != nil {
+		return response.ErrorResponse(c, utils.ErrBadParamInput)
+	}
+	userID, _ := _middL.ExtractTokenUser(c)
+	reports, err := CommunityHandler.communityUsecase.GetReports(uint(userID), uint(communityID))
+
+	if err != nil {
+		return response.ErrorResponse(c, err)
+	}
+
+	return response.SuccessResponse(c, reports)
 }
