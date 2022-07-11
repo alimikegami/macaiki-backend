@@ -202,6 +202,27 @@ func (ur *MysqlUserRepository) StoreReport(userReport entity.UserReport) error {
 	return nil
 }
 
+func (ur *MysqlUserRepository) StoreOTP(VerifyEmail entity.VerificationEmail) error {
+	res := ur.Db.Create(&VerifyEmail)
+	err := res.Error
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (ur *MysqlUserRepository) GetOTP(email string) (entity.VerificationEmail, error) {
+	VerifyEmail := entity.VerificationEmail{}
+	res := ur.Db.Where("email = ?", email).Order("id desc").First(&VerifyEmail)
+	err := res.Error
+	if err != nil {
+		return entity.VerificationEmail{}, err
+	}
+
+	return VerifyEmail, nil
+}
+
 func (ur *MysqlUserRepository) GetReports() ([]entity.BriefReport, error) {
 	var reports []entity.BriefReport
 	res := ur.Db.Raw("SELECT tr.id AS 'thread_reports_id', NULL AS 'user_reports_id', NULL AS 'comment_reports_id', tr.created_at, tr.user_id, tr.thread_id, NULL AS reported_user_id, NULL as comment_id, rc.name AS report_category, u.username, u.profile_image_url, 'threads' AS type FROM thread_reports tr INNER JOIN report_categories rc ON tr.report_category_id = rc.id INNER JOIN users u ON u.id = tr.user_id WHERE tr.deleted_at IS NULL AND u.`role` = 'Moderator' UNION SELECT NULL AS 'thread_reports_id', ur.id AS 'user_reports_id', NULL AS 'comment_reports_id', ur.created_at, ur.user_id, NULL AS thread_id, ur.reported_user_id, NULL AS comment_id, rc.name AS report_category, u.username, u.profile_image_url, 'users' AS type FROM user_reports ur INNER JOIN report_categories rc ON ur.report_category_id = rc.id INNER JOIN users u ON u.id = ur.user_id WHERE ur.deleted_at IS NULL AND u.`role` = 'Moderator' UNION SELECT NULL AS 'thread_reports_id', NULL AS 'user_reports_id', cr.id AS 'comment_reports_id', cr.created_at, cr.user_id, NULL AS thread_id, NULL AS reported_user_id, cr.comment_id, rc.name AS report_category, u.username, u.profile_image_url, 'comments' AS type FROM comment_reports cr INNER JOIN report_categories rc ON cr.report_category_id = rc.id INNER JOIN users u ON u.id = cr.user_id WHERE cr.deleted_at IS NULL AND u.`role` = 'Moderator';").Scan(&reports)
