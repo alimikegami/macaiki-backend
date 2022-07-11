@@ -162,6 +162,29 @@ func (_m *ThreadRepository) GetCommentsByThreadID(threadID uint) ([]entity.Comme
 	return r0, r1
 }
 
+// GetSavedThread provides a mock function with given fields: userID
+func (_m *ThreadRepository) GetSavedThread(userID uint) ([]entity.ThreadWithDetails, error) {
+	ret := _m.Called(userID)
+
+	var r0 []entity.ThreadWithDetails
+	if rf, ok := ret.Get(0).(func(uint) []entity.ThreadWithDetails); ok {
+		r0 = rf(userID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]entity.ThreadWithDetails)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(uint) error); ok {
+		r1 = rf(userID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetThreadByID provides a mock function with given fields: threadID
 func (_m *ThreadRepository) GetThreadByID(threadID uint) (entity.Thread, error) {
 	ret := _m.Called(threadID)
