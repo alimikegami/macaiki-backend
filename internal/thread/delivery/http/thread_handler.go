@@ -6,6 +6,7 @@ import (
 	"macaiki/internal/thread/dto"
 	_middL "macaiki/pkg/middleware"
 	"macaiki/pkg/response"
+	"macaiki/pkg/utils"
 	"strconv"
 
 	"github.com/labstack/echo/v4"
@@ -25,12 +26,22 @@ func (th *ThreadHandler) GetThreads(c echo.Context) error {
 	forYou := c.QueryParam("forYou")
 	keyword := c.QueryParam("keyword")
 	saved := c.QueryParam("saved")
+	limit := c.QueryParam("limit")
 
 	var res interface{}
 	var err error
-
 	if trending == "true" {
-		res, err = th.tu.GetTrendingThreads(uint(userID))
+		if limit != "" {
+			limitInt, err := strconv.Atoi(limit)
+			if err != nil {
+				fmt.Println(err)
+				return response.ErrorResponse(c, utils.ErrBadParamInput)
+			}
+			res, err = th.tu.GetTrendingThreads(uint(userID), limitInt)
+
+		} else {
+			res, err = th.tu.GetTrendingThreads(uint(userID), -1)
+		}
 	} else if community == "true" {
 		res, err = th.tu.GetThreadsFromFollowedCommunity(uint(userID))
 	} else if forYou == "true" {

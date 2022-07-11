@@ -363,6 +363,29 @@ func (_m *ThreadRepository) GetTrendingThreads(userID uint) ([]entity.ThreadWith
 	return r0, r1
 }
 
+// GetTrendingThreadsWithLimit provides a mock function with given fields: userID, limit
+func (_m *ThreadRepository) GetTrendingThreadsWithLimit(userID uint, limit int) ([]entity.ThreadWithDetails, error) {
+	ret := _m.Called(userID, limit)
+
+	var r0 []entity.ThreadWithDetails
+	if rf, ok := ret.Get(0).(func(uint, int) []entity.ThreadWithDetails); ok {
+		r0 = rf(userID, limit)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]entity.ThreadWithDetails)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(uint, int) error); ok {
+		r1 = rf(userID, limit)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // LikeComment provides a mock function with given fields: commentLikes
 func (_m *ThreadRepository) LikeComment(commentLikes entity.CommentLikes) error {
 	ret := _m.Called(commentLikes)

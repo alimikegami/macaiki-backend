@@ -211,9 +211,15 @@ func (tuc *ThreadUseCaseImpl) UpvoteThread(threadID uint, userID uint) error {
 	return err
 }
 
-func (tuc *ThreadUseCaseImpl) GetTrendingThreads(userID uint) ([]dto.DetailedThreadResponse, error) {
+func (tuc *ThreadUseCaseImpl) GetTrendingThreads(userID uint, limit int) ([]dto.DetailedThreadResponse, error) {
 	var threads []dto.DetailedThreadResponse
-	res, err := tuc.tr.GetTrendingThreads(userID)
+	var res []entity.ThreadWithDetails
+	var err error
+	if limit != -1 {
+		res, err = tuc.tr.GetTrendingThreadsWithLimit(userID, limit)
+	} else {
+		res, err = tuc.tr.GetTrendingThreads(userID)
+	}
 
 	if err != nil {
 		return []dto.DetailedThreadResponse{}, utils.ErrInternalServerError
