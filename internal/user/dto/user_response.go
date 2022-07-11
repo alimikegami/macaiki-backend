@@ -49,3 +49,9 @@ type BriefReportResponse struct {
 	ProfileImageURL string    `json:"profileImageURL"`
 	Type            string    `json:"type"`
 }
+
+type AdminDashboardAnalytics struct {
+	UsersCount      int `json:"usersCount"`
+	ModeratorsCount int `json:"moderatorsCount"`
+	ReportsCount    int `json:"reportsCount"`
+}

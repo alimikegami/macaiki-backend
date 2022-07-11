@@ -45,3 +45,9 @@ type BriefReport struct {
 	ProfileImageURL string
 	Type            string
 }
+
+type AdminDashboardAnalytics struct {
+	UsersCount      int
+	ModeratorsCount int
+	ReportsCount    int
+}

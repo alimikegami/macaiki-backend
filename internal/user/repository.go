@@ -22,4 +22,6 @@ type UserRepository interface {
 
 	StoreReport(userReport entity.UserReport) error
 	GetReports() ([]entity.BriefReport, error)
+
+	GetDashboardAnalytics() (entity.AdminDashboardAnalytics, error)
 }
