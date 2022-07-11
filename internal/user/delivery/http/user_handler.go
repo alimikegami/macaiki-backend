@@ -28,6 +28,7 @@ func NewUserHandler(e *echo.Echo, us user.UserUsecase, JWTSecret string) {
 	e.POST("/api/v1/register", handler.Register)
 	e.GET("/api/v1/users", handler.GetAllUsers, middleware.JWT([]byte(JWTSecret)))
 	e.GET("/api/v1/users/:userID", handler.GetUser, middleware.JWT([]byte(JWTSecret)))
+	e.GET("/api/v1/admin/reports", handler.GetReports, middleware.JWT([]byte(JWTSecret)))
 	e.DELETE("/api/v1/users/:userID", handler.Delete, middleware.JWT([]byte(JWTSecret)))
 	e.DELETE("/api/v1/users", handler.DeleteUserByToken, middleware.JWT([]byte(JWTSecret)))
 
@@ -295,4 +296,15 @@ func (u *UserHandler) ReportUser(c echo.Context) error {
 	}
 
 	return response.SuccessResponse(c, nil)
+}
+
+func (u *UserHandler) GetReports(c echo.Context) error {
+	_, role := _middL.ExtractTokenUser(c)
+	reports, err := u.UserUsecase.GetReports(role)
+
+	if err != nil {
+		return response.ErrorResponse(c, err)
+	}
+
+	return response.SuccessResponse(c, reports)
 }

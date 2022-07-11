@@ -1,6 +1,8 @@
 package entity
 
 import (
+	"time"
+
 	"gorm.io/gorm"
 )
 
@@ -28,4 +30,18 @@ type UserReport struct {
 	UserID           uint
 	ReportedUserID   uint
 	ReportCategoryID uint
+}
+
+type BriefReport struct {
+	ThreadReportID  uint
+	UserReportID    uint
+	CommentReportID uint
+	CreatedAt       time.Time
+	ThreadID        uint
+	UserID          uint
+	CommentID       uint
+	ReportCategory  string
+	Username        string
+	ProfileImageURL string
+	Type            string
 }

@@ -24,4 +24,5 @@ type UserUsecase interface {
 	Unfollow(userID, userFollowerID uint) error
 
 	Report(userID, userReportedID, ReportCategoryID uint) error
+	GetReports(curentUserRole string) ([]dto.BriefReportResponse, error)
 }

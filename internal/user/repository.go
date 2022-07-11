@@ -21,4 +21,5 @@ type UserRepository interface {
 	SetUserImage(id uint, imageURL string, tableName string) error
 
 	StoreReport(userReport entity.UserReport) error
+	GetReports() ([]entity.BriefReport, error)
 }

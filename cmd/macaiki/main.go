@@ -25,6 +25,7 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 )
 
 func main() {
@@ -74,6 +75,11 @@ func main() {
 	_reportCategoryHttpDeliver.NewReportCategoryHandler(e, reportCategoryUsecase, JWTSecret.Secret)
 	_communityHttpDelivery.NewCommunityHandler(e, communityUsecase, JWTSecret.Secret)
 	_notificationHttpDelivery.NewNotificationHandler(e, notificationUsecase, JWTSecret.Secret)
+
+	// setup middleware
+	e.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
+		Format: "method=${method}, uri=${uri}, status=${status}\n",
+	}))
 
 	log.Fatal(e.Start(":" + config.ServerPort))
 }

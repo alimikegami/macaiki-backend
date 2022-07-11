@@ -434,6 +434,38 @@ func (uu *userUsecase) Report(userID, userReportedID, reportCategoryID uint) err
 	return nil
 }
 
+func (uu *userUsecase) GetReports(curentUserRole string) ([]dto.BriefReportResponse, error) {
+	if curentUserRole != "Admin" {
+		return []dto.BriefReportResponse{}, utils.ErrUnauthorizedAccess
+	}
+
+	reports, err := uu.userRepo.GetReports()
+
+	if err != nil {
+		return []dto.BriefReportResponse{}, utils.ErrInternalServerError
+	}
+
+	var reportsResp []dto.BriefReportResponse
+
+	for _, report := range reports {
+		reportsResp = append(reportsResp, dto.BriefReportResponse{
+			ThreadReportID:  report.ThreadReportID,
+			UserReportID:    report.UserReportID,
+			CommentReportID: report.CommentReportID,
+			CreatedAt:       report.CreatedAt,
+			ThreadID:        report.ThreadID,
+			UserID:          report.UserID,
+			CommentID:       report.CommentID,
+			ReportCategory:  report.ReportCategory,
+			Username:        report.Username,
+			ProfileImageURL: report.ProfileImageURL,
+			Type:            report.Type,
+		})
+	}
+
+	return reportsResp, nil
+}
+
 func hashAndSalt(pwd []byte) string {
 
 	// Use GenerateFromPassword to hash & salt pwd.
