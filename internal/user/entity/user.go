@@ -33,9 +33,30 @@ type UserReport struct {
 	ReportCategoryID uint
 }
 
+<<<<<<< feature/email-verification
 type VerificationEmail struct {
 	ID        uint `gorm:"primaryKey"`
 	Email     string
 	OTPCode   string
 	ExpiredAt time.Time
+=======
+type BriefReport struct {
+	ThreadReportID  uint
+	UserReportID    uint
+	CommentReportID uint
+	CreatedAt       time.Time
+	ThreadID        uint
+	UserID          uint
+	CommentID       uint
+	ReportCategory  string
+	Username        string
+	ProfileImageURL string
+	Type            string
+}
+
+type AdminDashboardAnalytics struct {
+	UsersCount      int
+	ModeratorsCount int
+	ReportsCount    int
+>>>>>>> development
 }

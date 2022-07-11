@@ -443,6 +443,7 @@ func (uu *userUsecase) Report(userID, userReportedID, reportCategoryID uint) err
 	return nil
 }
 
+<<<<<<< feature/email-verification
 func (uu *userUsecase) GetThreadByToken(tokenUserID uint) ([]dtoThread.ThreadResponse, error) {
 
 	threads, err := uu.threadRepo.GetThreadsByUserID(tokenUserID)
@@ -517,6 +518,56 @@ func (uu *userUsecase) VerifyOTP(email, OTPCode string) error {
 	}
 
 	return nil
+=======
+func (uu *userUsecase) GetReports(curentUserRole string) ([]dto.BriefReportResponse, error) {
+	if curentUserRole != "Admin" {
+		return []dto.BriefReportResponse{}, utils.ErrUnauthorizedAccess
+	}
+
+	reports, err := uu.userRepo.GetReports()
+
+	if err != nil {
+		return []dto.BriefReportResponse{}, utils.ErrInternalServerError
+	}
+
+	var reportsResp []dto.BriefReportResponse
+
+	for _, report := range reports {
+		reportsResp = append(reportsResp, dto.BriefReportResponse{
+			ThreadReportID:  report.ThreadReportID,
+			UserReportID:    report.UserReportID,
+			CommentReportID: report.CommentReportID,
+			CreatedAt:       report.CreatedAt,
+			ThreadID:        report.ThreadID,
+			UserID:          report.UserID,
+			CommentID:       report.CommentID,
+			ReportCategory:  report.ReportCategory,
+			Username:        report.Username,
+			ProfileImageURL: report.ProfileImageURL,
+			Type:            report.Type,
+		})
+	}
+
+	return reportsResp, nil
+}
+
+func (uu *userUsecase) GetDashboardAnalytics(userRole string) (dto.AdminDashboardAnalytics, error) {
+	if userRole != "Admin" {
+		return dto.AdminDashboardAnalytics{}, utils.ErrUnauthorizedAccess
+	}
+
+	analytics, err := uu.userRepo.GetDashboardAnalytics()
+
+	if err != nil {
+		return dto.AdminDashboardAnalytics{}, utils.ErrInternalServerError
+	}
+
+	return dto.AdminDashboardAnalytics{
+		UsersCount:      analytics.UsersCount,
+		ModeratorsCount: analytics.ModeratorsCount,
+		ReportsCount:    analytics.ReportsCount,
+	}, nil
+>>>>>>> development
 }
 
 func hashAndSalt(pwd []byte) string {

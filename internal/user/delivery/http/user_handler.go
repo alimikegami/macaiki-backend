@@ -31,6 +31,9 @@ func NewUserHandler(e *echo.Echo, us user.UserUsecase, JWTSecret string) {
 	e.DELETE("/api/v1/users/:userID", handler.Delete, middleware.JWT([]byte(JWTSecret)))
 	e.DELETE("/api/v1/users", handler.DeleteUserByToken, middleware.JWT([]byte(JWTSecret)))
 
+	e.GET("/api/v1/admin/reports", handler.GetReports, middleware.JWT([]byte(JWTSecret)))
+	e.GET("/api/v1/admin/analytics", handler.GetDashboardAnalytics, middleware.JWT([]byte(JWTSecret)))
+
 	e.PUT("/api/v1/curent-user/email", handler.ChangeEmail, middleware.JWT([]byte(JWTSecret)))
 	e.PUT("/api/v1/curent-user/password", handler.ChangePassword, middleware.JWT([]byte(JWTSecret)))
 	e.GET("/api/v1/curent-user/threads", handler.GetThreadByToken, middleware.JWT([]byte(JWTSecret)))
@@ -302,6 +305,7 @@ func (u *UserHandler) ReportUser(c echo.Context) error {
 	return response.SuccessResponse(c, nil)
 }
 
+<<<<<<< feature/email-verification
 func (u *UserHandler) GetThreadByUserID(c echo.Context) error {
 	userID, err := strconv.Atoi(c.Param("userID"))
 	if err != nil {
@@ -333,10 +337,17 @@ func (u *UserHandler) SendOTP(c echo.Context) error {
 	c.Bind(&email)
 
 	err := u.UserUsecase.SendOTP(email)
+=======
+func (u *UserHandler) GetReports(c echo.Context) error {
+	_, role := _middL.ExtractTokenUser(c)
+	reports, err := u.UserUsecase.GetReports(role)
+
+>>>>>>> development
 	if err != nil {
 		return response.ErrorResponse(c, err)
 	}
 
+<<<<<<< feature/email-verification
 	return response.SuccessResponse(c, nil)
 }
 
@@ -345,9 +356,22 @@ func (u *UserHandler) VerifyOTP(c echo.Context) error {
 	otp := c.QueryParam("otp")
 
 	err := u.UserUsecase.VerifyOTP(email, otp)
+=======
+	return response.SuccessResponse(c, reports)
+}
+
+func (u *UserHandler) GetDashboardAnalytics(c echo.Context) error {
+	_, role := _middL.ExtractTokenUser(c)
+	analytics, err := u.UserUsecase.GetDashboardAnalytics(role)
+
+>>>>>>> development
 	if err != nil {
 		return response.ErrorResponse(c, err)
 	}
 
+<<<<<<< feature/email-verification
 	return response.SuccessResponse(c, nil)
+=======
+	return response.SuccessResponse(c, analytics)
+>>>>>>> development
 }

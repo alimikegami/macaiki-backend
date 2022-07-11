@@ -211,9 +211,15 @@ func (tuc *ThreadUseCaseImpl) UpvoteThread(threadID uint, userID uint) error {
 	return err
 }
 
-func (tuc *ThreadUseCaseImpl) GetTrendingThreads(userID uint) ([]dto.DetailedThreadResponse, error) {
+func (tuc *ThreadUseCaseImpl) GetTrendingThreads(userID uint, limit int) ([]dto.DetailedThreadResponse, error) {
 	var threads []dto.DetailedThreadResponse
-	res, err := tuc.tr.GetTrendingThreads(userID)
+	var res []entity.ThreadWithDetails
+	var err error
+	if limit != -1 {
+		res, err = tuc.tr.GetTrendingThreadsWithLimit(userID, limit)
+	} else {
+		res, err = tuc.tr.GetTrendingThreads(userID)
+	}
 
 	if err != nil {
 		return []dto.DetailedThreadResponse{}, utils.ErrInternalServerError
@@ -486,4 +492,35 @@ func (tuc *ThreadUseCaseImpl) StoreSavedThread(savedThread dto.SavedThreadReques
 	})
 
 	return err
+}
+
+func (tuc *ThreadUseCaseImpl) GetSavedThread(userID uint) ([]dto.DetailedThreadResponse, error) {
+	var threads []dto.DetailedThreadResponse
+	res, err := tuc.tr.GetSavedThread(userID)
+
+	if err != nil {
+		return []dto.DetailedThreadResponse{}, nil
+	}
+
+	for _, thread := range res {
+		threads = append(threads, dto.DetailedThreadResponse{
+			ID:                    thread.Thread.ID,
+			Title:                 thread.Title,
+			Body:                  thread.Body,
+			CommunityID:           thread.CommunityID,
+			ImageURL:              thread.ImageURL,
+			UserID:                thread.UserID,
+			UserName:              thread.User.Name,
+			UserProfession:        thread.User.Profession,
+			UserProfilePictureURL: thread.User.ProfileImageUrl,
+			CreatedAt:             thread.Thread.CreatedAt,
+			UpdatedAt:             thread.Thread.UpdatedAt,
+			UpvotesCount:          thread.UpvotesCount,
+			IsUpvoted:             thread.IsUpvoted,
+			IsFollowed:            thread.IsFollowed,
+			IsDownVoted:           thread.IsDownvoted,
+		})
+	}
+
+	return threads, nil
 }
