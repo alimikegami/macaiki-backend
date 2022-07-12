@@ -50,3 +50,24 @@ func (nr *NotificationRepositoryImpl) DeleleteAllNotifications(userID uint) erro
 	}
 	return nil
 }
+
+func (nr *NotificationRepositoryImpl) ReadNotification(notificationID uint) error {
+	res := nr.db.Model(&entity.Notification{}).Where("id = ?", notificationID).Update("is_readed", 1)
+	err := res.Error
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (nr *NotificationRepositoryImpl) GetNotification(notificationID uint) (entity.Notification, error) {
+	notif := entity.Notification{}
+	res := nr.db.Find(&notif, notificationID)
+	err := res.Error
+	if err != nil {
+		return entity.Notification{}, err
+	}
+
+	return notif, nil
+}
