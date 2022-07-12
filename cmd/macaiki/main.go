@@ -63,7 +63,7 @@ func main() {
 	userUsecase := _userUsecase.NewUserUsecase(userRepo, reportCategoryRepo, notificationRepo, threadRepo, v, s3Instance, goMail)
 	reportCategoryUsecase := _reportCategoryUsecase.NewReportCategoryUsecase(reportCategoryRepo, v)
 	threadUseCase := _threadUsecase.CreateNewThreadUseCase(threadRepo, notificationRepo, s3Instance)
-	communityUsecase := _communityUsecase.NewCommunityUsecase(communityRepo, userRepo, reportCategoryRepo, v, s3Instance)
+	communityUsecase := _communityUsecase.NewCommunityUsecase(communityRepo, userRepo, reportCategoryRepo, threadRepo, v, s3Instance)
 	notificationUsecase := _notificationUsecase.NewNotificationUsecase(notificationRepo, userRepo, threadRepo)
 
 	// setup middleware

@@ -310,6 +310,27 @@ func (tr *ThreadRepositoryImpl) CreateThreadReport(threadReport entity.ThreadRep
 	return nil
 }
 
+func (tr *ThreadRepositoryImpl) GetThreadReport(id uint) (entity.ThreadReport, error) {
+	threadReport := entity.ThreadReport{}
+
+	res := tr.db.Find(&threadReport, id)
+	err := res.Error
+	if err != nil {
+		return entity.ThreadReport{}, nil
+	}
+
+	return threadReport, nil
+}
+func (tr *ThreadRepositoryImpl) UpdateThreadReport(threadReport entity.ThreadReport, userID uint) error {
+	res := tr.db.Model(&threadReport).Update("user_id", userID)
+	err := res.Error
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (tr *ThreadRepositoryImpl) GetCommentByID(commentID uint) (entity.Comment, error) {
 	var comment entity.Comment
 	res := tr.db.First(&comment, commentID)
@@ -331,6 +352,28 @@ func (tr *ThreadRepositoryImpl) CreateCommentReport(commentReport entity.Comment
 
 	if res.Error != nil {
 		return utils.ErrInternalServerError
+	}
+
+	return nil
+}
+
+func (tr *ThreadRepositoryImpl) GetCommentReport(id uint) (entity.CommentReport, error) {
+	commentReport := entity.CommentReport{}
+
+	res := tr.db.Find(commentReport, id)
+	err := res.Error
+	if err != nil {
+		return entity.CommentReport{}, nil
+	}
+
+	return commentReport, nil
+}
+
+func (tr *ThreadRepositoryImpl) UpdateCommentReport(commentReport entity.CommentReport, userID uint) error {
+	res := tr.db.Model(&commentReport).Update("user_id", userID)
+	err := res.Error
+	if err != nil {
+		return err
 	}
 
 	return nil

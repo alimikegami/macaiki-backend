@@ -26,7 +26,11 @@ type ThreadRepository interface {
 	DeleteComment(commentID uint) error
 	GetCommentByID(commentID uint) (entity.Comment, error)
 	CreateThreadReport(threadReport entity.ThreadReport) error
+	GetThreadReport(id uint) (entity.ThreadReport, error)
+	UpdateThreadReport(threadReport entity.ThreadReport, userID uint) error
 	CreateCommentReport(commentReport entity.CommentReport) error
+	GetCommentReport(id uint) (entity.CommentReport, error)
+	UpdateCommentReport(commentReport entity.CommentReport, userID uint) error
 	GetThreadsByUserID(userID uint) ([]entity.Thread, error)
 	StoreSavedThread(savedThread entity.SavedThread) error
 	GetSavedThread(userID uint) ([]entity.ThreadWithDetails, error)
