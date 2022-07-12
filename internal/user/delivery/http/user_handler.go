@@ -48,7 +48,7 @@ func NewUserHandler(e *echo.Echo, us user.UserUsecase, JWTSecret string) {
 
 	e.GET("/api/v1/users/:userID/followers", handler.GetUserFollowers, middleware.JWT([]byte(JWTSecret)))
 	e.GET("/api/v1/users/:userID/following", handler.GetUserFollowing, middleware.JWT([]byte(JWTSecret)))
-	e.GET("/api/v1/users/:userID/threads", handler.GetThreadByUserID)
+	e.GET("/api/v1/users/:userID/threads", handler.GetThreadByUserID, middleware.JWT([]byte(JWTSecret)))
 
 	e.POST("api/v1/curent-user/email-verification", handler.SendOTP)
 	e.GET("api/v1/curent-user/email-verification", handler.VerifyOTP)
@@ -311,8 +311,8 @@ func (u *UserHandler) GetThreadByUserID(c echo.Context) error {
 		return response.ErrorResponse(c, utils.ErrBadParamInput)
 	}
 
-	// userID, _ := _middL.ExtractTokenUser(c)
-	threadResp, err := u.UserUsecase.GetThreadByToken(uint(userID))
+	tokenUserID, _ := _middL.ExtractTokenUser(c)
+	threadResp, err := u.UserUsecase.GetThreadByToken(uint(userID), uint(tokenUserID))
 	if err != nil {
 		return response.ErrorResponse(c, err)
 	}
@@ -322,7 +322,7 @@ func (u *UserHandler) GetThreadByUserID(c echo.Context) error {
 
 func (u *UserHandler) GetThreadByToken(c echo.Context) error {
 	userID, _ := _middL.ExtractTokenUser(c)
-	threadResp, err := u.UserUsecase.GetThreadByToken(uint(userID))
+	threadResp, err := u.UserUsecase.GetThreadByToken(uint(userID), uint(userID))
 	if err != nil {
 		return response.ErrorResponse(c, err)
 	}

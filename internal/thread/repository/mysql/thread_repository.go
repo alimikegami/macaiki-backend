@@ -379,13 +379,13 @@ func (tr *ThreadRepositoryImpl) UpdateCommentReport(commentReport entity.Comment
 	return nil
 }
 
-func (tr *ThreadRepositoryImpl) GetThreadsByUserID(userID uint) ([]entity.Thread, error) {
-	var threads []entity.Thread
+func (tr *ThreadRepositoryImpl) GetThreadsByUserID(userID, tokenUserID uint) ([]entity.ThreadWithDetails, error) {
+	threads := []entity.ThreadWithDetails{}
 
-	res := tr.db.Find(&threads, "user_id = ?", userID)
+	res := tr.db.Raw("SELECT t.*, tlc.count AS upvotes_count, !isnull(tl.user_id) AS is_upvoted, u.*, (u.id = ?) AS is_mine FROM threads AS t LEFT JOIN (SELECT t.thread_id, COUNT(*) AS count FROM thread_upvotes AS t GROUP BY t.thread_id) AS tlc ON t.id = tlc.thread_id LEFT JOIN (SELECT * FROM thread_upvotes WHERE user_id = ?) AS tl ON tl.thread_id = t.id LEFT JOIN (SELECT u.*, !ISNULL(uf.user_id) AS is_followed FROM `users` AS u LEFT JOIN (SELECT * FROM user_followers WHERE follower_id = ?) AS uf ON u.id = uf.user_id WHERE u.deleted_at IS NULL) AS u ON u.id = t.user_id WHERE t.user_id = ? AND t.deleted_at IS NULL", userID, userID, userID, tokenUserID).Scan(&threads)
 
 	if res.Error != nil {
-		return []entity.Thread{}, utils.ErrInternalServerError
+		return []entity.ThreadWithDetails{}, utils.ErrInternalServerError
 	}
 
 	return threads, nil
