@@ -360,7 +360,7 @@ func (tr *ThreadRepositoryImpl) CreateCommentReport(commentReport entity.Comment
 func (tr *ThreadRepositoryImpl) GetCommentReport(id uint) (entity.CommentReport, error) {
 	commentReport := entity.CommentReport{}
 
-	res := tr.db.Find(commentReport, id)
+	res := tr.db.Find(&commentReport, id)
 	err := res.Error
 	if err != nil {
 		return entity.CommentReport{}, nil

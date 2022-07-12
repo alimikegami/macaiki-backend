@@ -216,10 +216,10 @@ func (cr *CommunityRepositoryImpl) GetReports(communityID uint) ([]communityEnti
 	return reports, nil
 }
 
-func (cr *CommunityRepositoryImpl) GetModeratorByUserID(userID uint) (communityEntity.CommunityModerator, error) {
+func (cr *CommunityRepositoryImpl) GetModeratorByUserID(userID, communityID uint) (communityEntity.CommunityModerator, error) {
 	var communityMods communityEntity.CommunityModerator
 
-	res := cr.db.First(&communityMods, userID)
+	res := cr.db.Where("user_id = ? AND community_id = ?", userID, communityID).Find(&communityMods)
 
 	if res.Error != nil {
 		fmt.Println(res.Error)

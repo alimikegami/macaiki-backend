@@ -445,7 +445,7 @@ func (cu *CommunityUsecaseImpl) ReportCommunity(userID, communityID, reportCateg
 }
 
 func (cu *CommunityUsecaseImpl) ReportByModerator(userID, communityID uint, reportReq dtoCommunity.ReportRequest) error {
-	mods, err := cu.communityRepo.GetModeratorByUserID(userID)
+	mods, err := cu.communityRepo.GetModeratorByUserID(userID, communityID)
 
 	if err != nil {
 		return err
@@ -492,7 +492,7 @@ func (cu *CommunityUsecaseImpl) ReportByModerator(userID, communityID uint, repo
 }
 
 func (cu *CommunityUsecaseImpl) GetReports(userID, communityID uint) ([]dtoCommunity.BriefReportResponse, error) {
-	mods, err := cu.communityRepo.GetModeratorByUserID(userID)
+	mods, err := cu.communityRepo.GetModeratorByUserID(userID, communityID)
 
 	if err != nil {
 		return []dtoCommunity.BriefReportResponse{}, err
