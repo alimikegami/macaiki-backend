@@ -2,6 +2,7 @@ package entity
 
 import (
 	userEntity "macaiki/internal/user/entity"
+	"time"
 
 	"gorm.io/gorm"
 )
@@ -25,4 +26,24 @@ type CommunityReport struct {
 	UserID              uint
 	CommunityReportedID uint
 	ReportCategoryID    uint
+}
+
+type BriefReport struct {
+	ThreadReportsID     uint
+	CommunityReportsID  uint
+	CommentReportsID    uint
+	CreatedAt           time.Time
+	UserID              uint
+	ThreadID            uint
+	CommunityReportedID uint
+	CommentID           uint
+	ReportCategory      string
+	Username            string
+	ProfileImageURL     string
+	Type                string
+}
+
+type CommunityModerator struct {
+	UserID      uint
+	CommunityID uint
 }
