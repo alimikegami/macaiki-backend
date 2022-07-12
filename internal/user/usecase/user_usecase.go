@@ -449,17 +449,19 @@ func (uu *userUsecase) GetReports(curentUserRole string) ([]dto.BriefReportRespo
 
 	for _, report := range reports {
 		reportsResp = append(reportsResp, dto.BriefReportResponse{
-			ThreadReportID:  report.ThreadReportID,
-			UserReportID:    report.UserReportID,
-			CommentReportID: report.CommentReportID,
-			CreatedAt:       report.CreatedAt,
-			ThreadID:        report.ThreadID,
-			UserID:          report.UserID,
-			CommentID:       report.CommentID,
-			ReportCategory:  report.ReportCategory,
-			Username:        report.Username,
-			ProfileImageURL: report.ProfileImageURL,
-			Type:            report.Type,
+			ThreadReportsID:     report.ThreadReportsID,
+			UserReportsID:       report.UserReportsID,
+			CommentReportsID:    report.CommentReportsID,
+			CommunityReportsID:  report.CommunityReportsID,
+			CreatedAt:           report.CreatedAt,
+			ThreadID:            report.ThreadID,
+			UserID:              report.UserID,
+			CommentID:           report.CommentID,
+			CommunityReportedIT: report.CommunityReportedID,
+			ReportCategory:      report.ReportCategory,
+			Username:            report.Username,
+			ProfileImageURL:     report.ProfileImageURL,
+			Type:                report.Type,
 		})
 	}
 

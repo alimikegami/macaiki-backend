@@ -33,17 +33,19 @@ type UserReport struct {
 }
 
 type BriefReport struct {
-	ThreadReportID  uint
-	UserReportID    uint
-	CommentReportID uint
-	CreatedAt       time.Time
-	ThreadID        uint
-	UserID          uint
-	CommentID       uint
-	ReportCategory  string
-	Username        string
-	ProfileImageURL string
-	Type            string
+	ThreadReportsID     uint
+	UserReportsID       uint
+	CommentReportsID    uint
+	CommunityReportsID  uint
+	CreatedAt           time.Time
+	ThreadID            uint
+	UserID              uint
+	CommentID           uint
+	CommunityReportedID uint
+	ReportCategory      string
+	Username            string
+	ProfileImageURL     string
+	Type                string
 }
 
 type AdminDashboardAnalytics struct {

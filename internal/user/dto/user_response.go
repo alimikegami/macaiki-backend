@@ -37,17 +37,19 @@ type LoginResponse struct {
 }
 
 type BriefReportResponse struct {
-	ThreadReportID  uint      `json:"threadReportID"`
-	UserReportID    uint      `json:"userReportID"`
-	CommentReportID uint      `json:"commentReportID"`
-	CreatedAt       time.Time `json:"createdAt"`
-	ThreadID        uint      `json:"threadID"`
-	UserID          uint      `json:"userID"`
-	CommentID       uint      `json:"commentID"`
-	ReportCategory  string    `json:"reportCategory"`
-	Username        string    `json:"username"`
-	ProfileImageURL string    `json:"profileImageURL"`
-	Type            string    `json:"type"`
+	ThreadReportsID     uint      `json:"threadReportsID"`
+	UserReportsID       uint      `json:"userReportsID"`
+	CommentReportsID    uint      `json:"commentReportsID"`
+	CommunityReportsID  uint      `json:"communityReportsID"`
+	CreatedAt           time.Time `json:"createdAt"`
+	ThreadID            uint      `json:"threadID"`
+	UserID              uint      `json:"userID"`
+	CommentID           uint      `json:"commentID"`
+	CommunityReportedIT uint      `json:"communityReportedID"`
+	ReportCategory      string    `json:"reportCategory"`
+	Username            string    `json:"username"`
+	ProfileImageURL     string    `json:"profileImageURL"`
+	Type                string    `json:"type"`
 }
 
 type AdminDashboardAnalytics struct {
