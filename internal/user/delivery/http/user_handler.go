@@ -36,6 +36,7 @@ func NewUserHandler(e *echo.Echo, us user.UserUsecase, JWTSecret string) {
 
 	e.PUT("/api/v1/curent-user/email", handler.ChangeEmail, middleware.JWT([]byte(JWTSecret)))
 	e.PUT("/api/v1/curent-user/password", handler.ChangePassword, middleware.JWT([]byte(JWTSecret)))
+	e.GET("/api/v1/curent-user/threads", handler.GetThreadByToken, middleware.JWT([]byte(JWTSecret)))
 	e.GET("/api/v1/curent-user/profile", handler.GetUserByToken, middleware.JWT([]byte(JWTSecret)))
 	e.PUT("/api/v1/curent-user/profile", handler.Update, middleware.JWT([]byte(JWTSecret)))
 	e.PUT("/api/v1/curent-user/profile-images", handler.SetProfileImage, middleware.JWT([]byte(JWTSecret)))
@@ -47,6 +48,10 @@ func NewUserHandler(e *echo.Echo, us user.UserUsecase, JWTSecret string) {
 
 	e.GET("/api/v1/users/:userID/followers", handler.GetUserFollowers, middleware.JWT([]byte(JWTSecret)))
 	e.GET("/api/v1/users/:userID/following", handler.GetUserFollowing, middleware.JWT([]byte(JWTSecret)))
+	e.GET("/api/v1/users/:userID/threads", handler.GetThreadByUserID)
+
+	e.POST("api/v1/curent-user/email-verification", handler.SendOTP)
+	e.GET("api/v1/curent-user/email-verification", handler.VerifyOTP)
 }
 
 func (u *UserHandler) Login(c echo.Context) error {
@@ -300,10 +305,47 @@ func (u *UserHandler) ReportUser(c echo.Context) error {
 	return response.SuccessResponse(c, nil)
 }
 
+func (u *UserHandler) GetThreadByUserID(c echo.Context) error {
+	userID, err := strconv.Atoi(c.Param("userID"))
+	if err != nil {
+		return response.ErrorResponse(c, utils.ErrBadParamInput)
+	}
+
+	// userID, _ := _middL.ExtractTokenUser(c)
+	threadResp, err := u.UserUsecase.GetThreadByToken(uint(userID))
+	if err != nil {
+		return response.ErrorResponse(c, err)
+	}
+
+	return response.SuccessResponse(c, threadResp)
+}
+
+func (u *UserHandler) GetThreadByToken(c echo.Context) error {
+	userID, _ := _middL.ExtractTokenUser(c)
+	threadResp, err := u.UserUsecase.GetThreadByToken(uint(userID))
+	if err != nil {
+		return response.ErrorResponse(c, err)
+	}
+
+	return response.SuccessResponse(c, threadResp)
+}
+
+func (u *UserHandler) SendOTP(c echo.Context) error {
+	email := dto.SendOTPRequest{}
+
+	c.Bind(&email)
+
+	err := u.UserUsecase.SendOTP(email)
+	if err != nil {
+		return response.ErrorResponse(c, err)
+	}
+
+	return response.SuccessResponse(c, nil)
+}
+
 func (u *UserHandler) GetReports(c echo.Context) error {
 	_, role := _middL.ExtractTokenUser(c)
 	reports, err := u.UserUsecase.GetReports(role)
-
 	if err != nil {
 		return response.ErrorResponse(c, err)
 	}
@@ -311,10 +353,21 @@ func (u *UserHandler) GetReports(c echo.Context) error {
 	return response.SuccessResponse(c, reports)
 }
 
+func (u *UserHandler) VerifyOTP(c echo.Context) error {
+	email := c.QueryParam("email")
+	otp := c.QueryParam("otp")
+
+	err := u.UserUsecase.VerifyOTP(email, otp)
+	if err != nil {
+		return response.ErrorResponse(c, err)
+	}
+
+	return response.SuccessResponse(c, nil)
+}
+
 func (u *UserHandler) GetDashboardAnalytics(c echo.Context) error {
 	_, role := _middL.ExtractTokenUser(c)
 	analytics, err := u.UserUsecase.GetDashboardAnalytics(role)
-
 	if err != nil {
 		return response.ErrorResponse(c, err)
 	}

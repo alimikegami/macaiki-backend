@@ -20,6 +20,9 @@ type Config struct {
 	AWSAccessKeyId string `mapstructure:"AWS_ACCESS_KEY_ID"`
 	AWSSecretKey   string `mapstructure:"AWS_SECRET_ACCESS_KEY"`
 	BucketName     string `mapstructure:"BUCKET_NAME"`
+
+	GomailEmail    string `mapstructure:"GOMAIL_EMAIL"`
+	GomailPassword string `mapstructure:"GOMAIL_PASSWORD"`
 }
 
 type JWTSecret struct {
