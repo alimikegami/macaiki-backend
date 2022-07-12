@@ -2,10 +2,12 @@ package mysql
 
 import (
 	"errors"
+	"fmt"
 	"macaiki/internal/community"
 	communityEntity "macaiki/internal/community/entity"
 	threadEntity "macaiki/internal/thread/entity"
 	userEntity "macaiki/internal/user/entity"
+	"macaiki/pkg/utils"
 
 	"gorm.io/gorm"
 )
@@ -179,4 +181,53 @@ func (cr *CommunityRepositoryImpl) StoreReportCommunity(communityReport communit
 	}
 
 	return nil
+}
+
+func (cr *CommunityRepositoryImpl) UpdateReportCommunity(communityReport communityEntity.CommunityReport, userID uint) error {
+	res := cr.db.Model(&communityReport).Update("user_id", userID)
+	err := res.Error
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (cr *CommunityRepositoryImpl) GetReportCommunity(id uint) (communityEntity.CommunityReport, error) {
+	comReport := communityEntity.CommunityReport{}
+	res := cr.db.Find(&comReport, id)
+	err := res.Error
+	if err != nil {
+		return communityEntity.CommunityReport{}, err
+	}
+
+	return comReport, nil
+}
+
+func (cr *CommunityRepositoryImpl) GetReports(communityID uint) ([]communityEntity.BriefReport, error) {
+	var reports []communityEntity.BriefReport
+
+	res := cr.db.Raw("SELECT tr.id AS 'thread_reports_id', NULL AS 'community_reports_id', NULL AS 'comment_reports_id', tr.created_at, tr.user_id, tr.thread_id, NULL AS community_reported_id, NULL as comment_id, rc.name AS report_category, u.username, u.profile_image_url, 'threads' AS type FROM thread_reports tr INNER JOIN report_categories rc ON tr.report_category_id = rc.id INNER JOIN users u ON u.id = tr.user_id INNER JOIN threads t ON tr.thread_id = t.id WHERE tr.deleted_at IS NULL AND tr.user_id NOT IN (SELECT cm.user_id FROM community_moderators cm) AND t.community_id = ? UNION SELECT NULL AS 'thread_reports_id', cr2.id AS 'community_reports_id', NULL AS 'comment_reports_id', cr2.created_at, cr2.user_id, NULL AS thread_id, cr2.community_reported_id, NULL AS comment_id, rc.name AS report_category, u.username, u.profile_image_url, 'users' AS type FROM community_reports cr2 INNER JOIN report_categories rc ON cr2.report_category_id = rc.id INNER JOIN users u ON u.id = cr2.user_id  WHERE cr2.deleted_at IS NULL AND cr2.user_id NOT IN (SELECT cm.user_id FROM community_moderators cm) AND cr2.community_reported_id = ? UNION SELECT NULL AS 'thread_reports_id', NULL AS 'community_reports_id', cr.id AS 'comment_reports_id', cr.created_at, cr.user_id, NULL AS thread_id, NULL AS community_reported_id, cr.comment_id, rc.name AS report_category, u.username, u.profile_image_url, 'comments' AS type FROM comment_reports cr INNER JOIN report_categories rc ON cr.report_category_id = rc.id INNER JOIN users u ON u.id = cr.user_id INNER JOIN comments c ON c.id = cr.comment_id INNER JOIN threads t ON c.thread_id = t.id WHERE cr.deleted_at IS NULL AND cr.user_id NOT IN (SELECT cm.user_id FROM community_moderators cm) AND t.community_id = ?;", communityID, communityID, communityID).Scan(&reports)
+
+	if res.Error != nil {
+		return []communityEntity.BriefReport{}, utils.ErrInternalServerError
+	}
+
+	return reports, nil
+}
+
+func (cr *CommunityRepositoryImpl) GetModeratorByUserID(userID uint) (communityEntity.CommunityModerator, error) {
+	var communityMods communityEntity.CommunityModerator
+
+	res := cr.db.First(&communityMods, userID)
+
+	if res.Error != nil {
+		fmt.Println(res.Error)
+		if res.Error.Error() == "record not found" {
+			return communityEntity.CommunityModerator{}, utils.ErrNotFound
+		}
+		return communityEntity.CommunityModerator{}, utils.ErrInternalServerError
+	}
+
+	return communityMods, nil
 }

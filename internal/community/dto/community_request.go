@@ -15,3 +15,9 @@ type CommunityReportRequest struct {
 	ReportCategoryID uint `json:"reportCategoryID" validate:"required"`
 	CommunityID      uint `validate:"required"`
 }
+
+type ReportRequest struct {
+	ThreadReportID    uint `json:"threadReportsID"`
+	CommunityReportID uint `json:"communityReportsID"`
+	CommentReportID   uint `json:"commentReportsID"`
+}

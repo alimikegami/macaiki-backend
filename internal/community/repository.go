@@ -1,6 +1,7 @@
 package community
 
 import (
+	"macaiki/internal/community/entity"
 	communityEntity "macaiki/internal/community/entity"
 	threadEntity "macaiki/internal/thread/entity"
 	userEntity "macaiki/internal/user/entity"
@@ -23,6 +24,10 @@ type CommunityRepository interface {
 	AddModerator(user userEntity.User, community communityEntity.Community) error
 	RemoveModerator(user userEntity.User, community communityEntity.Community) error
 	GetModeratorByCommunityID(userID, communityID uint) ([]userEntity.User, error)
+	GetModeratorByUserID(userID uint) (entity.CommunityModerator, error)
 
 	StoreReportCommunity(communityReport communityEntity.CommunityReport) error
+	UpdateReportCommunity(communityReport communityEntity.CommunityReport, userID uint) error
+	GetReportCommunity(id uint) (communityEntity.CommunityReport, error)
+	GetReports(communityID uint) ([]entity.BriefReport, error)
 }

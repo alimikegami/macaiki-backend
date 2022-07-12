@@ -8,6 +8,7 @@ import (
 	"macaiki/pkg/utils"
 	"mime/multipart"
 
+	"macaiki/internal/community/dto"
 	dtoCommunity "macaiki/internal/community/dto"
 	"macaiki/internal/community/entity"
 	dtoThread "macaiki/internal/thread/dto"
@@ -438,4 +439,73 @@ func (cu *CommunityUsecaseImpl) ReportCommunity(userID, communityID, reportCateg
 	}
 
 	return nil
+}
+
+func (cu *CommunityUsecaseImpl) ReportByModerator(userID, communityID uint, reportReq dtoCommunity.ReportRequest) error {
+	mods, err := cu.communityRepo.GetModeratorByUserID(userID)
+
+	if err != nil {
+		return err
+	}
+
+	if mods.CommunityID != communityID {
+		return utils.ErrUnauthorizedAccess
+	}
+
+	if reportReq.CommentReportID != 0 {
+		return nil
+	} else if reportReq.CommunityReportID != 0 {
+		communityReport, err := cu.communityRepo.GetReportCommunity(reportReq.CommunityReportID)
+		if err != nil {
+			return utils.ErrInternalServerError
+		}
+
+		err = cu.communityRepo.UpdateReportCommunity(communityReport, userID)
+		if err != nil {
+			return utils.ErrInternalServerError
+		}
+	} else {
+
+	}
+
+	return nil
+}
+
+func (cu *CommunityUsecaseImpl) GetReports(userID, communityID uint) ([]dto.BriefReportResponse, error) {
+	mods, err := cu.communityRepo.GetModeratorByUserID(userID)
+
+	if err != nil {
+		return []dto.BriefReportResponse{}, err
+	}
+
+	if mods.CommunityID != communityID {
+		return []dto.BriefReportResponse{}, utils.ErrUnauthorizedAccess
+	}
+
+	reports, err := cu.communityRepo.GetReports(communityID)
+
+	if err != nil {
+		return []dto.BriefReportResponse{}, utils.ErrInternalServerError
+	}
+
+	var reportsResp []dto.BriefReportResponse
+
+	for _, report := range reports {
+		reportsResp = append(reportsResp, dto.BriefReportResponse{
+			ThreadReportsID:     report.ThreadReportsID,
+			CommunityReportsID:  report.CommunityReportsID,
+			CommentReportsID:    report.CommentReportsID,
+			CreatedAt:           report.CreatedAt,
+			ThreadID:            report.ThreadID,
+			CommunityReportedID: report.CommunityReportedID,
+			UserID:              report.UserID,
+			CommentID:           report.CommentID,
+			ReportCategory:      report.ReportCategory,
+			Username:            report.Username,
+			ProfileImageURL:     report.ProfileImageURL,
+			Type:                report.Type,
+		})
+	}
+
+	return reportsResp, nil
 }

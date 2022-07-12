@@ -17,6 +17,7 @@ type User struct {
 	Bio                string
 	Profession         string
 	Role               string
+	EmailVerifiedAt    time.Time
 	IsBanned           int
 	Followers          []User       `gorm:"many2many:user_followers"`
 	Report             []UserReport `gorm:"foreignKey:UserID"`
@@ -32,6 +33,12 @@ type UserReport struct {
 	ReportCategoryID uint
 }
 
+type VerificationEmail struct {
+	ID        uint `gorm:"primaryKey"`
+	Email     string
+	OTPCode   string
+	ExpiredAt time.Time
+}
 type BriefReport struct {
 	ThreadReportsID     uint
 	UserReportsID       uint
