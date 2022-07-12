@@ -441,6 +441,36 @@ func (cu *CommunityUsecaseImpl) ReportCommunity(userID, communityID, reportCateg
 	return nil
 }
 
+func (cu *CommunityUsecaseImpl) ReportByModerator(userID, communityID uint, reportReq dtoCommunity.ReportRequest) error {
+	mods, err := cu.communityRepo.GetModeratorByUserID(userID)
+
+	if err != nil {
+		return err
+	}
+
+	if mods.CommunityID != communityID {
+		return utils.ErrUnauthorizedAccess
+	}
+
+	if reportReq.CommentReportID != 0 {
+		return nil
+	} else if reportReq.CommunityReportID != 0 {
+		communityReport, err := cu.communityRepo.GetReportCommunity(reportReq.CommunityReportID)
+		if err != nil {
+			return utils.ErrInternalServerError
+		}
+
+		err = cu.communityRepo.UpdateReportCommunity(communityReport, userID)
+		if err != nil {
+			return utils.ErrInternalServerError
+		}
+	} else {
+
+	}
+
+	return nil
+}
+
 func (cu *CommunityUsecaseImpl) GetReports(userID, communityID uint) ([]dto.BriefReportResponse, error) {
 	mods, err := cu.communityRepo.GetModeratorByUserID(userID)
 

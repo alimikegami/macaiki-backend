@@ -27,5 +27,7 @@ type CommunityRepository interface {
 	GetModeratorByUserID(userID uint) (entity.CommunityModerator, error)
 
 	StoreReportCommunity(communityReport communityEntity.CommunityReport) error
+	UpdateReportCommunity(communityReport communityEntity.CommunityReport, userID uint) error
+	GetReportCommunity(id uint) (communityEntity.CommunityReport, error)
 	GetReports(communityID uint) ([]entity.BriefReport, error)
 }

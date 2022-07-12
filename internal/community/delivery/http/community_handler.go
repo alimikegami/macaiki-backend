@@ -44,6 +44,9 @@ func NewCommunityHandler(e *echo.Echo, communityUsecase community.CommunityUseca
 
 	e.POST("api/v1/communities/:communityID/report", communityHandler.ReportCommunity, middleware.JWT([]byte(JWTSecret)))
 	e.GET("/api/v1/communities/:communityID/reports", communityHandler.GetReports, middleware.JWT([]byte(JWTSecret)))
+
+	// ROUTE DIBAWAH INI SIFATNYA TIDAK KEKAL ALIAS SEMENTARA SEPERTI KITA HIDUP DI DUNIA INI,, CATAT !!!!!!!!!!!!!!!!
+	e.POST("/api/v1/community-moderators/communities/:communityID/reports", communityHandler.ReportByModerator, middleware.JWT([]byte(JWTSecret)))
 }
 
 func (communityHandler *CommunityHandler) CreateCommunity(c echo.Context) error {
@@ -280,4 +283,22 @@ func (CommunityHandler *CommunityHandler) GetReports(c echo.Context) error {
 	}
 
 	return response.SuccessResponse(c, reports)
+}
+
+func (CommunityHandler *CommunityHandler) ReportByModerator(c echo.Context) error {
+	communityID, err := strconv.Atoi(c.Param("communityID"))
+	if err != nil {
+		return response.ErrorResponse(c, utils.ErrBadParamInput)
+	}
+	userID, _ := _middL.ExtractTokenUser(c)
+
+	dtoReport := dto.ReportRequest{}
+	c.Bind(&dtoReport)
+
+	err = CommunityHandler.communityUsecase.ReportByModerator(uint(userID), uint(communityID), dtoReport)
+	if err != nil {
+		return response.ErrorResponse(c, err)
+	}
+
+	return response.SuccessResponse(c, nil)
 }
