@@ -30,6 +30,11 @@ type UserUsecase interface {
 	SendOTP(email dto.SendOTPRequest) error
 	VerifyOTP(email, OTPCode string) error
 
+	BanUser(userRole string, userReportID uint) error
+	BanThread(userRole string, threadReportID uint) error
+	BanComment(userRole string, commentReportID uint) error
+	BanCommunity(userRole string, communityReportID uint) error
+
 	GetReports(curentUserRole string) ([]dto.BriefReportResponse, error)
 	GetDashboardAnalytics(userRole string) (dto.AdminDashboardAnalytics, error)
 	GetReportedThread(userRole string, threadReportID uint) (dto.ReportedThreadResponse, error)

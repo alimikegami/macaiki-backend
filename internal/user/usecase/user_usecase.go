@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	comRepo "macaiki/internal/community"
 	"macaiki/internal/notification"
 	notificationEntity "macaiki/internal/notification/entity"
 	reportcategory "macaiki/internal/report_category"
@@ -29,6 +30,7 @@ import (
 type userUsecase struct {
 	userRepo           user.UserRepository
 	reportCategoryRepo reportcategory.ReportCategoryRepository
+	communityRepo      comRepo.CommunityRepository
 	notificationRepo   notification.NotificationRepository
 	threadRepo         thread.ThreadRepository
 	validator          *validator.Validate
@@ -36,10 +38,11 @@ type userUsecase struct {
 	goMail             *goMail.Gomail
 }
 
-func NewUserUsecase(userRepo user.UserRepository, reportCategoryRepo reportcategory.ReportCategoryRepository, notificationRepo notification.NotificationRepository, threadRepo thread.ThreadRepository, validator *validator.Validate, awsS3Instace *cloudstorage.S3, goMail *goMail.Gomail) user.UserUsecase {
+func NewUserUsecase(userRepo user.UserRepository, reportCategoryRepo reportcategory.ReportCategoryRepository, communityRepo comRepo.CommunityRepository, notificationRepo notification.NotificationRepository, threadRepo thread.ThreadRepository, validator *validator.Validate, awsS3Instace *cloudstorage.S3, goMail *goMail.Gomail) user.UserUsecase {
 	return &userUsecase{
 		userRepo:           userRepo,
 		reportCategoryRepo: reportCategoryRepo,
+		communityRepo:      communityRepo,
 		notificationRepo:   notificationRepo,
 		threadRepo:         threadRepo,
 		validator:          validator,
@@ -533,6 +536,7 @@ func (uu *userUsecase) VerifyOTP(email, OTPCode string) error {
 
 	return nil
 }
+
 func (uu *userUsecase) GetReports(curentUserRole string) ([]dto.BriefReportResponse, error) {
 	if curentUserRole != "Admin" {
 		return []dto.BriefReportResponse{}, utils.ErrUnauthorizedAccess
@@ -599,6 +603,7 @@ func (uu *userUsecase) GetReportedThread(userRole string, threadReportID uint) (
 	}
 
 	reportedThreadResponse = dto.ReportedThreadResponse{
+		ID:                      reportedThread.ID,
 		ThreadTitle:             reportedThread.ThreadTitle,
 		ThreadBody:              reportedThread.ThreadBody,
 		ThreadImageURL:          reportedThread.ThreadImageURL,
@@ -630,6 +635,7 @@ func (uu *userUsecase) GetReportedCommunity(userRole string, communityReportID u
 	}
 
 	reportedCommunityResponse = dto.ReportedCommunityResponse{
+		ID:                          reportedCommunity.ID,
 		CommunityName:               reportedCommunity.CommunityName,
 		CommunityImageURL:           reportedCommunity.CommunityImageURL,
 		CommunityBackgroundImageURL: reportedCommunity.CommunityBackgroundImageURL,
@@ -656,6 +662,7 @@ func (uu *userUsecase) GetReportedComment(userRole string, commentReportID uint)
 	}
 
 	reportedCommentResponse = dto.ReportedCommentResponse{
+		ID:                      reportedComment.ID,
 		CommentBody:             reportedComment.CommentBody,
 		LikesCount:              reportedComment.LikesCount,
 		CommentCreatedAt:        reportedComment.CommentCreatedAt,
@@ -684,6 +691,7 @@ func (uu *userUsecase) GetReportedUser(userRole string, userReportID uint) (dto.
 	}
 
 	reportedUserResponse = dto.ReportedUserResponse{
+		ID:                          reportedUser.ID,
 		ReportedUserUsername:        reportedUser.ReportedUserUsername,
 		ReportedUserName:            reportedUser.ReportedUserName,
 		ReportedUserProfession:      reportedUser.ReportedUserProfession,
@@ -697,6 +705,110 @@ func (uu *userUsecase) GetReportedUser(userRole string, userReportID uint) (dto.
 	}
 
 	return reportedUserResponse, nil
+}
+
+func (uu *userUsecase) BanUser(userRole string, userReportID uint) error {
+	if userRole != "Admin" {
+		return utils.ErrUnauthorizedAccess
+	}
+
+	report, err := uu.userRepo.GetUserReport(userReportID)
+
+	if err != nil {
+		return err
+	}
+
+	err = uu.userRepo.DeleteUserReport(userReportID)
+
+	if err != nil {
+		return err
+	}
+
+	err = uu.userRepo.Delete(report.ReportedUserID)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (uu *userUsecase) BanThread(userRole string, threadReportID uint) error {
+	if userRole != "Admin" {
+		return utils.ErrUnauthorizedAccess
+	}
+
+	report, err := uu.threadRepo.GetThreadReport(threadReportID)
+
+	if err != nil {
+		return err
+	}
+
+	err = uu.userRepo.DeleteThreadReport(threadReportID)
+
+	if err != nil {
+		return err
+	}
+
+	err = uu.threadRepo.DeleteThread(report.ThreadID)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (uu *userUsecase) BanComment(userRole string, commentReportID uint) error {
+	if userRole != "Admin" {
+		return utils.ErrUnauthorizedAccess
+	}
+
+	report, err := uu.threadRepo.GetCommentReport(commentReportID)
+
+	if err != nil {
+		return err
+	}
+
+	err = uu.userRepo.DeleteCommentReport(commentReportID)
+
+	if err != nil {
+		return err
+	}
+
+	err = uu.threadRepo.DeleteComment(report.CommentID)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (uu *userUsecase) BanCommunity(userRole string, communityReportID uint) error {
+	if userRole != "Admin" {
+		return utils.ErrUnauthorizedAccess
+	}
+
+	report, err := uu.communityRepo.GetReportCommunity(communityReportID)
+
+	if err != nil {
+		return err
+	}
+
+	err = uu.userRepo.DeleteCommunityReport(communityReportID)
+
+	if err != nil {
+		return err
+	}
+
+	err = uu.communityRepo.DeleteCommunity(report.CommunityReportedID)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func hashAndSalt(pwd []byte) string {

@@ -2,6 +2,9 @@ package mysql
 
 import (
 	"errors"
+	"fmt"
+	communityEntity "macaiki/internal/community/entity"
+	threadEntity "macaiki/internal/thread/entity"
 	"macaiki/internal/user"
 	"macaiki/internal/user/entity"
 	"macaiki/pkg/utils"
@@ -249,7 +252,8 @@ func (ur *MysqlUserRepository) GetDashboardAnalytics() (entity.AdminDashboardAna
 func (ur *MysqlUserRepository) GetReportedThread(threadReportID uint) (entity.ReportedThread, error) {
 	var reportedThread entity.ReportedThread
 
-	res := ur.Db.Raw("SELECT t.title AS thread_title, t.body AS thread_body, t.image_url AS thread_image_url, t.created_at AS thread_created_at, t2.likes_count, u.username AS reported_username, u.profile_image_url AS reported_profile_image_url, u.profession AS reported_user_profession, rc.name AS report_category, tr.created_at AS report_created_at, u2.username, u2.profile_image_url FROM thread_reports tr INNER JOIN threads t ON t.id = tr.thread_id LEFT JOIN (SELECT thread_id, COUNT(*) AS likes_count FROM thread_upvotes tu GROUP BY thread_id) AS t2 ON t.id = t2.thread_id INNER JOIN users u ON u.id = t.user_id INNER JOIN users u2 ON u2.id = tr.user_id INNER JOIN report_categories rc ON rc.id = tr.report_category_id WHERE tr.id = ?;", threadReportID).Scan(&reportedThread)
+	res := ur.Db.Raw("SELECT tr.id, t.title AS thread_title, t.body AS thread_body, t.image_url AS thread_image_url, t.created_at AS thread_created_at, t2.likes_count, u.username AS reported_username, u.profile_image_url AS reported_profile_image_url, u.profession AS reported_user_profession, rc.name AS report_category, tr.created_at AS report_created_at, u2.username, u2.profile_image_url FROM thread_reports tr INNER JOIN threads t ON t.id = tr.thread_id LEFT JOIN (SELECT thread_id, COUNT(*) AS likes_count FROM thread_upvotes tu GROUP BY thread_id) AS t2 ON t.id = t2.thread_id INNER JOIN users u ON u.id = t.user_id INNER JOIN users u2 ON u2.id = tr.user_id INNER JOIN report_categories rc ON rc.id = tr.report_category_id WHERE tr.id = ?;", threadReportID).Scan(&reportedThread)
+
 
 	if res.Error != nil {
 		return entity.ReportedThread{}, utils.ErrInternalServerError
@@ -265,7 +269,7 @@ func (ur *MysqlUserRepository) GetReportedThread(threadReportID uint) (entity.Re
 func (ur *MysqlUserRepository) GetReportedCommunity(communityReportID uint) (entity.ReportedCommunity, error) {
 	var reportedCommunity entity.ReportedCommunity
 
-	res := ur.Db.Raw("SELECT cr.created_at AS report_created_at, c.name AS community_name, c.community_image_url, c.community_background_image_url, rc.name AS report_category, u.username, u.profile_image_url  FROM community_reports cr INNER JOIN communities c ON c.id = cr.community_reported_id INNER JOIN users u ON u.id = cr.user_id INNER JOIN report_categories rc ON rc.id = cr.report_category_id WHERE cr.id = ?;", communityReportID).Scan(&reportedCommunity)
+	res := ur.Db.Raw("SELECT cr.id, cr.created_at AS report_created_at, c.name AS community_name, c.community_image_url, c.community_background_image_url, rc.name AS report_category, u.username, u.profile_image_url  FROM community_reports cr INNER JOIN communities c ON c.id = cr.community_reported_id INNER JOIN users u ON u.id = cr.user_id INNER JOIN report_categories rc ON rc.id = cr.report_category_id WHERE cr.id = ?;", communityReportID).Scan(&reportedCommunity)
 
 	if res.Error != nil {
 		return entity.ReportedCommunity{}, utils.ErrInternalServerError
@@ -281,7 +285,7 @@ func (ur *MysqlUserRepository) GetReportedCommunity(communityReportID uint) (ent
 func (ur *MysqlUserRepository) GetReportedComment(commentReportID uint) (entity.ReportedComment, error) {
 	var reportedComment entity.ReportedComment
 
-	res := ur.Db.Raw("SELECT c.body AS comment_body, t2.likes_count, c.created_at AS comment_created_at, u.username, u.profile_image_url, u2.username AS reported_username, u2.profile_image_url AS reported_profile_image_url, rc.name AS report_category FROM comment_reports cr INNER JOIN comments c ON c.id = cr.comment_id INNER JOIN users u ON u.id = cr.user_id INNER JOIN users u2 ON c.user_id = u2.id INNER JOIN report_categories rc ON rc.id = cr.report_category_id LEFT JOIN (SELECT comment_id, COUNT(*) AS likes_count FROM comment_likes cl GROUP BY comment_id) AS t2 ON c.id = t2.comment_id WHERE cr.id = ?;", commentReportID).Scan(&reportedComment)
+	res := ur.Db.Raw("SELECT cr.id, c.body AS comment_body, t2.likes_count, c.created_at AS comment_created_at, u.username, u.profile_image_url, u2.username AS reported_username, u2.profile_image_url AS reported_profile_image_url, rc.name AS report_category FROM comment_reports cr INNER JOIN comments c ON c.id = cr.comment_id INNER JOIN users u ON u.id = cr.user_id INNER JOIN users u2 ON c.user_id = u2.id INNER JOIN report_categories rc ON rc.id = cr.report_category_id LEFT JOIN (SELECT comment_id, COUNT(*) AS likes_count FROM comment_likes cl GROUP BY comment_id) AS t2 ON c.id = t2.comment_id WHERE cr.id = ?;", commentReportID).Scan(&reportedComment)
 
 	if res.Error != nil {
 		return entity.ReportedComment{}, utils.ErrInternalServerError
@@ -297,7 +301,7 @@ func (ur *MysqlUserRepository) GetReportedComment(commentReportID uint) (entity.
 func (ur *MysqlUserRepository) GetReportedUser(userReportID uint) (entity.ReportedUser, error) {
 	var reportedUser entity.ReportedUser
 
-	res := ur.Db.Raw("SELECT u.username AS reported_user_username, u.name AS reported_user_name, u.profession AS reported_user_profession, u.bio AS reported_user_bio, u.profile_image_url AS reported_user_profile_image_url, u.background_image_url AS reported_user_background_url, u2.username AS reporting_user_username, u2.name AS reporting_user_name, reported_user_follower.followers_count, reported_user_following.following_count FROM user_reports ur INNER JOIN users u ON ur.reported_user_id = u.id INNER JOIN users u2 ON u2.id = ur.user_id LEFT JOIN (SELECT uf.follower_id, COUNT(*) AS following_count FROM user_followers uf GROUP BY uf.follower_id) reported_user_following ON reported_user_following.follower_id = ur.user_id LEFT JOIN (SELECT user_id, COUNT(*) AS followers_count FROM user_followers uf GROUP BY uf.user_id) reported_user_follower ON reported_user_follower.user_id = u.id WHERE ur.id = ?;", userReportID).Scan(&reportedUser)
+	res := ur.Db.Raw("SELECT ur.id, u.username AS reported_user_username, u.name AS reported_user_name, u.profession AS reported_user_profession, u.bio AS reported_user_bio, u.profile_image_url AS reported_user_profile_image_url, u.background_image_url AS reported_user_background_url, u2.username AS reporting_user_username, u2.name AS reporting_user_name, reported_user_follower.followers_count, reported_user_following.following_count FROM user_reports ur INNER JOIN users u ON ur.reported_user_id = u.id INNER JOIN users u2 ON u2.id = ur.user_id LEFT JOIN (SELECT uf.follower_id, COUNT(*) AS following_count FROM user_followers uf GROUP BY uf.follower_id) reported_user_following ON reported_user_following.follower_id = ur.user_id LEFT JOIN (SELECT user_id, COUNT(*) AS followers_count FROM user_followers uf GROUP BY uf.user_id) reported_user_follower ON reported_user_follower.user_id = u.id WHERE ur.id = ?;", userReportID).Scan(&reportedUser)
 
 	if res.Error != nil {
 		return entity.ReportedUser{}, utils.ErrInternalServerError
@@ -308,4 +312,76 @@ func (ur *MysqlUserRepository) GetReportedUser(userReportID uint) (entity.Report
 	}
 
 	return reportedUser, nil
+}
+
+func (ur *MysqlUserRepository) DeleteUserReport(userReportID uint) error {
+	res := ur.Db.Delete(&entity.UserReport{}, userReportID)
+
+	if res.Error != nil {
+		return utils.ErrInternalServerError
+	}
+
+	if res.RowsAffected < 1 {
+		return utils.ErrNotFound
+	}
+
+	return nil
+}
+
+func (ur *MysqlUserRepository) DeleteThreadReport(threadReportID uint) error {
+	res := ur.Db.Delete(&threadEntity.ThreadReport{}, threadReportID)
+
+	if res.Error != nil {
+		return utils.ErrInternalServerError
+	}
+
+	if res.RowsAffected < 1 {
+		return utils.ErrNotFound
+	}
+
+	return nil
+}
+
+func (ur *MysqlUserRepository) DeleteCommunityReport(communityReportID uint) error {
+	res := ur.Db.Delete(&communityEntity.CommunityReport{}, communityReportID)
+
+	if res.Error != nil {
+		return utils.ErrInternalServerError
+	}
+
+	if res.RowsAffected < 1 {
+		return utils.ErrNotFound
+	}
+
+	return nil
+}
+
+func (ur *MysqlUserRepository) DeleteCommentReport(commentReportID uint) error {
+	res := ur.Db.Delete(&threadEntity.CommentReport{}, commentReportID)
+
+	if res.Error != nil {
+		return utils.ErrInternalServerError
+	}
+
+	if res.RowsAffected < 1 {
+		return utils.ErrNotFound
+	}
+
+	return nil
+}
+
+func (ur *MysqlUserRepository) GetUserReport(reportID uint) (entity.UserReport, error) {
+	var userReport entity.UserReport
+
+	res := ur.Db.First(&userReport, reportID)
+
+	if res.Error != nil {
+		fmt.Println(res.Error)
+		if res.Error.Error() == "record not found" {
+			return entity.UserReport{}, utils.ErrNotFound
+		}
+		return entity.UserReport{}, utils.ErrInternalServerError
+	}
+
+	return userReport, nil
 }

@@ -59,6 +59,7 @@ type AdminDashboardAnalytics struct {
 }
 
 type ReportedThreadResponse struct {
+	ID                      uint      `json:"ID"`
 	ThreadTitle             string    `json:"threadTitle"`
 	ThreadBody              string    `json:"threadBody"`
 	ThreadImageURL          string    `json:"threadImageURL"`
@@ -74,6 +75,7 @@ type ReportedThreadResponse struct {
 }
 
 type ReportedCommentResponse struct {
+	ID                      uint      `json:"ID"`
 	CommentBody             string    `json:"commentBody"`
 	LikesCount              int       `json:"likesCount"`
 	CommentCreatedAt        time.Time `json:"commentCreatedAt"`
@@ -86,6 +88,7 @@ type ReportedCommentResponse struct {
 }
 
 type ReportedCommunityResponse struct {
+	ID                          uint      `json:"ID"`
 	CommunityName               string    `json:"communityName"`
 	CommunityImageURL           string    `json:"communityImageURL"`
 	CommunityBackgroundImageURL string    `json:"communityBackgroundImageURL"`
@@ -96,6 +99,7 @@ type ReportedCommunityResponse struct {
 }
 
 type ReportedUserResponse struct {
+	ID                          uint   `json:"ID"`
 	ReportedUserUsername        string `json:"reportedUserUsername"`
 	ReportedUserName            string `json:"reportedUserName"`
 	ReportedUserProfession      string `json:"reportedUserProfession"`

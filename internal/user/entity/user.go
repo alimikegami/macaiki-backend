@@ -62,6 +62,7 @@ type AdminDashboardAnalytics struct {
 }
 
 type ReportedThread struct {
+	ID                      uint
 	ThreadTitle             string
 	ThreadBody              string
 	ThreadImageURL          string
@@ -77,6 +78,7 @@ type ReportedThread struct {
 }
 
 type ReportedComment struct {
+	ID                      uint
 	CommentBody             string
 	LikesCount              int
 	CommentCreatedAt        time.Time
@@ -89,6 +91,7 @@ type ReportedComment struct {
 }
 
 type ReportedCommunity struct {
+	ID                          uint
 	CommunityName               string
 	CommunityImageURL           string
 	CommunityBackgroundImageURL string
@@ -99,6 +102,7 @@ type ReportedCommunity struct {
 }
 
 type ReportedUser struct {
+	ID                          uint
 	ReportedUserUsername        string
 	ReportedUserName            string
 	ReportedUserProfession      string
