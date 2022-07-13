@@ -28,7 +28,7 @@ func NewCommunityHandler(e *echo.Echo, communityUsecase community.CommunityUseca
 	e.GET("api/v1/communities", communityHandler.GetAllCommunityWithDetail, middleware.JWT([]byte(JWTSecret)))
 	e.GET("api/v1/communities/:communityID", communityHandler.GetCommunity, middleware.JWT([]byte(JWTSecret)))
 	e.GET("api/v1/communities/:communityID/about", communityHandler.GetCommunityAbout, middleware.JWT([]byte(JWTSecret)))
-	e.GET("api/v1/communitites/:communityID/threads", communityHandler.GetThreadByCommunityID, middleware.JWT([]byte(JWTSecret)))
+	e.GET("api/v1/communities/:communityID/threads", communityHandler.GetThreadByCommunityID, middleware.JWT([]byte(JWTSecret)))
 
 	e.PUT("api/v1/communities/:communityID", communityHandler.UpdateCommunity, middleware.JWT([]byte(JWTSecret)))
 	e.DELETE("api/v1/communities/:communityID", communityHandler.DeleteCommunity, middleware.JWT([]byte(JWTSecret)))

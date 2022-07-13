@@ -24,6 +24,16 @@ type UserRepository interface {
 	StoreOTP(VerifyEmail entity.VerificationEmail) error
 	GetOTP(email string) (entity.VerificationEmail, error)
 	GetReports() ([]entity.BriefReport, error)
+	GetUserReport(reportID uint) (entity.UserReport, error)
 
 	GetDashboardAnalytics() (entity.AdminDashboardAnalytics, error)
+	GetReportedThread(threadReportID uint) (entity.ReportedThread, error)
+	GetReportedCommunity(communityReportID uint) (entity.ReportedCommunity, error)
+	GetReportedComment(commentReportID uint) (entity.ReportedComment, error)
+	GetReportedUser(userReportID uint) (entity.ReportedUser, error)
+
+	DeleteUserReport(userReportID uint) error
+	DeleteThreadReport(threadReportID uint) error
+	DeleteCommunityReport(communityReportID uint) error
+	DeleteCommentReport(commentReportID uint) error
 }
