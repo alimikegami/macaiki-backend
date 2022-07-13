@@ -28,7 +28,7 @@ func NewCommunityHandler(e *echo.Echo, communityUsecase community.CommunityUseca
 	e.GET("api/v1/communities", communityHandler.GetAllCommunityWithDetail, middleware.JWT([]byte(JWTSecret)))
 	e.GET("api/v1/communities/:communityID", communityHandler.GetCommunity, middleware.JWT([]byte(JWTSecret)))
 	e.GET("api/v1/communities/:communityID/about", communityHandler.GetCommunityAbout, middleware.JWT([]byte(JWTSecret)))
-	e.GET("api/v1/communitites/:communityID/threads", communityHandler.GetThreadByCommunityID, middleware.JWT([]byte(JWTSecret)))
+	e.GET("api/v1/communities/:communityID/threads", communityHandler.GetThreadByCommunityID, middleware.JWT([]byte(JWTSecret)))
 
 	e.PUT("api/v1/communities/:communityID", communityHandler.UpdateCommunity, middleware.JWT([]byte(JWTSecret)))
 	e.DELETE("api/v1/communities/:communityID", communityHandler.DeleteCommunity, middleware.JWT([]byte(JWTSecret)))
@@ -42,7 +42,8 @@ func NewCommunityHandler(e *echo.Echo, communityUsecase community.CommunityUseca
 	e.POST("api/v1/community-moderators", communityHandler.AddModerator, middleware.JWT([]byte(JWTSecret)))
 	e.DELETE("api/v1/community-moderators", communityHandler.RemoveModerator, middleware.JWT([]byte(JWTSecret)))
 
-	e.POST("api/v1/communities/:communityID/report", communityHandler.ReportCommunity, middleware.JWT([]byte(JWTSecret)))
+	e.POST("api/v1/communities/:communityID/reports", communityHandler.ReportCommunity, middleware.JWT([]byte(JWTSecret)))
+	e.DELETE("api/v1/communities/reports/:reportCommunityID", communityHandler.DeleteReportCommunity, middleware.JWT([]byte(JWTSecret)))
 	e.GET("/api/v1/communities/:communityID/reports", communityHandler.GetReports, middleware.JWT([]byte(JWTSecret)))
 
 	// ROUTE DIBAWAH INI SIFATNYA TIDAK KEKAL ALIAS SEMENTARA SEPERTI KITA HIDUP DI DUNIA INI,, CATAT !!!!!!!!!!!!!!!!
@@ -263,6 +264,20 @@ func (CommunityHandler *CommunityHandler) ReportCommunity(c echo.Context) error 
 
 	userID, _ := _middL.ExtractTokenUser(c)
 	err = CommunityHandler.communityUsecase.ReportCommunity(uint(userID), uint(communityID), uint(reportCategoryReq.ReportCategoryID))
+	if err != nil {
+		return response.ErrorResponse(c, err)
+	}
+
+	return response.SuccessResponse(c, nil)
+}
+
+func (CommunityHandler *CommunityHandler) DeleteReportCommunity(c echo.Context) error {
+	reportCommunityID, err := strconv.Atoi(c.Param("reportCommunityID"))
+	if err != nil {
+		return response.ErrorResponse(c, utils.ErrBadParamInput)
+	}
+
+	err = CommunityHandler.communityUsecase.DeleteReportCommunity(uint(reportCommunityID))
 	if err != nil {
 		return response.ErrorResponse(c, err)
 	}

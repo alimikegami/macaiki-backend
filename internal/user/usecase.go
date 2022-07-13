@@ -37,4 +37,8 @@ type UserUsecase interface {
 
 	GetReports(curentUserRole string) ([]dto.BriefReportResponse, error)
 	GetDashboardAnalytics(userRole string) (dto.AdminDashboardAnalytics, error)
+	GetReportedThread(userRole string, threadReportID uint) (dto.ReportedThreadResponse, error)
+	GetReportedCommunity(userRole string, communityReportID uint) (dto.ReportedCommunityResponse, error)
+	GetReportedComment(userRole string, commentReportID uint) (dto.ReportedCommentResponse, error)
+	GetReportedUser(userRole string, userReportID uint) (dto.ReportedUserResponse, error)
 }

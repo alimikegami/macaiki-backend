@@ -17,7 +17,7 @@ type User struct {
 	Bio                string
 	Profession         string
 	Role               string
-	EmailVerifiedAt    time.Time
+	EmailVerifiedAt    time.Time `gorm:"default:null"`
 	IsBanned           int
 	Followers          []User       `gorm:"many2many:user_followers"`
 	Report             []UserReport `gorm:"foreignKey:UserID"`

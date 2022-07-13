@@ -83,6 +83,7 @@ func main() {
 	e.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
 		Format: "method=${method}, uri=${uri}, status=${status}\n",
 	}))
+	e.Use(middleware.CORS())
 
 	log.Fatal(e.Start(":" + config.ServerPort))
 }

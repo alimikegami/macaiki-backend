@@ -1,7 +1,6 @@
 package usecase
 
 import (
-	"fmt"
 	community "macaiki/internal/community"
 	reportCategory "macaiki/internal/report_category"
 	"macaiki/internal/thread"
@@ -444,14 +443,16 @@ func (cu *CommunityUsecaseImpl) ReportCommunity(userID, communityID, reportCateg
 	return nil
 }
 
+func (cu *CommunityUsecaseImpl) DeleteReportCommunity(reportCommunityId uint) error {
+	return nil
+}
+
 func (cu *CommunityUsecaseImpl) ReportByModerator(userID, communityID uint, reportReq dtoCommunity.ReportRequest) error {
 	mods, err := cu.communityRepo.GetModeratorByUserID(userID, communityID)
 
 	if err != nil {
 		return err
 	}
-	fmt.Println(mods)
-	fmt.Println(mods.CommunityID)
 	if mods.CommunityID != communityID {
 		return utils.ErrUnauthorizedAccess
 	}
