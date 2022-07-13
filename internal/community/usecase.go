@@ -24,6 +24,7 @@ type CommunityUsecase interface {
 	RemoveModerator(moderatorReq dtoCommunity.CommunityModeratorRequest, role string) error
 
 	ReportCommunity(userID, communityID, reportCategoryID uint) error
+	DeleteReportCommunity(reportCommunityId uint) error
 	ReportByModerator(userID, communityID uint, reportReq dtoCommunity.ReportRequest) error
 	GetReports(userID, communityID uint) ([]dtoCommunity.BriefReportResponse, error)
 }

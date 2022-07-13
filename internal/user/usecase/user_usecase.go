@@ -299,6 +299,10 @@ func (uu *userUsecase) SetProfileImage(id uint, img *multipart.FileHeader) (stri
 		return "", utils.ErrInternalServerError
 	}
 
+	if user.ID == 0 {
+		return "", utils.ErrNotFound
+	}
+
 	if user.ProfileImageUrl != "" {
 		err = uu.awsS3.DeleteImage(user.ProfileImageUrl, "profile")
 		if err != nil {
@@ -326,6 +330,10 @@ func (uu *userUsecase) SetBackgroundImage(id uint, img *multipart.FileHeader) (s
 	user, err := uu.userRepo.Get(id)
 	if err != nil {
 		return "", utils.ErrInternalServerError
+	}
+
+	if user.ID == 0 {
+		return "", utils.ErrNotFound
 	}
 
 	if user.BackgroundImageUrl != "" {
@@ -494,7 +502,7 @@ func (uu *userUsecase) SendOTP(otpReq dto.SendOTPRequest) error {
 		return utils.ErrInternalServerError
 	}
 
-	err = uu.goMail.SendMail(user.Email, user.Username, fmt.Sprintf("Thank you for registering on the Macaiki application to verify your email please <a href=\"%s\">click here</a>", otpReq.Link+"?email="+user.Email+"&otp="+OTPCode))
+	err = uu.goMail.SendMail(user.Email, user.Username, fmt.Sprintf("Thank you for registering on the Macaiki application To verify your email, please use the following OTP : %s", OTPCode))
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -509,7 +517,7 @@ func (uu *userUsecase) VerifyOTP(email, OTPCode string) error {
 	}
 
 	if EmailVerif.OTPCode == OTPCode {
-		if time.Now().Before(EmailVerif.ExpiredAt) {
+		if time.Now().After(EmailVerif.ExpiredAt) {
 			return errors.New("OTP Is Expired")
 		}
 		user, err := uu.userRepo.GetByEmail(email)
