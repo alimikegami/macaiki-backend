@@ -7,7 +7,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/go-playground/validator/v10"
 	"github.com/stretchr/testify/assert"
 	"gorm.io/gorm"
 )
@@ -45,7 +44,7 @@ var (
 		ReportCategoryID: 1,
 	}
 
-	v = validator.New()
+	// v = validator.New()
 )
 
 // func TestRegister(t *testing.T) {
