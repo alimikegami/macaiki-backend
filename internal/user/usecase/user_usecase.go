@@ -443,24 +443,31 @@ func (uu *userUsecase) Report(userID, userReportedID, reportCategoryID uint) err
 	return nil
 }
 
-func (uu *userUsecase) GetThreadByToken(tokenUserID uint) ([]dtoThread.ThreadResponse, error) {
+func (uu *userUsecase) GetThreadByToken(userID, tokenUserID uint) ([]dtoThread.DetailedThreadResponse, error) {
 
-	threads, err := uu.threadRepo.GetThreadsByUserID(tokenUserID)
+	threads, err := uu.threadRepo.GetThreadsByUserID(userID, tokenUserID)
 	if err != nil {
-		return []dtoThread.ThreadResponse{}, utils.ErrInternalServerError
+		return []dtoThread.DetailedThreadResponse{}, utils.ErrInternalServerError
 	}
 
-	dtoThreads := []dtoThread.ThreadResponse{}
+	dtoThreads := []dtoThread.DetailedThreadResponse{}
 	for _, val := range threads {
-		dtoThreads = append(dtoThreads, dtoThread.ThreadResponse{
-			ID:          val.ID,
-			Title:       val.Title,
-			Body:        val.Body,
-			CommunityID: val.CommunityID,
-			ImageURL:    val.ImageURL,
-			UserID:      val.UserID,
-			CreatedAt:   val.CreatedAt,
-			UpdatedAt:   val.UpdatedAt,
+		dtoThreads = append(dtoThreads, dtoThread.DetailedThreadResponse{
+			ID:                    val.Thread.ID,
+			Title:                 val.Title,
+			Body:                  val.Body,
+			CommunityID:           val.CommunityID,
+			ImageURL:              val.ImageURL,
+			UserID:                val.UserID,
+			UserName:              val.Username,
+			UserProfession:        val.Profession,
+			UserProfilePictureURL: val.ProfileImageUrl,
+			CreatedAt:             val.Thread.CreatedAt,
+			UpdatedAt:             val.Thread.UpdatedAt,
+			UpvotesCount:          val.UpvotesCount,
+			IsUpvoted:             val.IsUpvoted,
+			IsDownVoted:           val.IsDownvoted,
+			IsFollowed:            val.IsFollowed,
 		})
 	}
 
