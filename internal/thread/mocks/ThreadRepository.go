@@ -313,22 +313,22 @@ func (_m *ThreadRepository) GetThreads(keyword string, userID uint) ([]entity.Th
 	return r0, r1
 }
 
-// GetThreadsByUserID provides a mock function with given fields: userID
-func (_m *ThreadRepository) GetThreadsByUserID(userID uint) ([]entity.Thread, error) {
-	ret := _m.Called(userID)
+// GetThreadsByUserID provides a mock function with given fields: userID, tokenUserID
+func (_m *ThreadRepository) GetThreadsByUserID(userID uint, tokenUserID uint) ([]entity.ThreadWithDetails, error) {
+	ret := _m.Called(userID, tokenUserID)
 
-	var r0 []entity.Thread
-	if rf, ok := ret.Get(0).(func(uint) []entity.Thread); ok {
-		r0 = rf(userID)
+	var r0 []entity.ThreadWithDetails
+	if rf, ok := ret.Get(0).(func(uint, uint) []entity.ThreadWithDetails); ok {
+		r0 = rf(userID, tokenUserID)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]entity.Thread)
+			r0 = ret.Get(0).([]entity.ThreadWithDetails)
 		}
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(uint) error); ok {
-		r1 = rf(userID)
+	if rf, ok := ret.Get(1).(func(uint, uint) error); ok {
+		r1 = rf(userID, tokenUserID)
 	} else {
 		r1 = ret.Error(1)
 	}

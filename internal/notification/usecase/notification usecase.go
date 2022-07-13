@@ -122,7 +122,7 @@ func (nu *NotificationUsecaseImpl) GetNotificatoinDetail(userID, notificationID 
 			IsFollowed:         user.IsFollowed,
 			IsMine:             user.IsMine,
 		}, nil
-	} else if notif.NotificationType == "Upvote Thread" {
+	} else if notif.NotificationType == "Upvote Thread" || notif.NotificationType == "Comment Thread" {
 		thread, err := nu.threadRepo.GetThreadByID(notif.NotificationRefID)
 		if err != nil {
 			return nil, err
@@ -136,23 +136,6 @@ func (nu *NotificationUsecaseImpl) GetNotificatoinDetail(userID, notificationID 
 			UserID:      thread.UserID,
 			CreatedAt:   thread.CreatedAt,
 			UpdatedAt:   thread.UpdatedAt,
-		}, nil
-	} else if notif.NotificationType == "Comment Thread" {
-		comment, err := nu.threadRepo.GetCommentByID(notif.NotificationRefID)
-		if err != nil {
-			return nil, err
-		}
-
-		user, _ := nu.userRepo.Get(comment.UserID)
-		return dtoThread.CommentResponse{
-			ID:                    comment.CommentID,
-			Body:                  comment.Body,
-			UserID:                user.ID,
-			Username:              user.Username,
-			UserProfilePictureURL: user.ProfileImageUrl,
-			ThreadID:              comment.ThreadID,
-			CreatedAt:             comment.CreatedAt,
-			LikesCount:            0,
 		}, nil
 	}
 

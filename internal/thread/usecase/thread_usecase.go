@@ -322,7 +322,7 @@ func (tuc *ThreadUseCaseImpl) AddThreadComment(comment dto.CommentRequest) error
 
 	_ = tuc.nr.StoreNotification(entityNotif.Notification{
 		UserID:            thread.UserID,
-		NotificationRefID: comment.CommentID,
+		NotificationRefID: thread.ID,
 		NotificationType:  "Comment Thread",
 		IsReaded:          0,
 	})

@@ -26,10 +26,9 @@ type UserUsecase interface {
 
 	Report(userID, userReportedID, ReportCategoryID uint) error
 
-	GetThreadByToken(tokenUserID uint) ([]dtoThread.ThreadResponse, error)
+	GetThreadByToken(userID, tokenUserID uint) ([]dtoThread.DetailedThreadResponse, error)
 	SendOTP(email dto.SendOTPRequest) error
 	VerifyOTP(email, OTPCode string) error
 	GetReports(curentUserRole string) ([]dto.BriefReportResponse, error)
 	GetDashboardAnalytics(userRole string) (dto.AdminDashboardAnalytics, error)
-
 }
