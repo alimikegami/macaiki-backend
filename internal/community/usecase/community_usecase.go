@@ -443,6 +443,10 @@ func (cu *CommunityUsecaseImpl) ReportCommunity(userID, communityID, reportCateg
 	return nil
 }
 
+func (cu *CommunityUsecaseImpl) DeleteReportCommunity(reportCommunityId uint) error {
+	return nil
+}
+
 func (cu *CommunityUsecaseImpl) ReportByModerator(userID, communityID uint, reportReq dtoCommunity.ReportRequest) error {
 	mods, err := cu.communityRepo.GetModeratorByUserID(userID, communityID)
 
