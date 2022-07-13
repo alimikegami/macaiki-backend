@@ -143,6 +143,29 @@ func (_m *ThreadUseCase) GetCommentsByThreadID(threadID uint) ([]dto.CommentResp
 	return r0, r1
 }
 
+// GetSavedThread provides a mock function with given fields: userID
+func (_m *ThreadUseCase) GetSavedThread(userID uint) ([]dto.DetailedThreadResponse, error) {
+	ret := _m.Called(userID)
+
+	var r0 []dto.DetailedThreadResponse
+	if rf, ok := ret.Get(0).(func(uint) []dto.DetailedThreadResponse); ok {
+		r0 = rf(userID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]dto.DetailedThreadResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(uint) error); ok {
+		r1 = rf(userID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetThreadByID provides a mock function with given fields: threadID
 func (_m *ThreadUseCase) GetThreadByID(threadID uint) (dto.ThreadResponse, error) {
 	ret := _m.Called(threadID)
@@ -233,13 +256,13 @@ func (_m *ThreadUseCase) GetThreadsFromFollowedUsers(userID uint) ([]dto.Detaile
 	return r0, r1
 }
 
-// GetTrendingThreads provides a mock function with given fields: userID
-func (_m *ThreadUseCase) GetTrendingThreads(userID uint) ([]dto.DetailedThreadResponse, error) {
-	ret := _m.Called(userID)
+// GetTrendingThreads provides a mock function with given fields: userID, limit
+func (_m *ThreadUseCase) GetTrendingThreads(userID uint, limit int) ([]dto.DetailedThreadResponse, error) {
+	ret := _m.Called(userID, limit)
 
 	var r0 []dto.DetailedThreadResponse
-	if rf, ok := ret.Get(0).(func(uint) []dto.DetailedThreadResponse); ok {
-		r0 = rf(userID)
+	if rf, ok := ret.Get(0).(func(uint, int) []dto.DetailedThreadResponse); ok {
+		r0 = rf(userID, limit)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]dto.DetailedThreadResponse)
@@ -247,8 +270,8 @@ func (_m *ThreadUseCase) GetTrendingThreads(userID uint) ([]dto.DetailedThreadRe
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(uint) error); ok {
-		r1 = rf(userID)
+	if rf, ok := ret.Get(1).(func(uint, int) error); ok {
+		r1 = rf(userID, limit)
 	} else {
 		r1 = ret.Error(1)
 	}

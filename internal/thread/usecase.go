@@ -13,7 +13,7 @@ type ThreadUseCase interface {
 	SetThreadImage(img *multipart.FileHeader, threadID uint, userID uint) error
 	UpvoteThread(threadID uint, userID uint) error
 	UndoUpvoteThread(threadID, userID uint) error
-	GetTrendingThreads(userID uint) ([]dto.DetailedThreadResponse, error)
+	GetTrendingThreads(userID uint, limit int) ([]dto.DetailedThreadResponse, error)
 	GetThreadsFromFollowedCommunity(userID uint) ([]dto.DetailedThreadResponse, error)
 	GetThreadsFromFollowedUsers(userID uint) ([]dto.DetailedThreadResponse, error)
 	AddThreadComment(dto.CommentRequest) error
@@ -27,4 +27,5 @@ type ThreadUseCase interface {
 	CreateThreadReport(threadReport dto.ThreadReportRequest) error
 	CreateCommentReport(commentReport dto.CommentReportRequest) error
 	StoreSavedThread(savedThread dto.SavedThreadRequest) error
+	GetSavedThread(userID uint) ([]dto.DetailedThreadResponse, error)
 }

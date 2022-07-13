@@ -1,4 +1,4 @@
-package repository
+package mysql
 
 import (
 	"fmt"
@@ -103,6 +103,17 @@ func (tr *ThreadRepositoryImpl) GetTrendingThreads(userID uint) ([]entity.Thread
 	var threads []entity.ThreadWithDetails
 	// TODO: retrieve name, profile URL, etc
 	res := tr.db.Raw("SELECT t.*, NOT ISNULL(t3.id) AS is_upvoted, NOT ISNULL(t4.user_id) AS is_followed, NOT ISNULL(t5.id) AS is_downvoted, users.name, users.profile_image_url, users.profession FROM threads t LEFT JOIN (SELECT thread_id, COUNT(*) AS upvotes_count FROM thread_upvotes tu WHERE DATEDIFF(NOW(), tu.created_at) < 7  GROUP BY thread_id) AS t2 ON t.id = t2.thread_id LEFT JOIN (SELECT * FROM thread_upvotes tu WHERE tu.user_id = ?) AS t3 ON t.id = t3.thread_id LEFT JOIN (SELECT user_id FROM user_followers uf WHERE uf.follower_id = ?) AS t4 ON t4.user_id = t.user_id LEFT JOIN users ON users.id = t.user_id LEFT JOIN (SELECT id, thread_id FROM thread_downvotes td WHERE td.user_id = ?) AS t5 ON t5.thread_id = t.id ORDER BY upvotes_count DESC;", userID, userID, userID).Scan(&threads)
+	if res.Error != nil {
+		return []entity.ThreadWithDetails{}, res.Error
+	}
+
+	return threads, nil
+}
+
+func (tr *ThreadRepositoryImpl) GetTrendingThreadsWithLimit(userID uint, limit int) ([]entity.ThreadWithDetails, error) {
+	var threads []entity.ThreadWithDetails
+	// TODO: retrieve name, profile URL, etc
+	res := tr.db.Raw("SELECT t.*, NOT ISNULL(t3.id) AS is_upvoted, NOT ISNULL(t4.user_id) AS is_followed, NOT ISNULL(t5.id) AS is_downvoted, users.name, users.profile_image_url, users.profession FROM threads t LEFT JOIN (SELECT thread_id, COUNT(*) AS upvotes_count FROM thread_upvotes tu WHERE DATEDIFF(NOW(), tu.created_at) < 7  GROUP BY thread_id) AS t2 ON t.id = t2.thread_id LEFT JOIN (SELECT * FROM thread_upvotes tu WHERE tu.user_id = ?) AS t3 ON t.id = t3.thread_id LEFT JOIN (SELECT user_id FROM user_followers uf WHERE uf.follower_id = ?) AS t4 ON t4.user_id = t.user_id LEFT JOIN users ON users.id = t.user_id LEFT JOIN (SELECT id, thread_id FROM thread_downvotes td WHERE td.user_id = ?) AS t5 ON t5.thread_id = t.id ORDER BY upvotes_count DESC LIMIT ?;", userID, userID, userID, limit).Scan(&threads)
 	if res.Error != nil {
 		return []entity.ThreadWithDetails{}, res.Error
 	}
@@ -299,6 +310,27 @@ func (tr *ThreadRepositoryImpl) CreateThreadReport(threadReport entity.ThreadRep
 	return nil
 }
 
+func (tr *ThreadRepositoryImpl) GetThreadReport(id uint) (entity.ThreadReport, error) {
+	threadReport := entity.ThreadReport{}
+
+	res := tr.db.Find(&threadReport, id)
+	err := res.Error
+	if err != nil {
+		return entity.ThreadReport{}, nil
+	}
+
+	return threadReport, nil
+}
+func (tr *ThreadRepositoryImpl) UpdateThreadReport(threadReport entity.ThreadReport, userID uint) error {
+	res := tr.db.Model(&threadReport).Update("user_id", userID)
+	err := res.Error
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (tr *ThreadRepositoryImpl) GetCommentByID(commentID uint) (entity.Comment, error) {
 	var comment entity.Comment
 	res := tr.db.First(&comment, commentID)
@@ -325,13 +357,35 @@ func (tr *ThreadRepositoryImpl) CreateCommentReport(commentReport entity.Comment
 	return nil
 }
 
-func (tr *ThreadRepositoryImpl) GetThreadsByUserID(userID uint) ([]entity.Thread, error) {
-	var threads []entity.Thread
+func (tr *ThreadRepositoryImpl) GetCommentReport(id uint) (entity.CommentReport, error) {
+	commentReport := entity.CommentReport{}
 
-	res := tr.db.Find(&threads, "user_id = ?", userID)
+	res := tr.db.Find(&commentReport, id)
+	err := res.Error
+	if err != nil {
+		return entity.CommentReport{}, nil
+	}
+
+	return commentReport, nil
+}
+
+func (tr *ThreadRepositoryImpl) UpdateCommentReport(commentReport entity.CommentReport, userID uint) error {
+	res := tr.db.Model(&commentReport).Update("user_id", userID)
+	err := res.Error
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (tr *ThreadRepositoryImpl) GetThreadsByUserID(userID, tokenUserID uint) ([]entity.ThreadWithDetails, error) {
+	threads := []entity.ThreadWithDetails{}
+
+	res := tr.db.Raw("SELECT t.*, tlc.count AS upvotes_count, !isnull(tl.user_id) AS is_upvoted, u.*, (u.id = ?) AS is_mine FROM threads AS t LEFT JOIN (SELECT t.thread_id, COUNT(*) AS count FROM thread_upvotes AS t GROUP BY t.thread_id) AS tlc ON t.id = tlc.thread_id LEFT JOIN (SELECT * FROM thread_upvotes WHERE user_id = ?) AS tl ON tl.thread_id = t.id LEFT JOIN (SELECT u.*, !ISNULL(uf.user_id) AS is_followed FROM `users` AS u LEFT JOIN (SELECT * FROM user_followers WHERE follower_id = ?) AS uf ON u.id = uf.user_id WHERE u.deleted_at IS NULL) AS u ON u.id = t.user_id WHERE t.user_id = ? AND t.deleted_at IS NULL", userID, userID, userID, tokenUserID).Scan(&threads)
 
 	if res.Error != nil {
-		return []entity.Thread{}, utils.ErrInternalServerError
+		return []entity.ThreadWithDetails{}, utils.ErrInternalServerError
 	}
 
 	return threads, nil
@@ -345,4 +399,16 @@ func (tr *ThreadRepositoryImpl) StoreSavedThread(savedThread entity.SavedThread)
 	}
 
 	return nil
+}
+
+func (tr *ThreadRepositoryImpl) GetSavedThread(userID uint) ([]entity.ThreadWithDetails, error) {
+	var threads []entity.ThreadWithDetails
+
+	res := tr.db.Raw("SELECT t.*, upvotes_count, NOT ISNULL(t4.id) AS is_upvoted, NOT ISNULL(t3.user_id) AS is_followed, NOT ISNULL(t5.id) AS is_downvoted, users.name, users.profile_image_url, users.profession FROM threads t INNER JOIN saved_threads st ON st.user_id = t.user_id LEFT JOIN (SELECT thread_id, COUNT(*) AS upvotes_count FROM thread_upvotes tu GROUP BY thread_id) AS t2 ON t.id = t2.thread_id LEFT JOIN (SELECT user_id FROM user_followers uf WHERE uf.follower_id= ?) AS t3 ON t3.user_id = t.user_id LEFT JOIN users ON users.id = t.user_id LEFT JOIN (SELECT * FROM thread_upvotes tu WHERE tu.user_id = ?) AS t4 ON t.id = t4.thread_id LEFT JOIN (SELECT id, thread_id, user_id FROM thread_downvotes td WHERE td.user_id = ?) AS t5 ON t5.thread_id = t.id WHERE t.user_id = ?", userID, userID, userID, userID).Scan(&threads)
+
+	if res.Error != nil {
+		return []entity.ThreadWithDetails{}, utils.ErrInternalServerError
+	}
+
+	return threads, nil
 }

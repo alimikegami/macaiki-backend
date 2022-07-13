@@ -1,19 +1,24 @@
 package usercase
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"macaiki/internal/notification"
 	notificationEntity "macaiki/internal/notification/entity"
 	reportcategory "macaiki/internal/report_category"
+	"macaiki/internal/thread"
+	dtoThread "macaiki/internal/thread/dto"
 	"macaiki/internal/user"
 	"macaiki/internal/user/delivery/http/helper"
 	"macaiki/internal/user/dto"
 	"macaiki/internal/user/entity"
 	cloudstorage "macaiki/pkg/cloud_storage"
+	goMail "macaiki/pkg/gomail"
 	"macaiki/pkg/middleware"
 	"macaiki/pkg/utils"
 	"mime/multipart"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/go-playground/validator/v10"
@@ -25,17 +30,21 @@ type userUsecase struct {
 	userRepo           user.UserRepository
 	reportCategoryRepo reportcategory.ReportCategoryRepository
 	notificationRepo   notification.NotificationRepository
+	threadRepo         thread.ThreadRepository
 	validator          *validator.Validate
 	awsS3              *cloudstorage.S3
+	goMail             *goMail.Gomail
 }
 
-func NewUserUsecase(userRepo user.UserRepository, reportCategoryRepo reportcategory.ReportCategoryRepository, notificationRepo notification.NotificationRepository, validator *validator.Validate, awsS3Instace *cloudstorage.S3) user.UserUsecase {
+func NewUserUsecase(userRepo user.UserRepository, reportCategoryRepo reportcategory.ReportCategoryRepository, notificationRepo notification.NotificationRepository, threadRepo thread.ThreadRepository, validator *validator.Validate, awsS3Instace *cloudstorage.S3, goMail *goMail.Gomail) user.UserUsecase {
 	return &userUsecase{
 		userRepo:           userRepo,
 		reportCategoryRepo: reportCategoryRepo,
 		notificationRepo:   notificationRepo,
+		threadRepo:         threadRepo,
 		validator:          validator,
 		awsS3:              awsS3Instace,
+		goMail:             goMail,
 	}
 }
 
@@ -432,6 +441,140 @@ func (uu *userUsecase) Report(userID, userReportedID, reportCategoryID uint) err
 		return utils.ErrInternalServerError
 	}
 	return nil
+}
+
+func (uu *userUsecase) GetThreadByToken(userID, tokenUserID uint) ([]dtoThread.DetailedThreadResponse, error) {
+
+	threads, err := uu.threadRepo.GetThreadsByUserID(userID, tokenUserID)
+	if err != nil {
+		return []dtoThread.DetailedThreadResponse{}, utils.ErrInternalServerError
+	}
+
+	dtoThreads := []dtoThread.DetailedThreadResponse{}
+	for _, val := range threads {
+		dtoThreads = append(dtoThreads, dtoThread.DetailedThreadResponse{
+			ID:                    val.Thread.ID,
+			Title:                 val.Title,
+			Body:                  val.Body,
+			CommunityID:           val.CommunityID,
+			ImageURL:              val.ImageURL,
+			UserID:                val.UserID,
+			UserName:              val.Username,
+			UserProfession:        val.Profession,
+			UserProfilePictureURL: val.ProfileImageUrl,
+			CreatedAt:             val.Thread.CreatedAt,
+			UpdatedAt:             val.Thread.UpdatedAt,
+			UpvotesCount:          val.UpvotesCount,
+			IsUpvoted:             val.IsUpvoted,
+			IsDownVoted:           val.IsDownvoted,
+			IsFollowed:            val.IsFollowed,
+		})
+	}
+
+	return dtoThreads, nil
+}
+
+func (uu *userUsecase) SendOTP(otpReq dto.SendOTPRequest) error {
+	user, err := uu.userRepo.GetByEmail(otpReq.Email)
+	if err != nil {
+		return utils.ErrInternalServerError
+	}
+
+	if user.ID == 0 {
+		return utils.ErrNotFound
+	}
+
+	OTPCode := uu.goMail.GenerateSecureToken(3)
+	err = uu.userRepo.StoreOTP(entity.VerificationEmail{
+		Email:     user.Email,
+		OTPCode:   OTPCode,
+		ExpiredAt: time.Now().Add(1 * time.Minute),
+	})
+	if err != nil {
+		return utils.ErrInternalServerError
+	}
+
+	err = uu.goMail.SendMail(user.Email, user.Username, fmt.Sprintf("Thank you for registering on the Macaiki application to verify your email please <a href=\"%s\">click here</a>", otpReq.Link+"?email="+user.Email+"&otp="+OTPCode))
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	return nil
+}
+
+func (uu *userUsecase) VerifyOTP(email, OTPCode string) error {
+	EmailVerif, err := uu.userRepo.GetOTP(email)
+	if err != nil {
+		return utils.ErrInternalServerError
+	}
+
+	if EmailVerif.OTPCode == OTPCode {
+		if time.Now().Before(EmailVerif.ExpiredAt) {
+			return errors.New("OTP Is Expired")
+		}
+		user, err := uu.userRepo.GetByEmail(email)
+		if err != nil {
+			return utils.ErrInternalServerError
+		}
+		_, _ = uu.userRepo.Update(&user, entity.User{
+			EmailVerifiedAt: time.Now(),
+		})
+	} else {
+		return errors.New("OTP Not Valid")
+	}
+
+	return nil
+}
+func (uu *userUsecase) GetReports(curentUserRole string) ([]dto.BriefReportResponse, error) {
+	if curentUserRole != "Admin" {
+		return []dto.BriefReportResponse{}, utils.ErrUnauthorizedAccess
+	}
+
+	reports, err := uu.userRepo.GetReports()
+
+	if err != nil {
+		return []dto.BriefReportResponse{}, utils.ErrInternalServerError
+	}
+
+	var reportsResp []dto.BriefReportResponse
+
+	for _, report := range reports {
+		reportsResp = append(reportsResp, dto.BriefReportResponse{
+			ThreadReportsID:     report.ThreadReportsID,
+			UserReportsID:       report.UserReportsID,
+			CommentReportsID:    report.CommentReportsID,
+			CommunityReportsID:  report.CommunityReportsID,
+			CreatedAt:           report.CreatedAt,
+			ThreadID:            report.ThreadID,
+			UserID:              report.UserID,
+			CommentID:           report.CommentID,
+			CommunityReportedIT: report.CommunityReportedID,
+			ReportCategory:      report.ReportCategory,
+			Username:            report.Username,
+			ProfileImageURL:     report.ProfileImageURL,
+			Type:                report.Type,
+		})
+	}
+
+	return reportsResp, nil
+}
+
+func (uu *userUsecase) GetDashboardAnalytics(userRole string) (dto.AdminDashboardAnalytics, error) {
+	if userRole != "Admin" {
+		return dto.AdminDashboardAnalytics{}, utils.ErrUnauthorizedAccess
+	}
+
+	analytics, err := uu.userRepo.GetDashboardAnalytics()
+
+	if err != nil {
+		return dto.AdminDashboardAnalytics{}, utils.ErrInternalServerError
+	}
+
+	return dto.AdminDashboardAnalytics{
+		UsersCount:      analytics.UsersCount,
+		ModeratorsCount: analytics.ModeratorsCount,
+		ReportsCount:    analytics.ReportsCount,
+	}, nil
 }
 
 func hashAndSalt(pwd []byte) string {

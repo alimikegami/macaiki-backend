@@ -139,6 +139,27 @@ func (_m *ThreadRepository) GetCommentByID(commentID uint) (entity.Comment, erro
 	return r0, r1
 }
 
+// GetCommentReport provides a mock function with given fields: id
+func (_m *ThreadRepository) GetCommentReport(id uint) (entity.CommentReport, error) {
+	ret := _m.Called(id)
+
+	var r0 entity.CommentReport
+	if rf, ok := ret.Get(0).(func(uint) entity.CommentReport); ok {
+		r0 = rf(id)
+	} else {
+		r0 = ret.Get(0).(entity.CommentReport)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(uint) error); ok {
+		r1 = rf(id)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetCommentsByThreadID provides a mock function with given fields: threadID
 func (_m *ThreadRepository) GetCommentsByThreadID(threadID uint) ([]entity.CommentDetails, error) {
 	ret := _m.Called(threadID)
@@ -155,6 +176,29 @@ func (_m *ThreadRepository) GetCommentsByThreadID(threadID uint) ([]entity.Comme
 	var r1 error
 	if rf, ok := ret.Get(1).(func(uint) error); ok {
 		r1 = rf(threadID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetSavedThread provides a mock function with given fields: userID
+func (_m *ThreadRepository) GetSavedThread(userID uint) ([]entity.ThreadWithDetails, error) {
+	ret := _m.Called(userID)
+
+	var r0 []entity.ThreadWithDetails
+	if rf, ok := ret.Get(0).(func(uint) []entity.ThreadWithDetails); ok {
+		r0 = rf(userID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]entity.ThreadWithDetails)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(uint) error); ok {
+		r1 = rf(userID)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -197,6 +241,27 @@ func (_m *ThreadRepository) GetThreadDownvotes(threadID uint, userID uint) (enti
 	var r1 error
 	if rf, ok := ret.Get(1).(func(uint, uint) error); ok {
 		r1 = rf(threadID, userID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetThreadReport provides a mock function with given fields: id
+func (_m *ThreadRepository) GetThreadReport(id uint) (entity.ThreadReport, error) {
+	ret := _m.Called(id)
+
+	var r0 entity.ThreadReport
+	if rf, ok := ret.Get(0).(func(uint) entity.ThreadReport); ok {
+		r0 = rf(id)
+	} else {
+		r0 = ret.Get(0).(entity.ThreadReport)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(uint) error); ok {
+		r1 = rf(id)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -248,22 +313,22 @@ func (_m *ThreadRepository) GetThreads(keyword string, userID uint) ([]entity.Th
 	return r0, r1
 }
 
-// GetThreadsByUserID provides a mock function with given fields: userID
-func (_m *ThreadRepository) GetThreadsByUserID(userID uint) ([]entity.Thread, error) {
-	ret := _m.Called(userID)
+// GetThreadsByUserID provides a mock function with given fields: userID, tokenUserID
+func (_m *ThreadRepository) GetThreadsByUserID(userID uint, tokenUserID uint) ([]entity.ThreadWithDetails, error) {
+	ret := _m.Called(userID, tokenUserID)
 
-	var r0 []entity.Thread
-	if rf, ok := ret.Get(0).(func(uint) []entity.Thread); ok {
-		r0 = rf(userID)
+	var r0 []entity.ThreadWithDetails
+	if rf, ok := ret.Get(0).(func(uint, uint) []entity.ThreadWithDetails); ok {
+		r0 = rf(userID, tokenUserID)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]entity.Thread)
+			r0 = ret.Get(0).([]entity.ThreadWithDetails)
 		}
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(uint) error); ok {
-		r1 = rf(userID)
+	if rf, ok := ret.Get(1).(func(uint, uint) error); ok {
+		r1 = rf(userID, tokenUserID)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -333,6 +398,29 @@ func (_m *ThreadRepository) GetTrendingThreads(userID uint) ([]entity.ThreadWith
 	var r1 error
 	if rf, ok := ret.Get(1).(func(uint) error); ok {
 		r1 = rf(userID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetTrendingThreadsWithLimit provides a mock function with given fields: userID, limit
+func (_m *ThreadRepository) GetTrendingThreadsWithLimit(userID uint, limit int) ([]entity.ThreadWithDetails, error) {
+	ret := _m.Called(userID, limit)
+
+	var r0 []entity.ThreadWithDetails
+	if rf, ok := ret.Get(0).(func(uint, int) []entity.ThreadWithDetails); ok {
+		r0 = rf(userID, limit)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]entity.ThreadWithDetails)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(uint, int) error); ok {
+		r1 = rf(userID, limit)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -424,6 +512,20 @@ func (_m *ThreadRepository) UnlikeComment(commentID uint, userID uint) error {
 	return r0
 }
 
+// UpdateCommentReport provides a mock function with given fields: commentReport, userID
+func (_m *ThreadRepository) UpdateCommentReport(commentReport entity.CommentReport, userID uint) error {
+	ret := _m.Called(commentReport, userID)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(entity.CommentReport, uint) error); ok {
+		r0 = rf(commentReport, userID)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // UpdateThread provides a mock function with given fields: threadID, _a1
 func (_m *ThreadRepository) UpdateThread(threadID uint, _a1 entity.Thread) error {
 	ret := _m.Called(threadID, _a1)
@@ -431,6 +533,20 @@ func (_m *ThreadRepository) UpdateThread(threadID uint, _a1 entity.Thread) error
 	var r0 error
 	if rf, ok := ret.Get(0).(func(uint, entity.Thread) error); ok {
 		r0 = rf(threadID, _a1)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// UpdateThreadReport provides a mock function with given fields: threadReport, userID
+func (_m *ThreadRepository) UpdateThreadReport(threadReport entity.ThreadReport, userID uint) error {
+	ret := _m.Called(threadReport, userID)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(entity.ThreadReport, uint) error); ok {
+		r0 = rf(threadReport, userID)
 	} else {
 		r0 = ret.Error(0)
 	}
