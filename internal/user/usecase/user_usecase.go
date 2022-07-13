@@ -290,6 +290,10 @@ func (uu *userUsecase) SetProfileImage(id uint, img *multipart.FileHeader) (stri
 		return "", utils.ErrInternalServerError
 	}
 
+	if user.ID == 0 {
+		return "", utils.ErrNotFound
+	}
+
 	if user.ProfileImageUrl != "" {
 		err = uu.awsS3.DeleteImage(user.ProfileImageUrl, "profile")
 		if err != nil {
@@ -317,6 +321,10 @@ func (uu *userUsecase) SetBackgroundImage(id uint, img *multipart.FileHeader) (s
 	user, err := uu.userRepo.Get(id)
 	if err != nil {
 		return "", utils.ErrInternalServerError
+	}
+
+	if user.ID == 0 {
+		return "", utils.ErrNotFound
 	}
 
 	if user.BackgroundImageUrl != "" {
