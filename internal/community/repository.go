@@ -15,7 +15,7 @@ type CommunityRepository interface {
 	GetCommunityAbout(userID, communityID uint) (communityEntity.Community, error)
 	StoreCommunity(community communityEntity.Community) error
 	UpdateCommunity(community communityEntity.Community, communityReq communityEntity.Community) (communityEntity.Community, error)
-	DeleteCommunity(community communityEntity.Community) error
+	DeleteCommunity(communityID uint) error
 
 	FollowCommunity(user userEntity.User, community communityEntity.Community) error
 	UnfollowCommunity(user userEntity.User, community communityEntity.Community) error

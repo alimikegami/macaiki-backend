@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"macaiki/internal/community"
+	"macaiki/internal/community/entity"
 	communityEntity "macaiki/internal/community/entity"
 	threadEntity "macaiki/internal/thread/entity"
 	userEntity "macaiki/internal/user/entity"
@@ -103,8 +104,8 @@ func (cr *CommunityRepositoryImpl) UpdateCommunity(community communityEntity.Com
 	return community, nil
 }
 
-func (cr *CommunityRepositoryImpl) DeleteCommunity(community communityEntity.Community) error {
-	res := cr.db.Delete(&community)
+func (cr *CommunityRepositoryImpl) DeleteCommunity(communityID uint) error {
+	res := cr.db.Delete(&entity.Community{}, communityID)
 	err := res.Error
 	if err != nil {
 		return err
