@@ -57,3 +57,53 @@ type AdminDashboardAnalytics struct {
 	ModeratorsCount int `json:"moderatorsCount"`
 	ReportsCount    int `json:"reportsCount"`
 }
+
+type ReportedThreadResponse struct {
+	ThreadTitle             string    `json:"threadTitle"`
+	ThreadBody              string    `json:"threadBody"`
+	ThreadImageURL          string    `json:"threadImageURL"`
+	ThreadCreatedAt         time.Time `json:"threadCreatedAt"`
+	LikesCount              int       `json:"likesCount"`
+	ReportedUsername        string    `json:"reportedUsername"`
+	ReportedProfileImageURL string    `json:"reportedProfileImageURL"`
+	ReportedUserProfession  string    `json:"reportedUserProfession"`
+	ReportCategory          string    `json:"reportCategory"`
+	ReportCreatedAt         time.Time `json:"reportCreatedAt"`
+	Username                string    `json:"username"`
+	ProfileImageURL         string    `json:"profileImageURL"`
+}
+
+type ReportedCommentResponse struct {
+	CommentBody             string    `json:"commentBody"`
+	LikesCount              int       `json:"likesCount"`
+	CommentCreatedAt        time.Time `json:"commentCreatedAt"`
+	ReportedUsername        string    `json:"reportedUsername"`
+	ReportedProfileImageURL string    `json:"reportedProfileImageURL"`
+	ReportCategory          string    `json:"reportCategory"`
+	ReportCreatedAt         time.Time `json:"reportCreatedAt"`
+	Username                string    `json:"username"`
+	ProfileImageURL         string    `json:"profileImageURL"`
+}
+
+type ReportedCommunityResponse struct {
+	CommunityName               string    `json:"communityName"`
+	CommunityImageURL           string    `json:"communityImageURL"`
+	CommunityBackgroundImageURL string    `json:"communityBackgroundImageURL"`
+	ReportCategory              string    `json:"reportCategory"`
+	ReportCreatedAt             time.Time `json:"reportCreatedAt"`
+	Username                    string    `json:"username"`
+	ProfileImageURL             string    `json:"profileImageURL"`
+}
+
+type ReportedUserResponse struct {
+	ReportedUserUsername        string `json:"reportedUserUsername"`
+	ReportedUserName            string `json:"reportedUserName"`
+	ReportedUserProfession      string `json:"reportedUserProfession"`
+	ReporteduserBio             string `json:"reportedUserBio"`
+	ReportedUserProfileImageURL string `json:"reportedUserProfileImageURL"`
+	ReportedUserBackgroundURL   string `json:"reportedUserBackgroundURL"`
+	ReportingUserUsername       string `json:"reportingUserUsername"`
+	ReportingUserName           string `json:"reportinguserName"`
+	FollowersCount              int    `json:"followersCount"`
+	FollowingCount              int    `json:"followingCount"`
+}
