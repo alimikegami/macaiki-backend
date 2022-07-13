@@ -43,6 +43,10 @@ func NewCommunityHandler(e *echo.Echo, communityUsecase community.CommunityUseca
 	e.DELETE("api/v1/community-moderators", communityHandler.RemoveModerator, middleware.JWT([]byte(JWTSecret)))
 
 	e.POST("api/v1/communities/:communityID/report", communityHandler.ReportCommunity, middleware.JWT([]byte(JWTSecret)))
+	e.GET("/api/v1/communities/:communityID/reports", communityHandler.GetReports, middleware.JWT([]byte(JWTSecret)))
+
+	// ROUTE DIBAWAH INI SIFATNYA TIDAK KEKAL ALIAS SEMENTARA SEPERTI KITA HIDUP DI DUNIA INI,, CATAT !!!!!!!!!!!!!!!!
+	e.POST("/api/v1/community-moderators/communities/:communityID/reports", communityHandler.ReportByModerator, middleware.JWT([]byte(JWTSecret)))
 }
 
 func (communityHandler *CommunityHandler) CreateCommunity(c echo.Context) error {
@@ -259,6 +263,39 @@ func (CommunityHandler *CommunityHandler) ReportCommunity(c echo.Context) error 
 
 	userID, _ := _middL.ExtractTokenUser(c)
 	err = CommunityHandler.communityUsecase.ReportCommunity(uint(userID), uint(communityID), uint(reportCategoryReq.ReportCategoryID))
+	if err != nil {
+		return response.ErrorResponse(c, err)
+	}
+
+	return response.SuccessResponse(c, nil)
+}
+
+func (CommunityHandler *CommunityHandler) GetReports(c echo.Context) error {
+	communityID, err := strconv.Atoi(c.Param("communityID"))
+	if err != nil {
+		return response.ErrorResponse(c, utils.ErrBadParamInput)
+	}
+	userID, _ := _middL.ExtractTokenUser(c)
+	reports, err := CommunityHandler.communityUsecase.GetReports(uint(userID), uint(communityID))
+
+	if err != nil {
+		return response.ErrorResponse(c, err)
+	}
+
+	return response.SuccessResponse(c, reports)
+}
+
+func (CommunityHandler *CommunityHandler) ReportByModerator(c echo.Context) error {
+	communityID, err := strconv.Atoi(c.Param("communityID"))
+	if err != nil {
+		return response.ErrorResponse(c, utils.ErrBadParamInput)
+	}
+	userID, _ := _middL.ExtractTokenUser(c)
+
+	dtoReport := dto.ReportRequest{}
+	c.Bind(&dtoReport)
+
+	err = CommunityHandler.communityUsecase.ReportByModerator(uint(userID), uint(communityID), dtoReport)
 	if err != nil {
 		return response.ErrorResponse(c, err)
 	}

@@ -17,3 +17,8 @@ type CommentReportRequest struct {
 	CommentID        uint
 	UserID           uint
 }
+
+type SavedThreadRequest struct {
+	UserID   uint
+	ThreadID uint
+}

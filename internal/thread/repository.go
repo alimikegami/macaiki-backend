@@ -11,6 +11,7 @@ type ThreadRepository interface {
 	UpvoteThread(threadUpvote entity.ThreadUpvote) error
 	UndoUpvoteThread(threadID, userID uint) error
 	GetTrendingThreads(userID uint) ([]entity.ThreadWithDetails, error)
+	GetTrendingThreadsWithLimit(userID uint, limit int) ([]entity.ThreadWithDetails, error)
 	GetThreadsFromFollowedCommunity(userID uint) ([]entity.ThreadWithDetails, error)
 	GetThreadsFromFollowedUsers(userID uint) ([]entity.ThreadWithDetails, error)
 	AddThreadComment(comment entity.Comment) error
@@ -25,6 +26,12 @@ type ThreadRepository interface {
 	DeleteComment(commentID uint) error
 	GetCommentByID(commentID uint) (entity.Comment, error)
 	CreateThreadReport(threadReport entity.ThreadReport) error
+	GetThreadReport(id uint) (entity.ThreadReport, error)
+	UpdateThreadReport(threadReport entity.ThreadReport, userID uint) error
 	CreateCommentReport(commentReport entity.CommentReport) error
-	GetThreadsByUserID(userID uint) ([]entity.Thread, error)
+	GetCommentReport(id uint) (entity.CommentReport, error)
+	UpdateCommentReport(commentReport entity.CommentReport, userID uint) error
+	GetThreadsByUserID(userID, tokenUserID uint) ([]entity.ThreadWithDetails, error)
+	StoreSavedThread(savedThread entity.SavedThread) error
+	GetSavedThread(userID uint) ([]entity.ThreadWithDetails, error)
 }

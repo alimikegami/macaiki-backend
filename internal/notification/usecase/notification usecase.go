@@ -1,19 +1,28 @@
 package usecase
 
 import (
+	"fmt"
 	notification "macaiki/internal/notification"
 	dtoNotif "macaiki/internal/notification/dto"
+	thread "macaiki/internal/thread"
+	dtoThread "macaiki/internal/thread/dto"
 	user "macaiki/internal/user"
+	dtoUser "macaiki/internal/user/dto"
 	"macaiki/pkg/utils"
 )
 
 type NotificationUsecaseImpl struct {
-	notifRepo notification.NotificationRepository
-	userRepo  user.UserRepository
+	notifRepo  notification.NotificationRepository
+	userRepo   user.UserRepository
+	threadRepo thread.ThreadRepository
 }
 
-func NewNotificationUsecase(notifRepo notification.NotificationRepository, userRepo user.UserRepository) notification.NotificationUsecase {
-	return &NotificationUsecaseImpl{notifRepo: notifRepo, userRepo: userRepo}
+func NewNotificationUsecase(notifRepo notification.NotificationRepository, userRepo user.UserRepository, threadRepo thread.ThreadRepository) notification.NotificationUsecase {
+	return &NotificationUsecaseImpl{
+		notifRepo:  notifRepo,
+		userRepo:   userRepo,
+		threadRepo: threadRepo,
+	}
 }
 
 func (nu *NotificationUsecaseImpl) GetAllNotifications(userID uint) ([]dtoNotif.NotificationResponse, error) {
@@ -30,8 +39,8 @@ func (nu *NotificationUsecaseImpl) GetAllNotifications(userID uint) ([]dtoNotif.
 		body := ""
 		if val.NotificationType == "Follow You" {
 			title += " started following you"
-		} else if val.NotificationType == "Like Thread" {
-			title += " like your thread"
+		} else if val.NotificationType == "Upvote Thread" {
+			title += " upvote your thread"
 		} else if val.NotificationType == "Comment Thread" {
 			// TODO: get comment from thread
 			title += " comment on your thread"
@@ -68,4 +77,67 @@ func (nu *NotificationUsecaseImpl) DeleteAllNotifications(userID uint) ([]dtoNot
 	}
 
 	return nu.GetAllNotifications(userID)
+}
+
+func (nu *NotificationUsecaseImpl) GetNotificatoinDetail(userID, notificationID uint) (interface{}, error) {
+	notif, err := nu.notifRepo.GetNotification(notificationID)
+	if err != nil {
+		return nil, utils.ErrInternalServerError
+	}
+
+	if userID != notif.UserID {
+		return nil, utils.ErrUnauthorizedAccess
+	}
+
+	err = nu.notifRepo.ReadNotification(notificationID)
+	if err != nil {
+		fmt.Println("masuk")
+		return nil, utils.ErrInternalServerError
+	}
+
+	if notif.NotificationType == "Follow You" {
+		user, err := nu.userRepo.Get(notif.NotificationRefID)
+		if err != nil {
+			return nil, utils.ErrInternalServerError
+		}
+
+		if user.ID == 0 {
+			return nil, utils.ErrNotFound
+		}
+
+		totalFollower, _ := nu.userRepo.GetFollowerNumber(user.ID)
+		totalFollowing, _ := nu.userRepo.GetFollowingNumber(user.ID)
+		totalPost, _ := nu.userRepo.GetThreadsNumber(user.ID)
+		return dtoUser.UserDetailResponse{
+			ID:                 user.ID,
+			Username:           user.Username,
+			Name:               user.Name,
+			ProfileImageUrl:    user.ProfileImageUrl,
+			BackgroundImageUrl: user.BackgroundImageUrl,
+			Bio:                user.Bio,
+			Profession:         user.Profession,
+			TotalFollower:      totalFollower,
+			TotalFollowing:     totalFollowing,
+			TotalPost:          totalPost,
+			IsFollowed:         user.IsFollowed,
+			IsMine:             user.IsMine,
+		}, nil
+	} else if notif.NotificationType == "Upvote Thread" || notif.NotificationType == "Comment Thread" {
+		thread, err := nu.threadRepo.GetThreadByID(notif.NotificationRefID)
+		if err != nil {
+			return nil, err
+		}
+		return dtoThread.ThreadResponse{
+			ID:          thread.ID,
+			Title:       thread.Title,
+			Body:        thread.Body,
+			CommunityID: thread.CommunityID,
+			ImageURL:    thread.ImageURL,
+			UserID:      thread.UserID,
+			CreatedAt:   thread.CreatedAt,
+			UpdatedAt:   thread.UpdatedAt,
+		}, nil
+	}
+
+	return nil, utils.ErrNotFound
 }

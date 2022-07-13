@@ -3,6 +3,7 @@ package usecase
 import (
 	community "macaiki/internal/community"
 	reportCategory "macaiki/internal/report_category"
+	"macaiki/internal/thread"
 	user "macaiki/internal/user"
 	cloudstorage "macaiki/pkg/cloud_storage"
 	"macaiki/pkg/utils"
@@ -22,14 +23,16 @@ type CommunityUsecaseImpl struct {
 	communityRepo community.CommunityRepository
 	userRepo      user.UserRepository
 	rcRepo        reportCategory.ReportCategoryRepository
+	threadRepo    thread.ThreadRepository
 	validator     *validator.Validate
 	awsS3         *cloudstorage.S3
 }
 
-func NewCommunityUsecase(communityRepo community.CommunityRepository, userRepo user.UserRepository, rcRepo reportCategory.ReportCategoryRepository, validator *validator.Validate, awsS3 *cloudstorage.S3) community.CommunityUsecase {
+func NewCommunityUsecase(communityRepo community.CommunityRepository, userRepo user.UserRepository, rcRepo reportCategory.ReportCategoryRepository, threadRepo thread.ThreadRepository, validator *validator.Validate, awsS3 *cloudstorage.S3) community.CommunityUsecase {
 	return &CommunityUsecaseImpl{
 		communityRepo: communityRepo,
 		userRepo:      userRepo,
+		threadRepo:    threadRepo,
 		rcRepo:        rcRepo,
 		validator:     validator,
 		awsS3:         awsS3,
@@ -438,4 +441,88 @@ func (cu *CommunityUsecaseImpl) ReportCommunity(userID, communityID, reportCateg
 	}
 
 	return nil
+}
+
+func (cu *CommunityUsecaseImpl) ReportByModerator(userID, communityID uint, reportReq dtoCommunity.ReportRequest) error {
+	mods, err := cu.communityRepo.GetModeratorByUserID(userID, communityID)
+
+	if err != nil {
+		return err
+	}
+	if mods.CommunityID != communityID {
+		return utils.ErrUnauthorizedAccess
+	}
+
+	if reportReq.CommentReportID != 0 {
+		commentReport, err := cu.threadRepo.GetCommentReport(reportReq.CommentReportID)
+		if err != nil {
+			return utils.ErrInternalServerError
+		}
+
+		err = cu.threadRepo.UpdateCommentReport(commentReport, userID)
+		if err != nil {
+			return utils.ErrInternalServerError
+		}
+	} else if reportReq.CommunityReportID != 0 {
+		communityReport, err := cu.communityRepo.GetReportCommunity(reportReq.CommunityReportID)
+		if err != nil {
+			return utils.ErrInternalServerError
+		}
+
+		err = cu.communityRepo.UpdateReportCommunity(communityReport, userID)
+		if err != nil {
+			return utils.ErrInternalServerError
+		}
+	} else {
+		threadReport, err := cu.threadRepo.GetThreadReport(reportReq.ThreadReportID)
+		if err != nil {
+			return utils.ErrInternalServerError
+		}
+
+		err = cu.threadRepo.UpdateThreadReport(threadReport, userID)
+		if err != nil {
+			return utils.ErrInternalServerError
+		}
+	}
+
+	return nil
+}
+
+func (cu *CommunityUsecaseImpl) GetReports(userID, communityID uint) ([]dtoCommunity.BriefReportResponse, error) {
+	mods, err := cu.communityRepo.GetModeratorByUserID(userID, communityID)
+
+	if err != nil {
+		return []dtoCommunity.BriefReportResponse{}, err
+	}
+
+	if mods.CommunityID != communityID {
+		return []dtoCommunity.BriefReportResponse{}, utils.ErrUnauthorizedAccess
+	}
+
+	reports, err := cu.communityRepo.GetReports(communityID)
+
+	if err != nil {
+		return []dtoCommunity.BriefReportResponse{}, utils.ErrInternalServerError
+	}
+
+	var reportsResp []dtoCommunity.BriefReportResponse
+
+	for _, report := range reports {
+		reportsResp = append(reportsResp, dtoCommunity.BriefReportResponse{
+			ThreadReportsID:     report.ThreadReportsID,
+			CommunityReportsID:  report.CommunityReportsID,
+			CommentReportsID:    report.CommentReportsID,
+			CreatedAt:           report.CreatedAt,
+			ThreadID:            report.ThreadID,
+			CommunityReportedID: report.CommunityReportedID,
+			UserID:              report.UserID,
+			CommentID:           report.CommentID,
+			ReportCategory:      report.ReportCategory,
+			Username:            report.Username,
+			ProfileImageURL:     report.ProfileImageURL,
+			Type:                report.Type,
+		})
+	}
+
+	return reportsResp, nil
 }

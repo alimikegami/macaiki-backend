@@ -40,6 +40,7 @@ func InitialMigration(DB *gorm.DB) {
 		&communityEntity.Community{},
 		&userEntity.User{},
 		&userEntity.UserReport{},
+		&userEntity.VerificationEmail{},
 		&notifEntity.Notification{},
 		&communityEntity.CommunityReport{},
 		&threadEntity.Thread{},
@@ -50,5 +51,6 @@ func InitialMigration(DB *gorm.DB) {
 		&threadEntity.ThreadDownvote{},
 		&threadEntity.ThreadReport{},
 		&threadEntity.CommentReport{},
+		&threadEntity.SavedThread{},
 	)
 }

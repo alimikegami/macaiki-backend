@@ -32,3 +32,31 @@ type UserReport struct {
 	ReportedUserID   uint
 	ReportCategoryID uint
 }
+
+type VerificationEmail struct {
+	ID        uint `gorm:"primaryKey"`
+	Email     string
+	OTPCode   string
+	ExpiredAt time.Time
+}
+type BriefReport struct {
+	ThreadReportsID     uint
+	UserReportsID       uint
+	CommentReportsID    uint
+	CommunityReportsID  uint
+	CreatedAt           time.Time
+	ThreadID            uint
+	UserID              uint
+	CommentID           uint
+	CommunityReportedID uint
+	ReportCategory      string
+	Username            string
+	ProfileImageURL     string
+	Type                string
+}
+
+type AdminDashboardAnalytics struct {
+	UsersCount      int
+	ModeratorsCount int
+	ReportsCount    int
+}

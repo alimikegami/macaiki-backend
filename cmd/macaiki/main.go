@@ -22,9 +22,11 @@ import (
 	_userRepo "macaiki/internal/user/repository/mysql"
 	_userUsecase "macaiki/internal/user/usecase"
 	_cloudstorage "macaiki/pkg/cloud_storage"
+	_gomail "macaiki/pkg/gomail"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 )
 
 func main() {
@@ -48,6 +50,8 @@ func main() {
 	v := validator.New()
 
 	s3Instance := _cloudstorage.CreateNewS3Instance(config.AWSAccessKeyId, config.AWSSecretKey, config.AWSRegion, config.BucketName)
+
+	goMail := _gomail.NewGomail(config.GomailEmail, config.GomailPassword)
 	// setup Repo
 	userRepo := _userRepo.NewMysqlUserRepository(_driver.DB)
 	reportCategoryRepo := _reportCategoryRepo.NewReportCategoryRepository(_driver.DB)
@@ -56,11 +60,11 @@ func main() {
 	notificationRepo := _notificationRepo.NewNotificaionRepository(_driver.DB)
 
 	// setup usecase
-	userUsecase := _userUsecase.NewUserUsecase(userRepo, reportCategoryRepo, notificationRepo, v, s3Instance)
+	userUsecase := _userUsecase.NewUserUsecase(userRepo, reportCategoryRepo, notificationRepo, threadRepo, v, s3Instance, goMail)
 	reportCategoryUsecase := _reportCategoryUsecase.NewReportCategoryUsecase(reportCategoryRepo, v)
-	threadUseCase := _threadUsecase.CreateNewThreadUseCase(threadRepo, s3Instance)
-	communityUsecase := _communityUsecase.NewCommunityUsecase(communityRepo, userRepo, reportCategoryRepo, v, s3Instance)
-	notificationUsecase := _notificationUsecase.NewNotificationUsecase(notificationRepo, userRepo)
+	threadUseCase := _threadUsecase.CreateNewThreadUseCase(threadRepo, notificationRepo, s3Instance)
+	communityUsecase := _communityUsecase.NewCommunityUsecase(communityRepo, userRepo, reportCategoryRepo, threadRepo, v, s3Instance)
+	notificationUsecase := _notificationUsecase.NewNotificationUsecase(notificationRepo, userRepo, threadRepo)
 
 	// setup middleware
 	JWTSecret, err := _config.LoadJWTSecret(".")
@@ -74,6 +78,11 @@ func main() {
 	_reportCategoryHttpDeliver.NewReportCategoryHandler(e, reportCategoryUsecase, JWTSecret.Secret)
 	_communityHttpDelivery.NewCommunityHandler(e, communityUsecase, JWTSecret.Secret)
 	_notificationHttpDelivery.NewNotificationHandler(e, notificationUsecase, JWTSecret.Secret)
+
+	// setup middleware
+	e.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
+		Format: "method=${method}, uri=${uri}, status=${status}\n",
+	}))
 
 	log.Fatal(e.Start(":" + config.ServerPort))
 }
