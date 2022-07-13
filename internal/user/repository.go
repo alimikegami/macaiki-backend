@@ -26,4 +26,8 @@ type UserRepository interface {
 	GetReports() ([]entity.BriefReport, error)
 
 	GetDashboardAnalytics() (entity.AdminDashboardAnalytics, error)
+	GetReportedThread(threadReportID uint) (entity.ReportedThread, error)
+	GetReportedCommunity(communityReportID uint) (entity.ReportedCommunity, error)
+	GetReportedComment(commentReportID uint) (entity.ReportedComment, error)
+	GetReportedUser(userReportID uint) (entity.ReportedUser, error)
 }

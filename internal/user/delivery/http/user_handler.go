@@ -33,6 +33,10 @@ func NewUserHandler(e *echo.Echo, us user.UserUsecase, JWTSecret string) {
 
 	e.GET("/api/v1/admin/reports", handler.GetReports, middleware.JWT([]byte(JWTSecret)))
 	e.GET("/api/v1/admin/analytics", handler.GetDashboardAnalytics, middleware.JWT([]byte(JWTSecret)))
+	e.GET("/api/v1/admin/reports/threads/:threadReportID", handler.GetReportedThread, middleware.JWT([]byte(JWTSecret)))
+	e.GET("/api/v1/admin/reports/communities/:communityReportID", handler.GetReportedCommunity, middleware.JWT([]byte(JWTSecret)))
+	e.GET("/api/v1/admin/reports/comments/:commentReportID", handler.GetReportedComment, middleware.JWT([]byte(JWTSecret)))
+	e.GET("/api/v1/admin/reports/users/:userReportID", handler.GetReportedUser, middleware.JWT([]byte(JWTSecret)))
 
 	e.PUT("/api/v1/curent-user/email", handler.ChangeEmail, middleware.JWT([]byte(JWTSecret)))
 	e.PUT("/api/v1/curent-user/password", handler.ChangePassword, middleware.JWT([]byte(JWTSecret)))
@@ -358,11 +362,72 @@ func (u *UserHandler) VerifyOTP(c echo.Context) error {
 	otp := c.QueryParam("otp")
 
 	err := u.UserUsecase.VerifyOTP(email, otp)
+
 	if err != nil {
 		return response.ErrorResponse(c, err)
 	}
 
 	return response.SuccessResponse(c, nil)
+}
+
+func (u *UserHandler) GetReportedThread(c echo.Context) error {
+	threadReportID, err := strconv.Atoi(c.Param("threadReportID"))
+	if err != nil {
+		return response.ErrorResponse(c, utils.ErrBadParamInput)
+	}
+	_, role := _middL.ExtractTokenUser(c)
+	thread, err := u.UserUsecase.GetReportedThread(role, uint(threadReportID))
+
+	if err != nil {
+		return response.ErrorResponse(c, err)
+	}
+
+	return response.SuccessResponse(c, thread)
+}
+
+func (u *UserHandler) GetReportedCommunity(c echo.Context) error {
+	communityReportID, err := strconv.Atoi(c.Param("communityReportID"))
+	if err != nil {
+		return response.ErrorResponse(c, utils.ErrBadParamInput)
+	}
+	_, role := _middL.ExtractTokenUser(c)
+	community, err := u.UserUsecase.GetReportedCommunity(role, uint(communityReportID))
+
+	if err != nil {
+		return response.ErrorResponse(c, err)
+	}
+
+	return response.SuccessResponse(c, community)
+}
+
+func (u *UserHandler) GetReportedComment(c echo.Context) error {
+	commentReportID, err := strconv.Atoi(c.Param("commentReportID"))
+	if err != nil {
+		return response.ErrorResponse(c, utils.ErrBadParamInput)
+	}
+	_, role := _middL.ExtractTokenUser(c)
+	comment, err := u.UserUsecase.GetReportedComment(role, uint(commentReportID))
+
+	if err != nil {
+		return response.ErrorResponse(c, err)
+	}
+
+	return response.SuccessResponse(c, comment)
+}
+
+func (u *UserHandler) GetReportedUser(c echo.Context) error {
+	userReportID, err := strconv.Atoi(c.Param("userReportID"))
+	if err != nil {
+		return response.ErrorResponse(c, utils.ErrBadParamInput)
+	}
+	_, role := _middL.ExtractTokenUser(c)
+	user, err := u.UserUsecase.GetReportedUser(role, uint(userReportID))
+
+	if err != nil {
+		return response.ErrorResponse(c, err)
+	}
+
+	return response.SuccessResponse(c, user)
 }
 
 func (u *UserHandler) GetDashboardAnalytics(c echo.Context) error {

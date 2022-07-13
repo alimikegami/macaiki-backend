@@ -585,6 +585,120 @@ func (uu *userUsecase) GetDashboardAnalytics(userRole string) (dto.AdminDashboar
 	}, nil
 }
 
+func (uu *userUsecase) GetReportedThread(userRole string, threadReportID uint) (dto.ReportedThreadResponse, error) {
+	var reportedThreadResponse dto.ReportedThreadResponse
+
+	if userRole != "Admin" {
+		return dto.ReportedThreadResponse{}, utils.ErrUnauthorizedAccess
+	}
+
+	reportedThread, err := uu.userRepo.GetReportedThread(threadReportID)
+
+	if err != nil {
+		return dto.ReportedThreadResponse{}, err
+	}
+
+	reportedThreadResponse = dto.ReportedThreadResponse{
+		ThreadTitle:             reportedThread.ThreadTitle,
+		ThreadBody:              reportedThread.ThreadBody,
+		ThreadImageURL:          reportedThread.ThreadImageURL,
+		ThreadCreatedAt:         reportedThread.ThreadCreatedAt,
+		LikesCount:              reportedThread.LikesCount,
+		ReportedUsername:        reportedThread.ReportedUsername,
+		ReportedProfileImageURL: reportedThread.ReportedProfileImageURL,
+		ReportedUserProfession:  reportedThread.ReportedUserProfession,
+		ReportCategory:          reportedThread.ReportCategory,
+		ReportCreatedAt:         reportedThread.ReportCreatedAt,
+		Username:                reportedThread.Username,
+		ProfileImageURL:         reportedThread.ProfileImageURL,
+	}
+
+	return reportedThreadResponse, nil
+}
+
+func (uu *userUsecase) GetReportedCommunity(userRole string, communityReportID uint) (dto.ReportedCommunityResponse, error) {
+	var reportedCommunityResponse dto.ReportedCommunityResponse
+
+	if userRole != "Admin" {
+		return dto.ReportedCommunityResponse{}, utils.ErrUnauthorizedAccess
+	}
+
+	reportedCommunity, err := uu.userRepo.GetReportedCommunity(communityReportID)
+
+	if err != nil {
+		return dto.ReportedCommunityResponse{}, err
+	}
+
+	reportedCommunityResponse = dto.ReportedCommunityResponse{
+		CommunityName:               reportedCommunity.CommunityName,
+		CommunityImageURL:           reportedCommunity.CommunityImageURL,
+		CommunityBackgroundImageURL: reportedCommunity.CommunityBackgroundImageURL,
+		ReportCategory:              reportedCommunity.ReportCategory,
+		ReportCreatedAt:             reportedCommunity.ReportCreatedAt,
+		Username:                    reportedCommunity.Username,
+		ProfileImageURL:             reportedCommunity.ProfileImageURL,
+	}
+
+	return reportedCommunityResponse, nil
+}
+
+func (uu *userUsecase) GetReportedComment(userRole string, commentReportID uint) (dto.ReportedCommentResponse, error) {
+	var reportedCommentResponse dto.ReportedCommentResponse
+
+	if userRole != "Admin" {
+		return dto.ReportedCommentResponse{}, utils.ErrUnauthorizedAccess
+	}
+
+	reportedComment, err := uu.userRepo.GetReportedComment(commentReportID)
+
+	if err != nil {
+		return dto.ReportedCommentResponse{}, err
+	}
+
+	reportedCommentResponse = dto.ReportedCommentResponse{
+		CommentBody:             reportedComment.CommentBody,
+		LikesCount:              reportedComment.LikesCount,
+		CommentCreatedAt:        reportedComment.CommentCreatedAt,
+		ReportedUsername:        reportedComment.ReportedUsername,
+		ReportedProfileImageURL: reportedComment.ReportedProfileImageURL,
+		ReportCategory:          reportedComment.ReportCategory,
+		ReportCreatedAt:         reportedComment.ReportCreatedAt,
+		Username:                reportedComment.Username,
+		ProfileImageURL:         reportedComment.ProfileImageURL,
+	}
+
+	return reportedCommentResponse, nil
+}
+
+func (uu *userUsecase) GetReportedUser(userRole string, userReportID uint) (dto.ReportedUserResponse, error) {
+	var reportedUserResponse dto.ReportedUserResponse
+
+	if userRole != "Admin" {
+		return dto.ReportedUserResponse{}, utils.ErrUnauthorizedAccess
+	}
+
+	reportedUser, err := uu.userRepo.GetReportedUser(userReportID)
+
+	if err != nil {
+		return dto.ReportedUserResponse{}, err
+	}
+
+	reportedUserResponse = dto.ReportedUserResponse{
+		ReportedUserUsername:        reportedUser.ReportedUserUsername,
+		ReportedUserName:            reportedUser.ReportedUserName,
+		ReportedUserProfession:      reportedUser.ReportedUserProfession,
+		ReporteduserBio:             reportedUser.ReporteduserBio,
+		ReportedUserProfileImageURL: reportedUser.ReportedUserProfileImageURL,
+		ReportedUserBackgroundURL:   reportedUser.ReportedUserBackgroundURL,
+		ReportingUserUsername:       reportedUser.ReportingUserUsername,
+		ReportingUserName:           reportedUser.ReportedUserName,
+		FollowersCount:              reportedUser.FollowersCount,
+		FollowingCount:              reportedUser.FollowingCount,
+	}
+
+	return reportedUserResponse, nil
+}
+
 func hashAndSalt(pwd []byte) string {
 
 	// Use GenerateFromPassword to hash & salt pwd.
