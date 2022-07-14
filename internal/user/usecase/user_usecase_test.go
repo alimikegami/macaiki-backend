@@ -995,3 +995,137 @@ func TestGetReportedThread(t *testing.T) {
 		assert.Empty(t, res)
 	})
 }
+
+func TestGetReportedCommunity(t *testing.T) {
+	mockUserRepo := userMock.NewUserRepository(t)
+
+	mockReportedCommunityEntity := userEntity.ReportedCommunity{
+		ID:                          uint(1),
+		CommunityName:               "dummy",
+		CommunityImageURL:           "dummy",
+		CommunityBackgroundImageURL: "dummy",
+		ReportCategory:              "dummy",
+		ReportCreatedAt:             time.Now(),
+		Username:                    "dummy",
+		ProfileImageURL:             "dummy",
+	}
+
+	t.Run("success", func(t *testing.T) {
+		mockUserRepo.On("GetReportedCommunity", uint(1)).Return(mockReportedCommunityEntity, nil).Once()
+
+		testUserUsecase := NewUserUsecase(mockUserRepo, nil, nil, nil, nil, nil, nil, nil)
+		res, err := testUserUsecase.GetReportedCommunity("Admin", uint(1))
+
+		assert.NoError(t, err)
+		assert.NotEmpty(t, res)
+	})
+
+	t.Run("unauthorize", func(t *testing.T) {
+		testUserUsecase := NewUserUsecase(nil, nil, nil, nil, nil, nil, nil, nil)
+		res, err := testUserUsecase.GetReportedCommunity("User", uint(1))
+
+		assert.Error(t, err)
+		assert.Empty(t, res)
+	})
+
+	t.Run("inteernal-server-error", func(t *testing.T) {
+		mockUserRepo.On("GetReportedCommunity", uint(1)).Return(userEntity.ReportedCommunity{}, utils.ErrInternalServerError).Once()
+
+		testUserUsecase := NewUserUsecase(mockUserRepo, nil, nil, nil, nil, nil, nil, nil)
+		res, err := testUserUsecase.GetReportedCommunity("Admin", uint(1))
+
+		assert.Error(t, err)
+		assert.Empty(t, res)
+	})
+}
+
+func TestGetReportedComment(t *testing.T) {
+	mockUserRepo := userMock.NewUserRepository(t)
+
+	mockReportedCommentEntity := userEntity.ReportedComment{
+		ID:                      uint(1),
+		CommentBody:             "dummy",
+		LikesCount:              1,
+		CommentCreatedAt:        time.Now(),
+		ReportedUsername:        "dummy",
+		ReportedProfileImageURL: "dummy",
+		ReportCategory:          "dummy",
+		ReportCreatedAt:         time.Now(),
+		Username:                "dummy",
+		ProfileImageURL:         "dummy",
+	}
+
+	t.Run("success", func(t *testing.T) {
+		mockUserRepo.On("GetReportedComment", uint(1)).Return(mockReportedCommentEntity, nil).Once()
+
+		testUserUsecase := NewUserUsecase(mockUserRepo, nil, nil, nil, nil, nil, nil, nil)
+		res, err := testUserUsecase.GetReportedComment("Admin", uint(1))
+
+		assert.NoError(t, err)
+		assert.NotEmpty(t, res)
+	})
+
+	t.Run("unauthorize", func(t *testing.T) {
+		testUserUsecase := NewUserUsecase(nil, nil, nil, nil, nil, nil, nil, nil)
+		res, err := testUserUsecase.GetReportedComment("User", uint(1))
+
+		assert.Error(t, err)
+		assert.Empty(t, res)
+	})
+
+	t.Run("inteernal-server-error", func(t *testing.T) {
+		mockUserRepo.On("GetReportedComment", uint(1)).Return(userEntity.ReportedComment{}, utils.ErrInternalServerError).Once()
+
+		testUserUsecase := NewUserUsecase(mockUserRepo, nil, nil, nil, nil, nil, nil, nil)
+		res, err := testUserUsecase.GetReportedComment("Admin", uint(1))
+
+		assert.Error(t, err)
+		assert.Empty(t, res)
+	})
+}
+
+func TestGetReportedUser(t *testing.T) {
+	mockUserRepo := userMock.NewUserRepository(t)
+
+	mockReportedUserEntity := userEntity.ReportedUser{
+		ID:                          uint(1),
+		ReportedUserUsername:        "dummy",
+		ReportedUserName:            "dummy",
+		ReportedUserProfession:      "dummy",
+		ReporteduserBio:             "dummy",
+		ReportedUserProfileImageURL: "dummy",
+		ReportedUserBackgroundURL:   "dummy",
+		ReportingUserUsername:       "dummy",
+		ReportingUserName:           "dummy",
+		FollowersCount:              1,
+		FollowingCount:              1,
+	}
+
+	t.Run("success", func(t *testing.T) {
+		mockUserRepo.On("GetReportedUser", uint(1)).Return(mockReportedUserEntity, nil).Once()
+
+		testUserUsecase := NewUserUsecase(mockUserRepo, nil, nil, nil, nil, nil, nil, nil)
+		res, err := testUserUsecase.GetReportedUser("Admin", uint(1))
+
+		assert.NoError(t, err)
+		assert.NotEmpty(t, res)
+	})
+
+	t.Run("unauthorize", func(t *testing.T) {
+		testUserUsecase := NewUserUsecase(nil, nil, nil, nil, nil, nil, nil, nil)
+		res, err := testUserUsecase.GetReportedUser("User", uint(1))
+
+		assert.Error(t, err)
+		assert.Empty(t, res)
+	})
+
+	t.Run("inteernal-server-error", func(t *testing.T) {
+		mockUserRepo.On("GetReportedUser", uint(1)).Return(userEntity.ReportedUser{}, utils.ErrInternalServerError).Once()
+
+		testUserUsecase := NewUserUsecase(mockUserRepo, nil, nil, nil, nil, nil, nil, nil)
+		res, err := testUserUsecase.GetReportedUser("Admin", uint(1))
+
+		assert.Error(t, err)
+		assert.Empty(t, res)
+	})
+}
