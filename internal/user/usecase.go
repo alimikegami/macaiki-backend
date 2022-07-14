@@ -41,4 +41,9 @@ type UserUsecase interface {
 	GetReportedCommunity(userRole string, communityReportID uint) (dto.ReportedCommunityResponse, error)
 	GetReportedComment(userRole string, commentReportID uint) (dto.ReportedCommentResponse, error)
 	GetReportedUser(userRole string, userReportID uint) (dto.ReportedUserResponse, error)
+
+	DeleteThreadReport(userRole string, threadReportID uint) error
+	DeleteUserReport(userRole string, userReportID uint) error
+	DeleteCommentReport(userRole string, commentReportID uint) error
+	DeleteCommunityReport(userRole string, communityReportID uint) error
 }

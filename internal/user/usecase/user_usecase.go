@@ -811,6 +811,46 @@ func (uu *userUsecase) BanCommunity(userRole string, communityReportID uint) err
 	return nil
 }
 
+func (uu *userUsecase) DeleteThreadReport(userRole string, threadReportID uint) error {
+	if userRole != "Admin" {
+		return utils.ErrUnauthorizedAccess
+	}
+
+	err := uu.userRepo.DeleteThreadReport(threadReportID)
+
+	return err
+}
+
+func (uu *userUsecase) DeleteUserReport(userRole string, userReportID uint) error {
+	if userRole != "Admin" {
+		return utils.ErrUnauthorizedAccess
+	}
+
+	err := uu.userRepo.DeleteUserReport(userReportID)
+
+	return err
+}
+
+func (uu *userUsecase) DeleteCommentReport(userRole string, commentReportID uint) error {
+	if userRole != "Admin" {
+		return utils.ErrUnauthorizedAccess
+	}
+
+	err := uu.userRepo.DeleteCommentReport(commentReportID)
+
+	return err
+}
+
+func (uu *userUsecase) DeleteCommunityReport(userRole string, communityReportID uint) error {
+	if userRole != "Admin" {
+		return utils.ErrUnauthorizedAccess
+	}
+
+	err := uu.userRepo.DeleteCommunityReport(communityReportID)
+
+	return err
+}
+
 func hashAndSalt(pwd []byte) string {
 
 	// Use GenerateFromPassword to hash & salt pwd.
