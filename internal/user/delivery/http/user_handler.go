@@ -37,6 +37,10 @@ func NewUserHandler(e *echo.Echo, us user.UserUsecase, JWTSecret string) {
 	e.GET("/api/v1/admin/reports/communities/:communityReportID", handler.GetReportedCommunity, middleware.JWT([]byte(JWTSecret)))
 	e.GET("/api/v1/admin/reports/comments/:commentReportID", handler.GetReportedComment, middleware.JWT([]byte(JWTSecret)))
 	e.GET("/api/v1/admin/reports/users/:userReportID", handler.GetReportedUser, middleware.JWT([]byte(JWTSecret)))
+	e.DELETE("/api/v1/admin/reports/threads/:threadReportID", handler.DeleteThreadReport, middleware.JWT([]byte(JWTSecret)))
+	e.DELETE("/api/v1/admin/reports/communities/:communityReportID", handler.DeleteCommunityReport, middleware.JWT([]byte(JWTSecret)))
+	e.DELETE("/api/v1/admin/reports/comments/:commentReportID", handler.DeleteCommentReport, middleware.JWT([]byte(JWTSecret)))
+	e.DELETE("/api/v1/admin/reports/users/:userReportID", handler.DeleteUserReport, middleware.JWT([]byte(JWTSecret)))
 
 	e.DELETE("/api/v1/admin/ban/users/:userReportID", handler.BanUser, middleware.JWT([]byte(JWTSecret)))
 	e.DELETE("/api/v1/admin/ban/comments/:commentReportID", handler.BanComment, middleware.JWT([]byte(JWTSecret)))
@@ -497,6 +501,66 @@ func (u *UserHandler) BanComment(c echo.Context) error {
 	}
 	_, role := _middL.ExtractTokenUser(c)
 	err = u.UserUsecase.BanComment(role, uint(commentReportID))
+
+	if err != nil {
+		return response.ErrorResponse(c, err)
+	}
+
+	return response.SuccessResponse(c, nil)
+}
+
+func (u *UserHandler) DeleteThreadReport(c echo.Context) error {
+	threadReportID, err := strconv.Atoi(c.Param("threadReportID"))
+	if err != nil {
+		return response.ErrorResponse(c, utils.ErrBadParamInput)
+	}
+	_, role := _middL.ExtractTokenUser(c)
+	err = u.UserUsecase.DeleteThreadReport(role, uint(threadReportID))
+
+	if err != nil {
+		return response.ErrorResponse(c, err)
+	}
+
+	return response.SuccessResponse(c, nil)
+}
+
+func (u *UserHandler) DeleteCommentReport(c echo.Context) error {
+	commentReportID, err := strconv.Atoi(c.Param("commentReportID"))
+	if err != nil {
+		return response.ErrorResponse(c, utils.ErrBadParamInput)
+	}
+	_, role := _middL.ExtractTokenUser(c)
+	err = u.UserUsecase.DeleteCommentReport(role, uint(commentReportID))
+
+	if err != nil {
+		return response.ErrorResponse(c, err)
+	}
+
+	return response.SuccessResponse(c, nil)
+}
+
+func (u *UserHandler) DeleteUserReport(c echo.Context) error {
+	userReportID, err := strconv.Atoi(c.Param("userReportID"))
+	if err != nil {
+		return response.ErrorResponse(c, utils.ErrBadParamInput)
+	}
+	_, role := _middL.ExtractTokenUser(c)
+	err = u.UserUsecase.DeleteUserReport(role, uint(userReportID))
+
+	if err != nil {
+		return response.ErrorResponse(c, err)
+	}
+
+	return response.SuccessResponse(c, nil)
+}
+
+func (u *UserHandler) DeleteCommunityReport(c echo.Context) error {
+	communityReportID, err := strconv.Atoi(c.Param("communityReportID"))
+	if err != nil {
+		return response.ErrorResponse(c, utils.ErrBadParamInput)
+	}
+	_, role := _middL.ExtractTokenUser(c)
+	err = u.UserUsecase.DeleteCommunityReport(role, uint(communityReportID))
 
 	if err != nil {
 		return response.ErrorResponse(c, err)
