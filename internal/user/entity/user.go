@@ -60,3 +60,57 @@ type AdminDashboardAnalytics struct {
 	ModeratorsCount int
 	ReportsCount    int
 }
+
+type ReportedThread struct {
+	ID                      uint
+	ThreadTitle             string
+	ThreadBody              string
+	ThreadImageURL          string
+	ThreadCreatedAt         time.Time
+	LikesCount              int
+	ReportedUsername        string
+	ReportedProfileImageURL string
+	ReportedUserProfession  string
+	ReportCategory          string
+	ReportCreatedAt         time.Time
+	Username                string
+	ProfileImageURL         string
+}
+
+type ReportedComment struct {
+	ID                      uint
+	CommentBody             string
+	LikesCount              int
+	CommentCreatedAt        time.Time
+	ReportedUsername        string
+	ReportedProfileImageURL string
+	ReportCategory          string
+	ReportCreatedAt         time.Time
+	Username                string
+	ProfileImageURL         string
+}
+
+type ReportedCommunity struct {
+	ID                          uint
+	CommunityName               string
+	CommunityImageURL           string
+	CommunityBackgroundImageURL string
+	ReportCategory              string
+	ReportCreatedAt             time.Time
+	Username                    string
+	ProfileImageURL             string
+}
+
+type ReportedUser struct {
+	ID                          uint
+	ReportedUserUsername        string
+	ReportedUserName            string
+	ReportedUserProfession      string
+	ReporteduserBio             string
+	ReportedUserProfileImageURL string
+	ReportedUserBackgroundURL   string
+	ReportingUserUsername       string
+	ReportingUserName           string
+	FollowersCount              int
+	FollowingCount              int
+}
