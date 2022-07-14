@@ -44,8 +44,20 @@ func (ur *MysqlUserRepository) Store(user entity.User) error {
 
 func (ur *MysqlUserRepository) Get(id uint) (entity.User, error) {
 	user := entity.User{}
+	res := ur.Db.Find(&user, id)
+	err := res.Error
 
-	res := ur.Db.Raw("SELECT u.*, !ISNULL(uf.user_id) AS is_followed, (u.id = ?) AS is_mine  FROM `users` AS u LEFT JOIN (SELECT * FROM user_followers WHERE follower_id = ?) AS uf ON u.id = uf.user_id WHERE u.deleted_at IS NULL AND u.id = ?", id, id, id).Find(&user)
+	if err != nil {
+		return entity.User{}, err
+	}
+
+	return user, nil
+}
+
+func (ur *MysqlUserRepository) GetWithDetail(id, tokenID uint) (entity.User, error) {
+	user := entity.User{}
+
+	res := ur.Db.Raw("SELECT u.*, !ISNULL(uf.user_id) AS is_followed, (u.id = ?) AS is_mine  FROM `users` AS u LEFT JOIN (SELECT * FROM user_followers WHERE follower_id = ?) AS uf ON u.id = uf.user_id WHERE u.deleted_at IS NULL AND u.id = ?", tokenID, tokenID, id).Find(&user)
 	err := res.Error
 
 	if err != nil {
@@ -253,7 +265,6 @@ func (ur *MysqlUserRepository) GetReportedThread(threadReportID uint) (entity.Re
 	var reportedThread entity.ReportedThread
 
 	res := ur.Db.Raw("SELECT tr.id, t.title AS thread_title, t.body AS thread_body, t.image_url AS thread_image_url, t.created_at AS thread_created_at, t2.likes_count, u.username AS reported_username, u.profile_image_url AS reported_profile_image_url, u.profession AS reported_user_profession, rc.name AS report_category, tr.created_at AS report_created_at, u2.username, u2.profile_image_url FROM thread_reports tr INNER JOIN threads t ON t.id = tr.thread_id LEFT JOIN (SELECT thread_id, COUNT(*) AS likes_count FROM thread_upvotes tu GROUP BY thread_id) AS t2 ON t.id = t2.thread_id INNER JOIN users u ON u.id = t.user_id INNER JOIN users u2 ON u2.id = tr.user_id INNER JOIN report_categories rc ON rc.id = tr.report_category_id WHERE tr.id = ?;", threadReportID).Scan(&reportedThread)
-
 
 	if res.Error != nil {
 		return entity.ReportedThread{}, utils.ErrInternalServerError

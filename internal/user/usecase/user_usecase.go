@@ -38,6 +38,11 @@ type userUsecase struct {
 	goMail             *goMail.Gomail
 }
 
+var (
+	DEFAULT_PROFILE    = "https://macaiki.s3.ap-southeast-3.amazonaws.com/profile/default-avatar.png"
+	DEFAULT_BACKGROUND = "https://macaiki.s3.ap-southeast-3.amazonaws.com/background/default-background.png"
+)
+
 func NewUserUsecase(userRepo user.UserRepository, reportCategoryRepo reportcategory.ReportCategoryRepository, communityRepo comRepo.CommunityRepository, notificationRepo notification.NotificationRepository, threadRepo thread.ThreadRepository, validator *validator.Validate, awsS3Instace *cloudstorage.S3, goMail *goMail.Gomail) user.UserUsecase {
 	return &userUsecase{
 		userRepo:           userRepo,
@@ -102,12 +107,14 @@ func (uu *userUsecase) Register(user dto.UserRequest) error {
 	}
 
 	userEntity := entity.User{
-		Email:    user.Email,
-		Username: user.Username,
-		Password: hashAndSalt([]byte(user.Password)),
-		Role:     "User",
-		Name:     user.Username,
-		IsBanned: 0,
+		Email:              user.Email,
+		Username:           user.Username,
+		Password:           hashAndSalt([]byte(user.Password)),
+		Role:               "User",
+		ProfileImageUrl:    DEFAULT_PROFILE,
+		BackgroundImageUrl: DEFAULT_BACKGROUND,
+		Name:               user.Username,
+		IsBanned:           0,
 	}
 
 	err = uu.userRepo.Store(userEntity)
@@ -128,7 +135,7 @@ func (uu *userUsecase) GetAll(userID uint, search string) ([]dto.UserResponse, e
 }
 
 func (uu *userUsecase) Get(id, tokenUserID uint) (dto.UserDetailResponse, error) {
-	userEntity, err := uu.userRepo.Get(id)
+	userEntity, err := uu.userRepo.GetWithDetail(id, tokenUserID)
 	if err != nil {
 		return dto.UserDetailResponse{}, utils.ErrInternalServerError
 	}
@@ -306,7 +313,7 @@ func (uu *userUsecase) SetProfileImage(id uint, img *multipart.FileHeader) (stri
 		return "", utils.ErrNotFound
 	}
 
-	if user.ProfileImageUrl != "" {
+	if user.ProfileImageUrl != DEFAULT_PROFILE {
 		err = uu.awsS3.DeleteImage(user.ProfileImageUrl, "profile")
 		if err != nil {
 			return "", err
@@ -339,7 +346,7 @@ func (uu *userUsecase) SetBackgroundImage(id uint, img *multipart.FileHeader) (s
 		return "", utils.ErrNotFound
 	}
 
-	if user.BackgroundImageUrl != "" {
+	if user.BackgroundImageUrl != DEFAULT_BACKGROUND {
 		err = uu.awsS3.DeleteImage(user.BackgroundImageUrl, "background")
 		if err != nil {
 			return "", err

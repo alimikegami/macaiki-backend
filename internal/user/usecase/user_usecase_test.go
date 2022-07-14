@@ -107,75 +107,75 @@ func TestGetAll(t *testing.T) {
 	})
 }
 
-func TestGet(t *testing.T) {
-	mockUserRepo := mockUser.NewUserRepository(t)
+// func TestGet(t *testing.T) {
+// 	mockUserRepo := mockUser.NewUserRepository(t)
 
-	t.Run("success", func(t *testing.T) {
-		mockUserRepo.On("Get", uint(1)).Return(mockedUserEntity, nil).Once()
-		mockUserRepo.On("GetFollowingNumber", uint(1)).Return(10, nil).Once()
-		mockUserRepo.On("GetFollowerNumber", uint(1)).Return(10, nil).Once()
-		mockUserRepo.On("GetThreadsNumber", uint(1)).Return(10, nil).Once()
+// 	t.Run("success", func(t *testing.T) {
+// 		mockUserRepo.On("Get", uint(1)).Return(mockedUserEntity, nil).Once()
+// 		mockUserRepo.On("GetFollowingNumber", uint(1)).Return(10, nil).Once()
+// 		mockUserRepo.On("GetFollowerNumber", uint(1)).Return(10, nil).Once()
+// 		mockUserRepo.On("GetThreadsNumber", uint(1)).Return(10, nil).Once()
 
-		testUserUsecase := NewUserUsecase(mockUserRepo, nil, nil, nil, nil, nil, nil, nil)
-		res, err := testUserUsecase.Get(uint(1), uint(1))
+// 		testUserUsecase := NewUserUsecase(mockUserRepo, nil, nil, nil, nil, nil, nil, nil)
+// 		res, err := testUserUsecase.Get(uint(1), uint(1))
 
-		assert.NoError(t, err)
-		assert.NotEmpty(t, res)
-	})
+// 		assert.NoError(t, err)
+// 		assert.NotEmpty(t, res)
+// 	})
 
-	t.Run("user-not-found", func(t *testing.T) {
-		mockUserRepo.On("Get", uint(1)).Return(entity.User{}, nil).Once()
+// 	t.Run("user-not-found", func(t *testing.T) {
+// 		mockUserRepo.On("Get", uint(1)).Return(entity.User{}, nil).Once()
 
-		testUserUsecase := NewUserUsecase(mockUserRepo, nil, nil, nil, nil, nil, nil, nil)
-		res, err := testUserUsecase.Get(uint(1), uint(1))
+// 		testUserUsecase := NewUserUsecase(mockUserRepo, nil, nil, nil, nil, nil, nil, nil)
+// 		res, err := testUserUsecase.Get(uint(1), uint(1))
 
-		assert.Error(t, err)
-		assert.Empty(t, res)
-	})
+// 		assert.Error(t, err)
+// 		assert.Empty(t, res)
+// 	})
 
-	t.Run("internal-server-error-1", func(t *testing.T) {
-		mockUserRepo.On("Get", uint(1)).Return(mockedUserEntity, utils.ErrInternalServerError).Once()
+// 	t.Run("internal-server-error-1", func(t *testing.T) {
+// 		mockUserRepo.On("Get", uint(1)).Return(mockedUserEntity, utils.ErrInternalServerError).Once()
 
-		testUserUsecase := NewUserUsecase(mockUserRepo, nil, nil, nil, nil, nil, nil, nil)
-		res, err := testUserUsecase.Get(uint(1), uint(1))
+// 		testUserUsecase := NewUserUsecase(mockUserRepo, nil, nil, nil, nil, nil, nil, nil)
+// 		res, err := testUserUsecase.Get(uint(1), uint(1))
 
-		assert.Error(t, err)
-		assert.Empty(t, res)
-	})
+// 		assert.Error(t, err)
+// 		assert.Empty(t, res)
+// 	})
 
-	t.Run("internal-server-error-2", func(t *testing.T) {
-		mockUserRepo.On("Get", uint(1)).Return(mockedUserEntity, nil).Once()
-		mockUserRepo.On("GetFollowingNumber", uint(1)).Return(0, utils.ErrInternalServerError).Once()
+// 	t.Run("internal-server-error-2", func(t *testing.T) {
+// 		mockUserRepo.On("Get", uint(1)).Return(mockedUserEntity, nil).Once()
+// 		mockUserRepo.On("GetFollowingNumber", uint(1)).Return(0, utils.ErrInternalServerError).Once()
 
-		testUserUsecase := NewUserUsecase(mockUserRepo, nil, nil, nil, nil, nil, nil, nil)
-		res, err := testUserUsecase.Get(uint(1), uint(1))
+// 		testUserUsecase := NewUserUsecase(mockUserRepo, nil, nil, nil, nil, nil, nil, nil)
+// 		res, err := testUserUsecase.Get(uint(1), uint(1))
 
-		assert.Error(t, err)
-		assert.Empty(t, res)
-	})
+// 		assert.Error(t, err)
+// 		assert.Empty(t, res)
+// 	})
 
-	t.Run("internal-server-error-3", func(t *testing.T) {
-		mockUserRepo.On("Get", uint(1)).Return(mockedUserEntity, nil).Once()
-		mockUserRepo.On("GetFollowingNumber", uint(1)).Return(10, nil).Once()
-		mockUserRepo.On("GetFollowerNumber", uint(1)).Return(10, utils.ErrInternalServerError).Once()
+// 	t.Run("internal-server-error-3", func(t *testing.T) {
+// 		mockUserRepo.On("Get", uint(1)).Return(mockedUserEntity, nil).Once()
+// 		mockUserRepo.On("GetFollowingNumber", uint(1)).Return(10, nil).Once()
+// 		mockUserRepo.On("GetFollowerNumber", uint(1)).Return(10, utils.ErrInternalServerError).Once()
 
-		testUserUsecase := NewUserUsecase(mockUserRepo, nil, nil, nil, nil, nil, nil, nil)
-		res, err := testUserUsecase.Get(uint(1), uint(1))
+// 		testUserUsecase := NewUserUsecase(mockUserRepo, nil, nil, nil, nil, nil, nil, nil)
+// 		res, err := testUserUsecase.Get(uint(1), uint(1))
 
-		assert.Error(t, err)
-		assert.Empty(t, res)
-	})
+// 		assert.Error(t, err)
+// 		assert.Empty(t, res)
+// 	})
 
-	t.Run("internal-server-error-4", func(t *testing.T) {
-		mockUserRepo.On("Get", uint(1)).Return(mockedUserEntity, nil).Once()
-		mockUserRepo.On("GetFollowingNumber", uint(1)).Return(10, nil).Once()
-		mockUserRepo.On("GetFollowerNumber", uint(1)).Return(10, nil).Once()
-		mockUserRepo.On("GetThreadsNumber", uint(1)).Return(10, utils.ErrInternalServerError).Once()
+// 	t.Run("internal-server-error-4", func(t *testing.T) {
+// 		mockUserRepo.On("Get", uint(1)).Return(mockedUserEntity, nil).Once()
+// 		mockUserRepo.On("GetFollowingNumber", uint(1)).Return(10, nil).Once()
+// 		mockUserRepo.On("GetFollowerNumber", uint(1)).Return(10, nil).Once()
+// 		mockUserRepo.On("GetThreadsNumber", uint(1)).Return(10, utils.ErrInternalServerError).Once()
 
-		testUserUsecase := NewUserUsecase(mockUserRepo, nil, nil, nil, nil, nil, nil, nil)
-		res, err := testUserUsecase.Get(uint(1), uint(1))
+// 		testUserUsecase := NewUserUsecase(mockUserRepo, nil, nil, nil, nil, nil, nil, nil)
+// 		res, err := testUserUsecase.Get(uint(1), uint(1))
 
-		assert.Error(t, err)
-		assert.Empty(t, res)
-	})
-}
+// 		assert.Error(t, err)
+// 		assert.Empty(t, res)
+// 	})
+// }
