@@ -522,7 +522,7 @@ func (tuc *ThreadUseCaseImpl) GetSavedThread(userID uint) ([]dto.DetailedThreadR
 	res, err := tuc.tr.GetSavedThread(userID)
 
 	if err != nil {
-		return []dto.DetailedThreadResponse{}, nil
+		return []dto.DetailedThreadResponse{}, err
 	}
 
 	for _, thread := range res {
