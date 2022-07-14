@@ -240,7 +240,7 @@ func (ur *MysqlUserRepository) GetReports() ([]entity.BriefReport, error) {
 func (ur *MysqlUserRepository) GetDashboardAnalytics() (entity.AdminDashboardAnalytics, error) {
 	var adminAnalytics entity.AdminDashboardAnalytics
 
-	res := ur.Db.Raw("SELECT (SELECT COUNT(*) FROM users WHERE deleted_at IS NULL) AS users_count, (SELECT COUNT(*) FROM users WHERE `role` = 'Moderator') AS moderators_count, (SELECT COUNT(*) FROM thread_reports) + (SELECT COUNT(*) FROM user_reports) + (SELECT COUNT(*) FROM comment_reports) AS reports_count;").Scan(&adminAnalytics)
+	res := ur.Db.Raw("SELECT (SELECT COUNT(*) FROM users WHERE deleted_at IS NULL) AS users_count, (SELECT COUNT(*) FROM users WHERE `role` = 'Moderator') AS moderators_count, (SELECT COUNT(*) FROM thread_reports WHERE deleted_at IS NULL) + (SELECT COUNT(*) FROM user_reports WHERE deleted_at IS NULL) + (SELECT COUNT(*) FROM comment_reports WHERE deleted_at IS NULL) AS reports_count;").Scan(&adminAnalytics)
 
 	if res.Error != nil {
 		return entity.AdminDashboardAnalytics{}, utils.ErrInternalServerError
@@ -253,7 +253,6 @@ func (ur *MysqlUserRepository) GetReportedThread(threadReportID uint) (entity.Re
 	var reportedThread entity.ReportedThread
 
 	res := ur.Db.Raw("SELECT tr.id, t.title AS thread_title, t.body AS thread_body, t.image_url AS thread_image_url, t.created_at AS thread_created_at, t2.likes_count, u.username AS reported_username, u.profile_image_url AS reported_profile_image_url, u.profession AS reported_user_profession, rc.name AS report_category, tr.created_at AS report_created_at, u2.username, u2.profile_image_url FROM thread_reports tr INNER JOIN threads t ON t.id = tr.thread_id LEFT JOIN (SELECT thread_id, COUNT(*) AS likes_count FROM thread_upvotes tu GROUP BY thread_id) AS t2 ON t.id = t2.thread_id INNER JOIN users u ON u.id = t.user_id INNER JOIN users u2 ON u2.id = tr.user_id INNER JOIN report_categories rc ON rc.id = tr.report_category_id WHERE tr.id = ?;", threadReportID).Scan(&reportedThread)
-
 
 	if res.Error != nil {
 		return entity.ReportedThread{}, utils.ErrInternalServerError
