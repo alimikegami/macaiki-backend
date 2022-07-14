@@ -3,6 +3,10 @@ package usecase
 import (
 	notifEntity "macaiki/internal/notification/entity"
 	notifMock "macaiki/internal/notification/mocks"
+	rcEntity "macaiki/internal/report_category/entity"
+	reportCategoryMock "macaiki/internal/report_category/mocks"
+	threadEntity "macaiki/internal/thread/entity"
+	threadMock "macaiki/internal/thread/mocks"
 	userDTO "macaiki/internal/user/dto"
 	userEntity "macaiki/internal/user/entity"
 	userMock "macaiki/internal/user/mocks"
@@ -410,7 +414,30 @@ func TestChangeEmail(t *testing.T) {
 	})
 }
 
-func TestChangePassword(t *testing.T) {}
+// func TestChangePassword(t *testing.T) {
+// 	mockUserRepo := userMock.NewUserRepository(t)
+
+// 	mockUserUpdateEntity := userEntity.User{
+// 		Password: "1234567",
+// 	}
+
+// 	mockPasswordInfoDTOReqSuccess := userDTO.UserChangePasswordRequest{
+// 		NewPassword:          "1234567",
+// 		PasswordConfirmation: "1234567",
+// 	}
+
+// 	t.Run("success", func(t *testing.T) {
+// 		mockUserRepo.On("Get", uint(1)).Return(mockUserEntity1, nil).Once()
+// 		mockUserRepo.On("Update", &mockUserEntity1, mockUserUpdateEntity).Return(mockUserEntity1, nil).Once()
+
+// 		testUserUsecase := NewUserUsecase(mockUserRepo, nil, nil, nil, nil, v, nil, nil)
+
+// 		err := testUserUsecase.ChangePassword(uint(1), mockPasswordInfoDTOReqSuccess)
+
+// 		assert.NoError(t, err)
+// 	})
+
+// }
 
 func TestGetUserFollowers(t *testing.T) {
 	mockUserRepo := userMock.NewUserRepository(t)
@@ -504,9 +531,15 @@ func TestGetUserFollowing(t *testing.T) {
 	})
 }
 
-// func TestSetProfileImage(t *testing.T) {}
+// func TestSetProfileImage(t *testing.T) {
+// 	mockUserRepo := userMock.UserRepository(t)
+// 	mockAwsS3 := cloudstorage.CreateNewS3Instance()
+// 	t.Run("success", func(t *testing.T) {
+// 		mockUserRepo.On("Get", uint(1)).Return(mockUserEntity1, nil).Once()
+// 	})
+// }
 
-// func TestSetBackgroundImage(t *testing.T) {}
+func TestSetBackgroundImage(t *testing.T) {}
 
 func TestFollow(t *testing.T) {
 	mockUserRepo := userMock.NewUserRepository(t)
@@ -607,5 +640,358 @@ func TestFollow(t *testing.T) {
 		err := testUserUsecase.Follow(uint(1), uint(1))
 
 		assert.Error(t, err)
+	})
+}
+
+func TestUnfollow(t *testing.T) {
+	mockUserRepo := userMock.NewUserRepository(t)
+
+	t.Run("success", func(t *testing.T) {
+		mockUserRepo.On("Get", uint(1)).Return(mockUserEntity1, nil).Once()
+		mockUserRepo.On("Get", uint(2)).Return(mockUserEntity2, nil).Once()
+		mockUserRepo.On("Unfollow", mockUserEntity1, mockUserEntity2).Return(mockUserEntity1, nil).Once()
+
+		testUserUsecase := NewUserUsecase(mockUserRepo, nil, nil, nil, nil, nil, nil, nil)
+
+		err := testUserUsecase.Unfollow(uint(1), uint(2))
+
+		assert.NoError(t, err)
+	})
+
+	t.Run("user-not-found", func(t *testing.T) {
+		mockUserRepo.On("Get", uint(1)).Return(userEntity.User{}, nil).Once()
+
+		testUserUsecase := NewUserUsecase(mockUserRepo, nil, nil, nil, nil, nil, nil, nil)
+
+		err := testUserUsecase.Unfollow(uint(1), uint(2))
+
+		assert.Error(t, err)
+	})
+
+	t.Run("user-not-found", func(t *testing.T) {
+		mockUserRepo.On("Get", uint(1)).Return(mockUserEntity1, nil).Once()
+		mockUserRepo.On("Get", uint(2)).Return(userEntity.User{}, nil).Once()
+
+		testUserUsecase := NewUserUsecase(mockUserRepo, nil, nil, nil, nil, nil, nil, nil)
+
+		err := testUserUsecase.Unfollow(uint(1), uint(2))
+
+		assert.Error(t, err)
+	})
+
+	t.Run("internal-server-error", func(t *testing.T) {
+		mockUserRepo.On("Get", uint(1)).Return(userEntity.User{}, utils.ErrInternalServerError).Once()
+
+		testUserUsecase := NewUserUsecase(mockUserRepo, nil, nil, nil, nil, nil, nil, nil)
+
+		err := testUserUsecase.Unfollow(uint(1), uint(2))
+
+		assert.Error(t, err)
+	})
+
+	t.Run("internal-server-error", func(t *testing.T) {
+		mockUserRepo.On("Get", uint(1)).Return(mockUserEntity1, nil).Once()
+		mockUserRepo.On("Get", uint(2)).Return(userEntity.User{}, utils.ErrInternalServerError).Once()
+
+		testUserUsecase := NewUserUsecase(mockUserRepo, nil, nil, nil, nil, nil, nil, nil)
+
+		err := testUserUsecase.Unfollow(uint(1), uint(2))
+
+		assert.Error(t, err)
+	})
+
+	t.Run("internal-server-error", func(t *testing.T) {
+		mockUserRepo.On("Get", uint(1)).Return(mockUserEntity1, nil).Once()
+		mockUserRepo.On("Get", uint(2)).Return(mockUserEntity2, nil).Once()
+		mockUserRepo.On("Unfollow", mockUserEntity1, mockUserEntity2).Return(userEntity.User{}, utils.ErrInternalServerError).Once()
+
+		testUserUsecase := NewUserUsecase(mockUserRepo, nil, nil, nil, nil, nil, nil, nil)
+
+		err := testUserUsecase.Unfollow(uint(1), uint(2))
+
+		assert.Error(t, err)
+	})
+
+	t.Run("internal-server-error", func(t *testing.T) {
+		mockUserRepo.On("Get", uint(1)).Return(mockUserEntity1, nil).Once()
+		mockUserRepo.On("Get", uint(2)).Return(mockUserEntity2, nil).Once()
+		mockUserRepo.On("Unfollow", mockUserEntity1, mockUserEntity2).Return(mockUserEntity1, nil).Once()
+
+		testUserUsecase := NewUserUsecase(mockUserRepo, nil, nil, nil, nil, nil, nil, nil)
+
+		err := testUserUsecase.Unfollow(uint(1), uint(2))
+
+		assert.NoError(t, err)
+	})
+}
+
+func TestReport(t *testing.T) {
+	mockUserRepo := userMock.NewUserRepository(t)
+	mockReportCategoryRepo := reportCategoryMock.NewReportCategoryRepository(t)
+
+	mockRcEntity := rcEntity.ReportCategory{
+		ID:   uint(1),
+		Name: "ga sopan",
+	}
+
+	mockUserReportEntity := userEntity.UserReport{
+		UserID:           uint(1),
+		ReportedUserID:   uint(2),
+		ReportCategoryID: uint(1),
+	}
+
+	t.Run("internal-server-error", func(t *testing.T) {
+		mockUserRepo.On("Get", uint(1)).Return(mockUserEntity1, nil).Once()
+		mockReportCategoryRepo.On("GetReportCategory", uint(1)).Return(mockRcEntity, utils.ErrInternalServerError).Once()
+
+		testUserUsecase := NewUserUsecase(mockUserRepo, mockReportCategoryRepo, nil, nil, nil, nil, nil, nil)
+
+		err := testUserUsecase.Report(uint(2), uint(1), uint(1))
+
+		assert.Error(t, err)
+	})
+
+	t.Run("internal-server-error", func(t *testing.T) {
+		mockUserRepo.On("Get", uint(2)).Return(userEntity.User{}, utils.ErrInternalServerError).Once()
+
+		testUserUsecase := NewUserUsecase(mockUserRepo, mockReportCategoryRepo, nil, nil, nil, nil, nil, nil)
+
+		err := testUserUsecase.Report(uint(1), uint(2), uint(1))
+
+		assert.Error(t, err)
+	})
+
+	t.Run("internal-server-error", func(t *testing.T) {
+		mockUserRepo.On("Get", uint(2)).Return(mockUserEntity2, nil).Once()
+		mockReportCategoryRepo.On("GetReportCategory", uint(1)).Return(mockRcEntity, nil).Once()
+		mockUserRepo.On("StoreReport", mockUserReportEntity).Return(utils.ErrInternalServerError).Once()
+
+		testUserUsecase := NewUserUsecase(mockUserRepo, mockReportCategoryRepo, nil, nil, nil, nil, nil, nil)
+
+		err := testUserUsecase.Report(uint(1), uint(2), uint(1))
+
+		assert.Error(t, err)
+	})
+
+	t.Run("success", func(t *testing.T) {
+		mockUserRepo.On("Get", uint(2)).Return(mockUserEntity2, nil).Once()
+		mockReportCategoryRepo.On("GetReportCategory", uint(1)).Return(mockRcEntity, nil).Once()
+		mockUserRepo.On("StoreReport", mockUserReportEntity).Return(nil).Once()
+
+		testUserUsecase := NewUserUsecase(mockUserRepo, mockReportCategoryRepo, nil, nil, nil, nil, nil, nil)
+
+		err := testUserUsecase.Report(uint(1), uint(2), uint(1))
+
+		assert.NoError(t, err)
+	})
+
+	t.Run("user-not-found", func(t *testing.T) {
+		mockUserRepo.On("Get", uint(2)).Return(userEntity.User{}, nil).Once()
+
+		testUserUsecase := NewUserUsecase(mockUserRepo, mockReportCategoryRepo, nil, nil, nil, nil, nil, nil)
+
+		err := testUserUsecase.Report(uint(1), uint(2), uint(1))
+
+		assert.Error(t, err)
+	})
+
+	t.Run("report-category-not-found", func(t *testing.T) {
+		mockUserRepo.On("Get", uint(2)).Return(mockUserEntity2, nil).Once()
+		mockReportCategoryRepo.On("GetReportCategory", uint(1)).Return(rcEntity.ReportCategory{}, nil)
+		testUserUsecase := NewUserUsecase(mockUserRepo, mockReportCategoryRepo, nil, nil, nil, nil, nil, nil)
+
+		err := testUserUsecase.Report(uint(1), uint(2), uint(1))
+
+		assert.Error(t, err)
+	})
+}
+
+func TestGetThreadByToken(t *testing.T) {
+	mockThreadRepo := threadMock.NewThreadRepository(t)
+
+	mockThreadWithDetailEntity := threadEntity.ThreadWithDetails{
+		Thread: threadEntity.Thread{
+			Model: gorm.Model{
+				ID:        1,
+				CreatedAt: time.Now(),
+				UpdatedAt: time.Now(),
+			},
+			Title:       "dummy",
+			Body:        "dummy",
+			ImageURL:    "dummy",
+			UserID:      uint(1),
+			CommunityID: uint(1),
+		},
+		User:         mockUserEntity1,
+		UpvotesCount: 1,
+		IsUpvoted:    1,
+		IsFollowed:   1,
+		IsDownvoted:  0,
+	}
+
+	mockThreadWithDetailEntityArr := []threadEntity.ThreadWithDetails{
+		mockThreadWithDetailEntity,
+	}
+
+	t.Run("success", func(t *testing.T) {
+		mockThreadRepo.On("GetThreadsByUserID", uint(1), uint(1)).Return(mockThreadWithDetailEntityArr, nil).Once()
+
+		testUserUsecase := NewUserUsecase(nil, nil, nil, nil, mockThreadRepo, nil, nil, nil)
+		res, err := testUserUsecase.GetThreadByToken(uint(1), uint(1))
+
+		assert.NoError(t, err)
+		assert.NotEmpty(t, res)
+	})
+
+	t.Run("internal-server-error", func(t *testing.T) {
+		mockThreadRepo.On("GetThreadsByUserID", uint(1), uint(1)).Return([]threadEntity.ThreadWithDetails{}, utils.ErrInternalServerError).Once()
+
+		testUserUsecase := NewUserUsecase(nil, nil, nil, nil, mockThreadRepo, nil, nil, nil)
+		res, err := testUserUsecase.GetThreadByToken(uint(1), uint(1))
+
+		assert.Error(t, err)
+		assert.Empty(t, res)
+	})
+}
+
+func TestSendOTP(t *testing.T)   {}
+func TestVerifyOTP(t *testing.T) {}
+
+func TestGetReports(t *testing.T) {
+	mockUserRepo := userMock.NewUserRepository(t)
+
+	mockBriefReportEntity := userEntity.BriefReport{
+		ThreadReportsID:     0,
+		UserReportsID:       2,
+		CommentReportsID:    0,
+		CommunityReportsID:  0,
+		CreatedAt:           time.Now(),
+		ThreadID:            0,
+		UserID:              1,
+		CommentID:           0,
+		CommunityReportedID: 0,
+		ReportCategory:      "dummy",
+		Username:            "dummy",
+		ProfileImageURL:     "dummy",
+		Type:                "dummy",
+	}
+
+	mockBriefReportEntityArr := []userEntity.BriefReport{mockBriefReportEntity}
+
+	t.Run("success", func(t *testing.T) {
+		mockUserRepo.On("GetReports").Return(mockBriefReportEntityArr, nil).Once()
+
+		testUserUsecase := NewUserUsecase(mockUserRepo, nil, nil, nil, nil, nil, nil, nil)
+
+		res, err := testUserUsecase.GetReports("Admin")
+
+		assert.NoError(t, err)
+		assert.NotEmpty(t, res)
+	})
+
+	t.Run("unauthorize", func(t *testing.T) {
+		testUserUsecase := NewUserUsecase(nil, nil, nil, nil, nil, nil, nil, nil)
+
+		res, err := testUserUsecase.GetReports("User")
+
+		assert.Error(t, err)
+		assert.Empty(t, res)
+	})
+
+	t.Run("internal-server-error", func(t *testing.T) {
+		mockUserRepo.On("GetReports").Return([]userEntity.BriefReport{}, utils.ErrInternalServerError).Once()
+
+		testUserUsecase := NewUserUsecase(mockUserRepo, nil, nil, nil, nil, nil, nil, nil)
+
+		res, err := testUserUsecase.GetReports("Admin")
+
+		assert.Error(t, err)
+		assert.Empty(t, res)
+	})
+}
+
+func TestGetDashboardAnalytics(t *testing.T) {
+	mockUserRepo := userMock.NewUserRepository(t)
+
+	mockAdminDashboardAnalyticsEntity := userEntity.AdminDashboardAnalytics{
+		UsersCount:      1000,
+		ModeratorsCount: 1000,
+		ReportsCount:    1000,
+	}
+
+	t.Run("success", func(t *testing.T) {
+		mockUserRepo.On("GetDashboardAnalytics").Return(mockAdminDashboardAnalyticsEntity, nil).Once()
+
+		testUserUsecase := NewUserUsecase(mockUserRepo, nil, nil, nil, nil, nil, nil, nil)
+		res, err := testUserUsecase.GetDashboardAnalytics("Admin")
+
+		assert.NoError(t, err)
+		assert.NotEmpty(t, res)
+	})
+
+	t.Run("unauthorize", func(t *testing.T) {
+		testUserUsecase := NewUserUsecase(nil, nil, nil, nil, nil, nil, nil, nil)
+		res, err := testUserUsecase.GetDashboardAnalytics("User")
+
+		assert.Error(t, err)
+		assert.Empty(t, res)
+	})
+
+	t.Run("internal-server-error", func(t *testing.T) {
+		mockUserRepo.On("GetDashboardAnalytics").Return(userEntity.AdminDashboardAnalytics{}, utils.ErrInternalServerError).Once()
+
+		testUserUsecase := NewUserUsecase(mockUserRepo, nil, nil, nil, nil, nil, nil, nil)
+		res, err := testUserUsecase.GetDashboardAnalytics("Admin")
+
+		assert.Error(t, err)
+		assert.Empty(t, res)
+	})
+}
+
+func TestGetReportedThread(t *testing.T) {
+	mockUserRepo := userMock.NewUserRepository(t)
+
+	mockReportedThreadEntity := userEntity.ReportedThread{
+		ID:                      uint(1),
+		ThreadTitle:             "dummy",
+		ThreadBody:              "dummy",
+		ThreadImageURL:          "dummy",
+		ThreadCreatedAt:         time.Now(),
+		LikesCount:              1,
+		ReportedUsername:        "dummy",
+		ReportedProfileImageURL: "dummy",
+		ReportedUserProfession:  "dummy",
+		ReportCategory:          "dummy",
+		ReportCreatedAt:         time.Now(),
+		Username:                "dummy",
+		ProfileImageURL:         "dummy",
+	}
+
+	t.Run("success", func(t *testing.T) {
+		mockUserRepo.On("GetReportedThread", uint(1)).Return(mockReportedThreadEntity, nil).Once()
+
+		testUserUsecase := NewUserUsecase(mockUserRepo, nil, nil, nil, nil, nil, nil, nil)
+		res, err := testUserUsecase.GetReportedThread("Admin", uint(1))
+
+		assert.NoError(t, err)
+		assert.NotEmpty(t, res)
+	})
+
+	t.Run("unauthorize", func(t *testing.T) {
+		testUserUsecase := NewUserUsecase(nil, nil, nil, nil, nil, nil, nil, nil)
+		res, err := testUserUsecase.GetReportedThread("User", uint(1))
+
+		assert.Error(t, err)
+		assert.Empty(t, res)
+	})
+
+	t.Run("internal-server-error", func(t *testing.T) {
+		mockUserRepo.On("GetReportedThread", uint(1)).Return(userEntity.ReportedThread{}, utils.ErrInternalServerError).Once()
+
+		testUserUsecase := NewUserUsecase(mockUserRepo, nil, nil, nil, nil, nil, nil, nil)
+		res, err := testUserUsecase.GetReportedThread("Admin", uint(1))
+
+		assert.Error(t, err)
+		assert.Empty(t, res)
 	})
 }
