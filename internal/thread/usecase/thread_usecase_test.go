@@ -469,3 +469,53 @@ func TestGetTrendingThreads(t *testing.T) {
 		assert.Empty(t, thread)
 	})
 }
+
+func TestGetThreadsFromFollowedCommunity(t *testing.T) {
+	mockThreadRepo := mocks.NewThreadRepository(t)
+	mockNotifRepo := entityMocks.NewNotificationRepository(t)
+
+	t.Run("success", func(t *testing.T) {
+		mockThreadRepo.On("GetThreadsFromFollowedCommunity", uint(1)).Return(mockedDetailedThread, nil).Once()
+
+		testThreadUseCase := CreateNewThreadUseCase(mockThreadRepo, mockNotifRepo, nil)
+		thread, err := testThreadUseCase.GetThreadsFromFollowedCommunity(uint(1))
+
+		assert.NoError(t, err)
+		assert.NotEmpty(t, thread)
+	})
+
+	t.Run("internal-server-error", func(t *testing.T) {
+		mockThreadRepo.On("GetThreadsFromFollowedCommunity", uint(1)).Return([]entity.ThreadWithDetails{}, utils.ErrInternalServerError).Once()
+
+		testThreadUseCase := CreateNewThreadUseCase(mockThreadRepo, mockNotifRepo, nil)
+		thread, err := testThreadUseCase.GetThreadsFromFollowedCommunity(uint(1))
+
+		assert.Error(t, err)
+		assert.Empty(t, thread)
+	})
+}
+
+func TestGetThreadsFromFollowedUsers(t *testing.T) {
+	mockThreadRepo := mocks.NewThreadRepository(t)
+	mockNotifRepo := entityMocks.NewNotificationRepository(t)
+
+	t.Run("success", func(t *testing.T) {
+		mockThreadRepo.On("GetThreadsFromFollowedUsers", uint(1)).Return(mockedDetailedThread, nil).Once()
+
+		testThreadUseCase := CreateNewThreadUseCase(mockThreadRepo, mockNotifRepo, nil)
+		thread, err := testThreadUseCase.GetThreadsFromFollowedUsers(uint(1))
+
+		assert.NoError(t, err)
+		assert.NotEmpty(t, thread)
+	})
+
+	t.Run("internal-server-error", func(t *testing.T) {
+		mockThreadRepo.On("GetThreadsFromFollowedUsers", uint(1)).Return([]entity.ThreadWithDetails{}, utils.ErrInternalServerError).Once()
+
+		testThreadUseCase := CreateNewThreadUseCase(mockThreadRepo, mockNotifRepo, nil)
+		thread, err := testThreadUseCase.GetThreadsFromFollowedUsers(uint(1))
+
+		assert.Error(t, err)
+		assert.Empty(t, thread)
+	})
+}
