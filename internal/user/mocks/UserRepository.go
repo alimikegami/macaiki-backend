@@ -469,6 +469,27 @@ func (_m *UserRepository) GetUserReport(reportID uint) (entity.UserReport, error
 	return r0, r1
 }
 
+// GetWithDetail provides a mock function with given fields: id, tokenID
+func (_m *UserRepository) GetWithDetail(id uint, tokenID uint) (entity.User, error) {
+	ret := _m.Called(id, tokenID)
+
+	var r0 entity.User
+	if rf, ok := ret.Get(0).(func(uint, uint) entity.User); ok {
+		r0 = rf(id, tokenID)
+	} else {
+		r0 = ret.Get(0).(entity.User)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(uint, uint) error); ok {
+		r1 = rf(id, tokenID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // SetUserImage provides a mock function with given fields: id, imageURL, tableName
 func (_m *UserRepository) SetUserImage(id uint, imageURL string, tableName string) error {
 	ret := _m.Called(id, imageURL, tableName)

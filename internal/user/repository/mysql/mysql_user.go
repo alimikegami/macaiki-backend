@@ -44,8 +44,20 @@ func (ur *MysqlUserRepository) Store(user entity.User) error {
 
 func (ur *MysqlUserRepository) Get(id uint) (entity.User, error) {
 	user := entity.User{}
+	res := ur.Db.Find(&user, id)
+	err := res.Error
 
-	res := ur.Db.Raw("SELECT u.*, !ISNULL(uf.user_id) AS is_followed, (u.id = ?) AS is_mine  FROM `users` AS u LEFT JOIN (SELECT * FROM user_followers WHERE follower_id = ?) AS uf ON u.id = uf.user_id WHERE u.deleted_at IS NULL AND u.id = ?", id, id, id).Find(&user)
+	if err != nil {
+		return entity.User{}, err
+	}
+
+	return user, nil
+}
+
+func (ur *MysqlUserRepository) GetWithDetail(id, tokenID uint) (entity.User, error) {
+	user := entity.User{}
+
+	res := ur.Db.Raw("SELECT u.*, !ISNULL(uf.user_id) AS is_followed, (u.id = ?) AS is_mine  FROM `users` AS u LEFT JOIN (SELECT * FROM user_followers WHERE follower_id = ?) AS uf ON u.id = uf.user_id WHERE u.deleted_at IS NULL AND u.id = ?", tokenID, tokenID, id).Find(&user)
 	err := res.Error
 
 	if err != nil {
