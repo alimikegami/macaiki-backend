@@ -45,8 +45,6 @@ func NewCommunityHandler(e *echo.Echo, communityUsecase community.CommunityUseca
 	e.POST("api/v1/communities/:communityID/reports", communityHandler.ReportCommunity, middleware.JWT([]byte(JWTSecret)))
 	e.DELETE("api/v1/communities/reports/:reportCommunityID", communityHandler.DeleteReportCommunity, middleware.JWT([]byte(JWTSecret)))
 	e.GET("/api/v1/communities/:communityID/reports", communityHandler.GetReports, middleware.JWT([]byte(JWTSecret)))
-
-	// ROUTE DIBAWAH INI SIFATNYA TIDAK KEKAL ALIAS SEMENTARA SEPERTI KITA HIDUP DI DUNIA INI,, CATAT !!!!!!!!!!!!!!!!
 	e.POST("/api/v1/community-moderators/communities/:communityID/reports", communityHandler.ReportByModerator, middleware.JWT([]byte(JWTSecret)))
 }
 
