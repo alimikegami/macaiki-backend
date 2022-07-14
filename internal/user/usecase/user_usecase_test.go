@@ -326,3 +326,53 @@ func TestGetUserFollowers(t *testing.T) {
 		assert.Error(t, err)
 	})
 }
+
+func TestGetUserFollowing(t *testing.T) {
+	mockUserRepo := mockUser.NewUserRepository(t)
+
+	t.Run("success", func(t *testing.T) {
+		mockUserRepo.On("Get", uint(1)).Return(mockedUserEntity, nil).Once()
+		mockUserRepo.On("GetFollowing", uint(1), uint(1)).Return(mockedUserArr, nil).Once()
+
+		testUserUsecase := NewUserUsecase(mockUserRepo, nil, nil, nil, nil, nil, nil, nil)
+
+		_, err := testUserUsecase.GetUserFollowing(uint(1), uint(1))
+
+		assert.NoError(t, err)
+	})
+
+	t.Run("user-not-found", func(t *testing.T) {
+		mockUserRepo.On("Get", uint(1)).Return(entity.User{}, nil).Once()
+
+		testUserUsecase := NewUserUsecase(mockUserRepo, nil, nil, nil, nil, nil, nil, nil)
+
+		_, err := testUserUsecase.GetUserFollowing(uint(1), uint(1))
+
+		assert.Error(t, err)
+	})
+
+	t.Run("internal-server-error-1", func(t *testing.T) {
+		mockUserRepo.On("Get", uint(1)).Return(entity.User{}, utils.ErrInternalServerError).Once()
+
+		testUserUsecase := NewUserUsecase(mockUserRepo, nil, nil, nil, nil, nil, nil, nil)
+
+		_, err := testUserUsecase.GetUserFollowing(uint(1), uint(1))
+
+		assert.Error(t, err)
+	})
+
+	t.Run("internal-server-error-2", func(t *testing.T) {
+		mockUserRepo.On("Get", uint(1)).Return(mockedUserEntity, nil).Once()
+		mockUserRepo.On("GetFollowing", uint(1), uint(1)).Return([]entity.User{}, utils.ErrInternalServerError).Once()
+
+		testUserUsecase := NewUserUsecase(mockUserRepo, nil, nil, nil, nil, nil, nil, nil)
+
+		_, err := testUserUsecase.GetUserFollowing(uint(1), uint(1))
+
+		assert.Error(t, err)
+	})
+}
+
+// func TestSetProfileImage(t *testing.T) {}
+
+// func TestSetBackgroundImage(t *testing.T) {}
