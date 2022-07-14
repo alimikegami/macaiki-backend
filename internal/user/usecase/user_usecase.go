@@ -162,10 +162,6 @@ func (uu *userUsecase) Get(id, tokenUserID uint) (dto.UserDetailResponse, error)
 	return userResp, nil
 }
 func (uu *userUsecase) Update(user dto.UserUpdateRequest, id uint) (dto.UserUpdateResponse, error) {
-	if err := uu.validator.Struct(user); err != nil {
-		return dto.UserUpdateResponse{}, utils.ErrBadParamInput
-	}
-
 	// validation the user exist
 	userDB, err := uu.userRepo.Get(id)
 	if err != nil {
