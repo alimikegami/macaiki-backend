@@ -260,6 +260,10 @@ func (cu *CommunityUsecaseImpl) SetImage(id uint, img *multipart.FileHeader, rol
 		return "", utils.ErrInternalServerError
 	}
 
+	if community.ID == 0 {
+		return "", utils.ErrNotFound
+	}
+
 	if community.CommunityImageUrl != "" {
 		err = cu.awsS3.DeleteImage(community.CommunityImageUrl, "community")
 		if err != nil {
@@ -291,6 +295,10 @@ func (cu *CommunityUsecaseImpl) SetBackgroundImage(id uint, img *multipart.FileH
 	community, err := cu.communityRepo.GetCommunity(id)
 	if err != nil {
 		return "", utils.ErrInternalServerError
+	}
+
+	if community.ID == 0 {
+		return "", utils.ErrNotFound
 	}
 
 	if community.CommunityImageUrl != "" {
