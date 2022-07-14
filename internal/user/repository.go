@@ -6,6 +6,7 @@ type UserRepository interface {
 	GetAllWithDetail(userID uint, search string) ([]entity.User, error)
 	Store(user entity.User) error
 	Get(id uint) (entity.User, error)
+	GetWithDetail(id, tokenID uint) (entity.User, error)
 	Update(userDB *entity.User, user entity.User) (entity.User, error)
 	Delete(id uint) error
 	GetByEmail(email string) (entity.User, error)
