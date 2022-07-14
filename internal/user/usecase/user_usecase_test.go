@@ -3,6 +3,7 @@ package usecase
 import (
 	notifEntity "macaiki/internal/notification/entity"
 	notifMock "macaiki/internal/notification/mocks"
+	userDTO "macaiki/internal/user/dto"
 	userEntity "macaiki/internal/user/entity"
 	userMock "macaiki/internal/user/mocks"
 	"macaiki/pkg/utils"
@@ -23,7 +24,7 @@ var (
 		},
 		Email:              "dummy@gmail.com",
 		Username:           "dummy",
-		Password:           "123456",
+		Password:           "$2a$04$UP.ZNuepVAiEedwlZrvA3.ywqqNszceSuqnZQl4mozYOzO9ILY2kK",
 		Name:               "dummy",
 		ProfileImageUrl:    "dummy",
 		BackgroundImageUrl: "dummy",
@@ -60,22 +61,18 @@ var (
 
 // func TestLogin(t *testing.T) {
 // 	mockUserRepo := userMock.NewUserRepository(t)
-// 	mockNotifRepo := notifMock.NewNotificationRepository(t)
-// 	mockThreadRepo := threadMock.NewThreadRepository(t)
-// 	mockRcRepo := rcMock.NewReportCategoryRepository(t)
 
-// 	mockUserRepo.On("GetByEmail", mockUserEntity1.Email).Return(entity.User{}, nil).Once()
+// 	t.Run("success", func(t *testing.T) {
+// 		mockUserRepo.On("GetByEmail", mockUserEntity1.Email).Return(userEntity.User{}, nil).Once()
 
-// 	testUserUsecase := NewUserUsecase(mockUserRepo, mockRcRepo, mockNotifRepo, mockThreadRepo, v, nil, nil)
+// 		testUserUsecase := NewUserUsecase(mockUserRepo, nil, nil, nil, nil, v, nil, nil)
+// 	})
 // }
 
 // func TestRegister(t *testing.T) {
 // 	mockUserRepo := userMock.NewUserRepository(t)
-// 	mockNotifRepo := notifMock.NewNotificationRepository(t)
-// 	mockThreadRepo := threadMock.NewThreadRepository(t)
-// 	mockRcRepo := rcMock.NewReportCategoryRepository(t)
 
-// 	mockUserReq := dto.UserRequest{
+// 	mockUserReq := userDTO.UserRequest{
 // 		Email:                "dummy@gmail.com",
 // 		Username:             "dummy",
 // 		Password:             "123456",
@@ -83,11 +80,11 @@ var (
 // 	}
 
 // 	t.Run("success", func(t *testing.T) {
-// 		mockUserRepo.On("GetByEmail", mockUserReq.Email).Return(entity.User{}, nil).Once()
-// 		mockUserRepo.On("GetByUsername", mockUserReq.Username).Return(entity.User{}, nil).Once()
+// 		mockUserRepo.On("GetByEmail", mockUserReq.Email).Return(userEntity.User{}, nil).Once()
+// 		mockUserRepo.On("GetByUsername", mockUserReq.Username).Return(userEntity.User{}, nil).Once()
 // 		mockUserRepo.On("Store", mockUserEntity1).Return(nil).Once()
 
-// 		testUserUsecase := NewUserUsecase(mockUserRepo, mockRcRepo, mockNotifRepo, mockThreadRepo, v, nil, nil)
+// 		testUserUsecase := NewUserUsecase(mockUserRepo, nil, nil, nil, nil, v, nil, nil)
 // 		err := testUserUsecase.Register(mockUserReq)
 
 // 		assert.NoError(t, err)
@@ -191,26 +188,67 @@ func TestGet(t *testing.T) {
 	})
 }
 
-// func TestUpdate(t *testing.T) {
-// 	mockUserRepo := mockUser.NewUserRepository(t)
+func TestUpdate(t *testing.T) {
+	mockUserRepo := userMock.NewUserRepository(t)
 
-// 	t.Run("success", func(t *testing.T) {
-// 		mockUserRepo.On("Get", uint(1)).Return(mockUserEntity1, nil)
-// 		mockUserRepo.On("Update", &mockUserEntity1, mockUserEntity1).Return(mockUserEntity1, nil).Once()
+	mockUserUpdateDTO := userDTO.UserUpdateRequest{
+		Name:       "dummy",
+		Bio:        "dummy",
+		Profession: "dummy",
+	}
 
-// 		testUseUsecase := NewUserUsecase(mockUserRepo, nil, nil, nil, nil, v, nil, nil)
+	mockUserEntityUpdate := userEntity.User{
+		Name:       "dummy",
+		Bio:        "dummy",
+		Profession: "dummy",
+	}
 
-// 		mockUserUpdateDTO := dto.UserUpdateRequest{
-// 			Name:       "dummy",
-// 			Bio:        "dummy",
-// 			Profession: "dummy",
-// 		}
-// 		res, err := testUseUsecase.Update(mockUserUpdateDTO, uint(1))
+	t.Run("success", func(t *testing.T) {
+		mockUserRepo.On("Get", uint(1)).Return(mockUserEntity1, nil).Once()
+		mockUserRepo.On("Update", &mockUserEntity1, mockUserEntityUpdate).Return(mockUserEntity1, nil).Once()
 
-// 		assert.NoError(t, err)
-// 		assert.NotEmpty(t, res)
-// 	})
-// }
+		testUseUsecase := NewUserUsecase(mockUserRepo, nil, nil, nil, nil, nil, nil, nil)
+
+		res, err := testUseUsecase.Update(mockUserUpdateDTO, uint(1))
+
+		assert.NoError(t, err)
+		assert.NotEmpty(t, res)
+	})
+
+	t.Run("user-not-found", func(t *testing.T) {
+		mockUserRepo.On("Get", uint(1)).Return(userEntity.User{}, nil).Once()
+
+		testUseUsecase := NewUserUsecase(mockUserRepo, nil, nil, nil, nil, nil, nil, nil)
+
+		res, err := testUseUsecase.Update(mockUserUpdateDTO, uint(1))
+
+		assert.Error(t, err)
+		assert.Empty(t, res)
+	})
+
+	t.Run("internal-server-error", func(t *testing.T) {
+		mockUserRepo.On("Get", uint(1)).Return(userEntity.User{}, utils.ErrInternalServerError).Once()
+
+		testUseUsecase := NewUserUsecase(mockUserRepo, nil, nil, nil, nil, nil, nil, nil)
+
+		res, err := testUseUsecase.Update(mockUserUpdateDTO, uint(1))
+
+		assert.Error(t, err)
+		assert.Empty(t, res)
+	})
+
+	t.Run("internal-server-error", func(t *testing.T) {
+		mockUserRepo.On("Get", uint(1)).Return(mockUserEntity1, nil).Once()
+		mockUserRepo.On("Update", &mockUserEntity1, mockUserEntityUpdate).Return(userEntity.User{}, utils.ErrInternalServerError).Once()
+
+		testUseUsecase := NewUserUsecase(mockUserRepo, nil, nil, nil, nil, nil, nil, nil)
+
+		res, err := testUseUsecase.Update(mockUserUpdateDTO, uint(1))
+
+		assert.Error(t, err)
+		assert.Empty(t, res)
+	})
+}
 
 func TestDelete(t *testing.T) {
 	mockUserRepo := userMock.NewUserRepository(t)
@@ -246,7 +284,7 @@ func TestDelete(t *testing.T) {
 		assert.Error(t, err)
 	})
 
-	t.Run("internal-server-error-1", func(t *testing.T) {
+	t.Run("internal-server-error", func(t *testing.T) {
 		mockUserRepo.On("Get", uint(1)).Return(mockUserEntity1, nil).Once()
 		mockUserRepo.On("Delete", uint(1)).Return(utils.ErrInternalServerError).Once()
 
@@ -257,7 +295,7 @@ func TestDelete(t *testing.T) {
 		assert.Error(t, err)
 	})
 
-	t.Run("internal-server-error-2", func(t *testing.T) {
+	t.Run("internal-server-error", func(t *testing.T) {
 		mockUserRepo.On("Get", uint(1)).Return(userEntity.User{}, utils.ErrInternalServerError).Once()
 
 		testUserUsecase := NewUserUsecase(mockUserRepo, nil, nil, nil, nil, nil, nil, nil)
@@ -268,7 +306,109 @@ func TestDelete(t *testing.T) {
 	})
 }
 
-func TestChangeEmail(t *testing.T) {}
+func TestChangeEmail(t *testing.T) {
+	mockUserRepo := userMock.NewUserRepository(t)
+
+	mockInfoDTOReqSuccess := userDTO.UserLoginRequest{
+		Email:    "dummyupdate@gmail.com",
+		Password: "123456",
+	}
+
+	mockInfoDTOReqSuccessFail1 := userDTO.UserLoginRequest{
+		Email:    "",
+		Password: "123456",
+	}
+
+	mockInfoDTOReqSuccessFail2 := userDTO.UserLoginRequest{
+		Email:    "dummyupdate@gmail.com",
+		Password: "1234567",
+	}
+
+	mockEntityReq := userEntity.User{
+		Email: "dummyupdate@gmail.com",
+	}
+
+	t.Run("success", func(t *testing.T) {
+		mockUserRepo.On("Get", uint(1)).Return(mockUserEntity1, nil).Once()
+		mockUserRepo.On("GetByEmail", mockInfoDTOReqSuccess.Email).Return(userEntity.User{}, nil).Once()
+		mockUserRepo.On("Update", &mockUserEntity1, mockEntityReq).Return(mockUserEntity1, nil).Once()
+
+		testUserUsecase := NewUserUsecase(mockUserRepo, nil, nil, nil, nil, v, nil, nil)
+
+		res, err := testUserUsecase.ChangeEmail(uint(1), mockInfoDTOReqSuccess)
+
+		assert.NoError(t, err)
+		assert.NotEmpty(t, res)
+	})
+
+	t.Run("internal-server-error", func(t *testing.T) {
+		mockUserRepo.On("Get", uint(1)).Return(userEntity.User{}, utils.ErrInternalServerError).Once()
+
+		testUserUsecase := NewUserUsecase(mockUserRepo, nil, nil, nil, nil, v, nil, nil)
+
+		res, err := testUserUsecase.ChangeEmail(uint(1), mockInfoDTOReqSuccess)
+
+		assert.Error(t, err)
+		assert.Empty(t, res)
+	})
+
+	t.Run("success", func(t *testing.T) {
+		mockUserRepo.On("Get", uint(1)).Return(mockUserEntity1, nil).Once()
+		mockUserRepo.On("GetByEmail", mockInfoDTOReqSuccess.Email).Return(userEntity.User{}, utils.ErrInternalServerError).Once()
+
+		testUserUsecase := NewUserUsecase(mockUserRepo, nil, nil, nil, nil, v, nil, nil)
+
+		res, err := testUserUsecase.ChangeEmail(uint(1), mockInfoDTOReqSuccess)
+
+		assert.Error(t, err)
+		assert.Empty(t, res)
+	})
+
+	t.Run("success", func(t *testing.T) {
+		mockUserRepo.On("Get", uint(1)).Return(mockUserEntity1, nil).Once()
+		mockUserRepo.On("GetByEmail", mockInfoDTOReqSuccess.Email).Return(userEntity.User{}, nil).Once()
+		mockUserRepo.On("Update", &mockUserEntity1, mockEntityReq).Return(userEntity.User{}, utils.ErrInternalServerError).Once()
+
+		testUserUsecase := NewUserUsecase(mockUserRepo, nil, nil, nil, nil, v, nil, nil)
+
+		res, err := testUserUsecase.ChangeEmail(uint(1), mockInfoDTOReqSuccess)
+
+		assert.Error(t, err)
+		assert.Empty(t, res)
+	})
+	t.Run("bad-param-input", func(t *testing.T) {
+		testUserUsecase := NewUserUsecase(mockUserRepo, nil, nil, nil, nil, v, nil, nil)
+
+		res, err := testUserUsecase.ChangeEmail(uint(1), mockInfoDTOReqSuccessFail1)
+
+		assert.Error(t, err)
+		assert.Empty(t, res)
+	})
+
+	t.Run("email-already-used", func(t *testing.T) {
+		mockUserRepo.On("Get", uint(1)).Return(mockUserEntity1, nil).Once()
+		mockUserRepo.On("GetByEmail", mockInfoDTOReqSuccess.Email).Return(mockUserEntity1, nil).Once()
+
+		testUserUsecase := NewUserUsecase(mockUserRepo, nil, nil, nil, nil, v, nil, nil)
+
+		res, err := testUserUsecase.ChangeEmail(uint(1), mockInfoDTOReqSuccess)
+
+		assert.Error(t, err)
+		assert.Empty(t, res)
+	})
+
+	t.Run("forbidden", func(t *testing.T) {
+		mockUserRepo.On("Get", uint(1)).Return(mockUserEntity1, nil).Once()
+		mockUserRepo.On("GetByEmail", mockInfoDTOReqSuccess.Email).Return(userEntity.User{}, nil).Once()
+
+		testUserUsecase := NewUserUsecase(mockUserRepo, nil, nil, nil, nil, v, nil, nil)
+
+		res, err := testUserUsecase.ChangeEmail(uint(1), mockInfoDTOReqSuccessFail2)
+
+		assert.Error(t, err)
+		assert.Empty(t, res)
+	})
+}
 
 func TestChangePassword(t *testing.T) {}
 
@@ -296,7 +436,7 @@ func TestGetUserFollowers(t *testing.T) {
 		assert.Error(t, err)
 	})
 
-	t.Run("internal-server-error-1", func(t *testing.T) {
+	t.Run("internal-server-error", func(t *testing.T) {
 		mockUserRepo.On("Get", uint(1)).Return(userEntity.User{}, utils.ErrInternalServerError).Once()
 
 		testUserUsecase := NewUserUsecase(mockUserRepo, nil, nil, nil, nil, nil, nil, nil)
@@ -306,7 +446,7 @@ func TestGetUserFollowers(t *testing.T) {
 		assert.Error(t, err)
 	})
 
-	t.Run("internal-server-error-2", func(t *testing.T) {
+	t.Run("internal-server-error", func(t *testing.T) {
 		mockUserRepo.On("Get", uint(1)).Return(mockUserEntity1, nil).Once()
 		mockUserRepo.On("GetFollower", uint(1), uint(1)).Return([]userEntity.User{}, utils.ErrInternalServerError).Once()
 
@@ -342,7 +482,7 @@ func TestGetUserFollowing(t *testing.T) {
 		assert.Error(t, err)
 	})
 
-	t.Run("internal-server-error-1", func(t *testing.T) {
+	t.Run("internal-server-error", func(t *testing.T) {
 		mockUserRepo.On("Get", uint(1)).Return(userEntity.User{}, utils.ErrInternalServerError).Once()
 
 		testUserUsecase := NewUserUsecase(mockUserRepo, nil, nil, nil, nil, nil, nil, nil)
@@ -352,7 +492,7 @@ func TestGetUserFollowing(t *testing.T) {
 		assert.Error(t, err)
 	})
 
-	t.Run("internal-server-error-2", func(t *testing.T) {
+	t.Run("internal-server-error", func(t *testing.T) {
 		mockUserRepo.On("Get", uint(1)).Return(mockUserEntity1, nil).Once()
 		mockUserRepo.On("GetFollowing", uint(1), uint(1)).Return([]userEntity.User{}, utils.ErrInternalServerError).Once()
 
