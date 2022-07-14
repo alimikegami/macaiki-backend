@@ -34,6 +34,18 @@ var (
 		CommunityID: uint(1),
 	}
 
+	mockedCommentEntity = entity.Comment{
+		Model: gorm.Model{
+			ID:        uint(1),
+			CreatedAt: time.Now(),
+			UpdatedAt: time.Now(),
+		},
+		Body:      "this thread is so good",
+		UserID:    uint(2),
+		ThreadID:  uint(1),
+		CommentID: uint(0),
+	}
+
 	mockedEntityMappedFromDTO = entity.Thread{
 		Title:       "Title",
 		Body:        "Body",
@@ -52,8 +64,8 @@ var (
 	// }
 
 	mockedLikeCommentEntity = entity.CommentLikes{
-		UserID:    1,
-		CommentID: 1,
+		UserID:    uint(1),
+		CommentID: uint(1),
 	}
 
 	mockedCommentReportDTO = dto.CommentReportRequest{
@@ -325,6 +337,7 @@ func TestLikeComment(t *testing.T) {
 	mockNotifRepo := entityMocks.NewNotificationRepository(t)
 
 	t.Run("success", func(t *testing.T) {
+		mockThreadRepo.On("GetCommentByID", uint(1)).Return(mockedCommentEntity, nil).Once()
 		mockThreadRepo.On("LikeComment", mockedLikeCommentEntity).Return(nil).Once()
 
 		testThreadUseCase := CreateNewThreadUseCase(mockThreadRepo, mockNotifRepo, nil)
@@ -332,8 +345,17 @@ func TestLikeComment(t *testing.T) {
 		assert.NoError(t, err)
 	})
 
-	t.Run("internal-server-error", func(t *testing.T) {
+	t.Run("internal-server-error-like-comment", func(t *testing.T) {
+		mockThreadRepo.On("GetCommentByID", uint(1)).Return(mockedCommentEntity, nil).Once()
 		mockThreadRepo.On("LikeComment", mockedLikeCommentEntity).Return(utils.ErrInternalServerError).Once()
+
+		testThreadUseCase := CreateNewThreadUseCase(mockThreadRepo, mockNotifRepo, nil)
+		err := testThreadUseCase.LikeComment(uint(1), uint(1))
+		assert.Error(t, err)
+	})
+
+	t.Run("internal-server-error-like-comment", func(t *testing.T) {
+		mockThreadRepo.On("GetCommentByID", uint(1)).Return(entity.Comment{}, utils.ErrInternalServerError).Once()
 
 		testThreadUseCase := CreateNewThreadUseCase(mockThreadRepo, mockNotifRepo, nil)
 		err := testThreadUseCase.LikeComment(uint(1), uint(1))
@@ -369,6 +391,7 @@ func TestStoreSavedThread(t *testing.T) {
 	mockNotifRepo := entityMocks.NewNotificationRepository(t)
 
 	t.Run("success", func(t *testing.T) {
+		mockThreadRepo.On("GetThreadByID", uint(1)).Return(mockedEntity, nil).Once()
 		mockThreadRepo.On("StoreSavedThread", mockedSavedThreadEntity).Return(nil).Once()
 
 		testThreadUseCase := CreateNewThreadUseCase(mockThreadRepo, mockNotifRepo, nil)
@@ -377,7 +400,17 @@ func TestStoreSavedThread(t *testing.T) {
 		assert.NoError(t, err)
 	})
 
-	t.Run("internal-server-error", func(t *testing.T) {
+	t.Run("internal-server-error-get-thread-by-id", func(t *testing.T) {
+		mockThreadRepo.On("GetThreadByID", uint(1)).Return(entity.Thread{}, utils.ErrInternalServerError).Once()
+
+		testThreadUseCase := CreateNewThreadUseCase(mockThreadRepo, mockNotifRepo, nil)
+		err := testThreadUseCase.StoreSavedThread(mockedSavedThreadDTO)
+
+		assert.Error(t, err)
+	})
+
+	t.Run("internal-server-error-store-saved-thread", func(t *testing.T) {
+		mockThreadRepo.On("GetThreadByID", uint(1)).Return(mockedEntity, nil).Once()
 		mockThreadRepo.On("StoreSavedThread", mockedSavedThreadEntity).Return(utils.ErrInternalServerError).Once()
 
 		testThreadUseCase := CreateNewThreadUseCase(mockThreadRepo, mockNotifRepo, nil)
