@@ -193,7 +193,7 @@ func (cu *CommunityUsecaseImpl) DeleteCommunity(id uint, role string) error {
 		return utils.ErrNotFound
 	}
 
-	err = cu.communityRepo.DeleteCommunity(communityDB)
+	err = cu.communityRepo.DeleteCommunity(communityDB.ID)
 	if err != nil {
 		return utils.ErrInternalServerError
 	}

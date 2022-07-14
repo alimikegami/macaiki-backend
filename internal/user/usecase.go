@@ -29,6 +29,16 @@ type UserUsecase interface {
 	GetThreadByToken(userID, tokenUserID uint) ([]dtoThread.DetailedThreadResponse, error)
 	SendOTP(email dto.SendOTPRequest) error
 	VerifyOTP(email, OTPCode string) error
+
+	BanUser(userRole string, userReportID uint) error
+	BanThread(userRole string, threadReportID uint) error
+	BanComment(userRole string, commentReportID uint) error
+	BanCommunity(userRole string, communityReportID uint) error
+
 	GetReports(curentUserRole string) ([]dto.BriefReportResponse, error)
 	GetDashboardAnalytics(userRole string) (dto.AdminDashboardAnalytics, error)
+	GetReportedThread(userRole string, threadReportID uint) (dto.ReportedThreadResponse, error)
+	GetReportedCommunity(userRole string, communityReportID uint) (dto.ReportedCommunityResponse, error)
+	GetReportedComment(userRole string, commentReportID uint) (dto.ReportedCommentResponse, error)
+	GetReportedUser(userRole string, userReportID uint) (dto.ReportedUserResponse, error)
 }

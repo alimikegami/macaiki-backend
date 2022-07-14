@@ -27,6 +27,62 @@ func (_m *UserRepository) Delete(id uint) error {
 	return r0
 }
 
+// DeleteCommentReport provides a mock function with given fields: commentReportID
+func (_m *UserRepository) DeleteCommentReport(commentReportID uint) error {
+	ret := _m.Called(commentReportID)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(uint) error); ok {
+		r0 = rf(commentReportID)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// DeleteCommunityReport provides a mock function with given fields: communityReportID
+func (_m *UserRepository) DeleteCommunityReport(communityReportID uint) error {
+	ret := _m.Called(communityReportID)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(uint) error); ok {
+		r0 = rf(communityReportID)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// DeleteThreadReport provides a mock function with given fields: threadReportID
+func (_m *UserRepository) DeleteThreadReport(threadReportID uint) error {
+	ret := _m.Called(threadReportID)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(uint) error); ok {
+		r0 = rf(threadReportID)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// DeleteUserReport provides a mock function with given fields: userReportID
+func (_m *UserRepository) DeleteUserReport(userReportID uint) error {
+	ret := _m.Called(userReportID)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(uint) error); ok {
+		r0 = rf(userReportID)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // Follow provides a mock function with given fields: _a0, userFollower
 func (_m *UserRepository) Follow(_a0 entity.User, userFollower entity.User) (entity.User, error) {
 	ret := _m.Called(_a0, userFollower)
@@ -264,6 +320,90 @@ func (_m *UserRepository) GetOTP(email string) (entity.VerificationEmail, error)
 	return r0, r1
 }
 
+// GetReportedComment provides a mock function with given fields: commentReportID
+func (_m *UserRepository) GetReportedComment(commentReportID uint) (entity.ReportedComment, error) {
+	ret := _m.Called(commentReportID)
+
+	var r0 entity.ReportedComment
+	if rf, ok := ret.Get(0).(func(uint) entity.ReportedComment); ok {
+		r0 = rf(commentReportID)
+	} else {
+		r0 = ret.Get(0).(entity.ReportedComment)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(uint) error); ok {
+		r1 = rf(commentReportID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetReportedCommunity provides a mock function with given fields: communityReportID
+func (_m *UserRepository) GetReportedCommunity(communityReportID uint) (entity.ReportedCommunity, error) {
+	ret := _m.Called(communityReportID)
+
+	var r0 entity.ReportedCommunity
+	if rf, ok := ret.Get(0).(func(uint) entity.ReportedCommunity); ok {
+		r0 = rf(communityReportID)
+	} else {
+		r0 = ret.Get(0).(entity.ReportedCommunity)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(uint) error); ok {
+		r1 = rf(communityReportID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetReportedThread provides a mock function with given fields: threadReportID
+func (_m *UserRepository) GetReportedThread(threadReportID uint) (entity.ReportedThread, error) {
+	ret := _m.Called(threadReportID)
+
+	var r0 entity.ReportedThread
+	if rf, ok := ret.Get(0).(func(uint) entity.ReportedThread); ok {
+		r0 = rf(threadReportID)
+	} else {
+		r0 = ret.Get(0).(entity.ReportedThread)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(uint) error); ok {
+		r1 = rf(threadReportID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetReportedUser provides a mock function with given fields: userReportID
+func (_m *UserRepository) GetReportedUser(userReportID uint) (entity.ReportedUser, error) {
+	ret := _m.Called(userReportID)
+
+	var r0 entity.ReportedUser
+	if rf, ok := ret.Get(0).(func(uint) entity.ReportedUser); ok {
+		r0 = rf(userReportID)
+	} else {
+		r0 = ret.Get(0).(entity.ReportedUser)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(uint) error); ok {
+		r1 = rf(userReportID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetReports provides a mock function with given fields:
 func (_m *UserRepository) GetReports() ([]entity.BriefReport, error) {
 	ret := _m.Called()
@@ -301,6 +441,27 @@ func (_m *UserRepository) GetThreadsNumber(id uint) (int, error) {
 	var r1 error
 	if rf, ok := ret.Get(1).(func(uint) error); ok {
 		r1 = rf(id)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetUserReport provides a mock function with given fields: reportID
+func (_m *UserRepository) GetUserReport(reportID uint) (entity.UserReport, error) {
+	ret := _m.Called(reportID)
+
+	var r0 entity.UserReport
+	if rf, ok := ret.Get(0).(func(uint) entity.UserReport); ok {
+		r0 = rf(reportID)
+	} else {
+		r0 = ret.Get(0).(entity.UserReport)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(uint) error); ok {
+		r1 = rf(reportID)
 	} else {
 		r1 = ret.Error(1)
 	}

@@ -17,6 +17,62 @@ type UserUsecase struct {
 	mock.Mock
 }
 
+// BanComment provides a mock function with given fields: userRole, commentReportID
+func (_m *UserUsecase) BanComment(userRole string, commentReportID uint) error {
+	ret := _m.Called(userRole, commentReportID)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(string, uint) error); ok {
+		r0 = rf(userRole, commentReportID)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// BanCommunity provides a mock function with given fields: userRole, communityReportID
+func (_m *UserUsecase) BanCommunity(userRole string, communityReportID uint) error {
+	ret := _m.Called(userRole, communityReportID)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(string, uint) error); ok {
+		r0 = rf(userRole, communityReportID)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// BanThread provides a mock function with given fields: userRole, threadReportID
+func (_m *UserUsecase) BanThread(userRole string, threadReportID uint) error {
+	ret := _m.Called(userRole, threadReportID)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(string, uint) error); ok {
+		r0 = rf(userRole, threadReportID)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// BanUser provides a mock function with given fields: userRole, userReportID
+func (_m *UserUsecase) BanUser(userRole string, userReportID uint) error {
+	ret := _m.Called(userRole, userReportID)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(string, uint) error); ok {
+		r0 = rf(userRole, userReportID)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // ChangeEmail provides a mock function with given fields: id, info
 func (_m *UserUsecase) ChangeEmail(id uint, info dto.UserLoginRequest) (string, error) {
 	ret := _m.Called(id, info)
@@ -138,6 +194,90 @@ func (_m *UserUsecase) GetDashboardAnalytics(userRole string) (dto.AdminDashboar
 	var r1 error
 	if rf, ok := ret.Get(1).(func(string) error); ok {
 		r1 = rf(userRole)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetReportedComment provides a mock function with given fields: userRole, commentReportID
+func (_m *UserUsecase) GetReportedComment(userRole string, commentReportID uint) (dto.ReportedCommentResponse, error) {
+	ret := _m.Called(userRole, commentReportID)
+
+	var r0 dto.ReportedCommentResponse
+	if rf, ok := ret.Get(0).(func(string, uint) dto.ReportedCommentResponse); ok {
+		r0 = rf(userRole, commentReportID)
+	} else {
+		r0 = ret.Get(0).(dto.ReportedCommentResponse)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string, uint) error); ok {
+		r1 = rf(userRole, commentReportID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetReportedCommunity provides a mock function with given fields: userRole, communityReportID
+func (_m *UserUsecase) GetReportedCommunity(userRole string, communityReportID uint) (dto.ReportedCommunityResponse, error) {
+	ret := _m.Called(userRole, communityReportID)
+
+	var r0 dto.ReportedCommunityResponse
+	if rf, ok := ret.Get(0).(func(string, uint) dto.ReportedCommunityResponse); ok {
+		r0 = rf(userRole, communityReportID)
+	} else {
+		r0 = ret.Get(0).(dto.ReportedCommunityResponse)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string, uint) error); ok {
+		r1 = rf(userRole, communityReportID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetReportedThread provides a mock function with given fields: userRole, threadReportID
+func (_m *UserUsecase) GetReportedThread(userRole string, threadReportID uint) (dto.ReportedThreadResponse, error) {
+	ret := _m.Called(userRole, threadReportID)
+
+	var r0 dto.ReportedThreadResponse
+	if rf, ok := ret.Get(0).(func(string, uint) dto.ReportedThreadResponse); ok {
+		r0 = rf(userRole, threadReportID)
+	} else {
+		r0 = ret.Get(0).(dto.ReportedThreadResponse)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string, uint) error); ok {
+		r1 = rf(userRole, threadReportID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetReportedUser provides a mock function with given fields: userRole, userReportID
+func (_m *UserUsecase) GetReportedUser(userRole string, userReportID uint) (dto.ReportedUserResponse, error) {
+	ret := _m.Called(userRole, userReportID)
+
+	var r0 dto.ReportedUserResponse
+	if rf, ok := ret.Get(0).(func(string, uint) dto.ReportedUserResponse); ok {
+		r0 = rf(userRole, userReportID)
+	} else {
+		r0 = ret.Get(0).(dto.ReportedUserResponse)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string, uint) error); ok {
+		r1 = rf(userRole, userReportID)
 	} else {
 		r1 = ret.Error(1)
 	}
