@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	communityDTO "macaiki/internal/community/dto"
 	communityEntity "macaiki/internal/community/entity"
 	communityMock "macaiki/internal/community/mocks"
 	userEntity "macaiki/internal/user/entity"
@@ -8,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/stretchr/testify/assert"
 	"gorm.io/gorm"
 )
@@ -47,6 +49,8 @@ var (
 	}
 
 	mockUserEntityArr = []userEntity.User{mockUserEntity}
+
+	v = validator.New()
 )
 
 func TestGetAllCommunities(t *testing.T) {
@@ -141,4 +145,82 @@ func TestGetCommunityAbout(t *testing.T) {
 		assert.Error(t, err)
 		assert.Empty(t, res)
 	})
+}
+
+func TestStoreCommunity(t *testing.T) {
+	mockCommunityRepo := communityMock.NewCommunityRepository(t)
+
+	mockCommunityEntityReq := communityEntity.Community{
+		Name:        "dummy",
+		Description: "dummy",
+	}
+
+	mockCommunityDTOReq := communityDTO.CommunityRequest{
+		Name:        "dummy",
+		Description: "dummy",
+	}
+
+	mockCommunityDTOReqFail := communityDTO.CommunityRequest{
+		Name:        "",
+		Description: "",
+	}
+
+	t.Run("success", func(t *testing.T) {
+		mockCommunityRepo.On("GetCommunity", uint(1)).Return(mockCommunityEntity, nil).Once()
+		mockCommunityRepo.On("UpdateCommunity", mockCommunityEntity, mockCommunityEntityReq).Return(mockCommunityEntity, nil)
+
+		testCommunityUsecase := NewCommunityUsecase(mockCommunityRepo, nil, nil, nil, v, nil)
+		res, err := testCommunityUsecase.UpdateCommunity(uint(1), mockCommunityDTOReq, "Admin")
+
+		assert.NoError(t, err)
+		assert.NotEmpty(t, res)
+	})
+
+	// t.Run("internal-server-error", func(t *testing.T) {
+	// 	mockCommunityRepo.On("GetCommunity", uint(1)).Return(communityEntity.Community{}, utils.ErrInternalServerError).Once()
+
+	// 	testCommunityUsecase := NewCommunityUsecase(mockCommunityRepo, nil, nil, nil, v, nil)
+	// 	res, err := testCommunityUsecase.UpdateCommunity(uint(1), mockCommunityDTOReq, "Admin")
+
+	// 	assert.Error(t, err)
+	// 	assert.Empty(t, res)
+	// })
+
+	// t.Run("internal-server-error", func(t *testing.T) {
+	// 	mockCommunityRepo.On("GetCommunity", uint(1)).Return(mockCommunityEntity, nil).Once()
+	// 	mockCommunityRepo.On("UpdateCommunity", mockCommunityEntity, mockCommunityEntityReq).Return(communityEntity.Community{}, utils.ErrInternalServerError)
+
+	// 	testCommunityUsecase := NewCommunityUsecase(mockCommunityRepo, nil, nil, nil, v, nil)
+	// 	res, err := testCommunityUsecase.UpdateCommunity(uint(1), mockCommunityDTOReq, "Admin")
+
+	// 	assert.Error(t, err)
+	// 	assert.Empty(t, res)
+	// })
+
+	t.Run("bad-param-input", func(t *testing.T) {
+		testCommunityUsecase := NewCommunityUsecase(mockCommunityRepo, nil, nil, nil, v, nil)
+		res, err := testCommunityUsecase.UpdateCommunity(uint(1), mockCommunityDTOReq, "User")
+
+		assert.Error(t, err)
+		assert.Empty(t, res)
+	})
+
+	t.Run("community-not-found", func(t *testing.T) {
+		mockCommunityRepo.On("GetCommunity", uint(1)).Return(communityEntity.Community{}, nil).Once()
+
+		testCommunityUsecase := NewCommunityUsecase(mockCommunityRepo, nil, nil, nil, v, nil)
+		res, err := testCommunityUsecase.UpdateCommunity(uint(1), mockCommunityDTOReq, "Admin")
+
+		assert.Error(t, err)
+		assert.Empty(t, res)
+	})
+
+	t.Run("unauthorize", func(t *testing.T) {
+		testCommunityUsecase := NewCommunityUsecase(mockCommunityRepo, nil, nil, nil, v, nil)
+		res, err := testCommunityUsecase.UpdateCommunity(uint(1), mockCommunityDTOReqFail, "Admin")
+
+		assert.Error(t, err)
+		assert.Empty(t, res)
+	})
+
 }
