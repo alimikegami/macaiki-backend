@@ -440,7 +440,7 @@ func (uu *userUsecase) Report(userID, userReportedID, reportCategoryID uint) err
 
 	reportCategory, err := uu.reportCategoryRepo.GetReportCategory(reportCategoryID)
 	if err != nil {
-		return utils.ErrBadParamInput
+		return utils.ErrInternalServerError
 	}
 	if reportCategory.ID == 0 {
 		return utils.ErrNotFound
