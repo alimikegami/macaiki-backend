@@ -1,9 +1,9 @@
 package mysql
 
 import (
-	"macaiki/internal/thread/entity"
+	"macaiki/pkg/utils"
+	"regexp"
 	"testing"
-	"time"
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/stretchr/testify/assert"
@@ -11,15 +11,7 @@ import (
 	"gorm.io/gorm"
 )
 
-var (
-	threadReport = entity.ThreadReport{
-		UserID:           uint(1),
-		ThreadID:         uint(1),
-		ReportCategoryID: uint(2),
-	}
-)
-
-func TestSuccessfullCreateThreadReport(t *testing.T) {
+func TestSuccessfullDeleteComment(t *testing.T) {
 	mockedDB, mockObj, err := sqlmock.New()
 	db, err := gorm.Open(mysql.Dialector{
 		&mysql.Config{
@@ -31,14 +23,86 @@ func TestSuccessfullCreateThreadReport(t *testing.T) {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 	}
 
-	mockThreadRepo := CreateNewThreadRepository(db)
-	mockObj.ExpectBegin()
-	mockObj.ExpectExec("INSERT INTO `thread_reports` (`created_at`,`updated_at`,`deleted_at`,`user_id`,`thread_id`,`report_category_id`) VALUES (?, ?, NULL, ?, ?, ?)").WithArgs(time.Now(), time.Now(), 1, 1, 1)
-	mockObj.ExpectCommit()
-
-	err = mockThreadRepo.CreateThreadReport(threadReport)
+	threadRepo := CreateNewThreadRepository(db)
 
 	defer mockedDB.Close()
 
+	mockObj.ExpectBegin()
+	mockObj.ExpectExec(regexp.QuoteMeta("UPDATE")).WithArgs(utils.AnyTime{}, uint(1)).WillReturnResult(sqlmock.NewResult(0, 1))
+	mockObj.ExpectCommit()
+
+	err = threadRepo.DeleteComment(uint(1))
+	assert.NoError(t, err)
+}
+
+func TestNoRowsAffectedDeleteComment(t *testing.T) {
+	mockedDB, mockObj, err := sqlmock.New()
+	db, err := gorm.Open(mysql.Dialector{
+		&mysql.Config{
+			Conn:                      mockedDB,
+			SkipInitializeWithVersion: true,
+		},
+	}, &gorm.Config{})
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+
+	threadRepo := CreateNewThreadRepository(db)
+
+	defer mockedDB.Close()
+
+	mockObj.ExpectBegin()
+	mockObj.ExpectExec(regexp.QuoteMeta("UPDATE")).WithArgs(utils.AnyTime{}, uint(1)).WillReturnResult(sqlmock.NewResult(0, 0))
+	mockObj.ExpectCommit()
+
+	err = threadRepo.DeleteComment(uint(1))
+	assert.Error(t, err)
+}
+
+func TestSuccessfullDeleteThread(t *testing.T) {
+	mockedDB, mockObj, err := sqlmock.New()
+	db, err := gorm.Open(mysql.Dialector{
+		&mysql.Config{
+			Conn:                      mockedDB,
+			SkipInitializeWithVersion: true,
+		},
+	}, &gorm.Config{})
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+
+	threadRepo := CreateNewThreadRepository(db)
+
+	defer mockedDB.Close()
+
+	mockObj.ExpectBegin()
+	mockObj.ExpectExec(regexp.QuoteMeta("UPDATE")).WithArgs(utils.AnyTime{}, uint(1)).WillReturnResult(sqlmock.NewResult(0, 1))
+	mockObj.ExpectCommit()
+
+	err = threadRepo.DeleteThread(uint(1))
+	assert.NoError(t, err)
+}
+
+func TestNoRowsAffectedDeleteThread(t *testing.T) {
+	mockedDB, mockObj, err := sqlmock.New()
+	db, err := gorm.Open(mysql.Dialector{
+		&mysql.Config{
+			Conn:                      mockedDB,
+			SkipInitializeWithVersion: true,
+		},
+	}, &gorm.Config{})
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+
+	threadRepo := CreateNewThreadRepository(db)
+
+	defer mockedDB.Close()
+
+	mockObj.ExpectBegin()
+	mockObj.ExpectExec(regexp.QuoteMeta("UPDATE")).WithArgs(utils.AnyTime{}, uint(1)).WillReturnResult(sqlmock.NewResult(0, 0))
+	mockObj.ExpectCommit()
+
+	err = threadRepo.DeleteThread(uint(1))
 	assert.Error(t, err)
 }

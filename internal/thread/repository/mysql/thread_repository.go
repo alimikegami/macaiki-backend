@@ -289,7 +289,7 @@ func (tr *ThreadRepositoryImpl) GetThreadUpvotes(threadID, userID uint) (entity.
 }
 
 func (tr *ThreadRepositoryImpl) DeleteComment(commentID uint) error {
-	res := tr.db.Delete(&entity.Comment{}, commentID)
+	res := tr.db.Debug().Delete(&entity.Comment{}, commentID)
 
 	if res.Error != nil {
 		return utils.ErrInternalServerError
