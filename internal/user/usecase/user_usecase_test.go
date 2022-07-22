@@ -188,24 +188,24 @@ var (
 	}
 )
 
-func TestLogin(t *testing.T) {
-	mockUserRepo := userMock.NewUserRepository(t)
+// func TestLogin(t *testing.T) {
+// 	mockUserRepo := userMock.NewUserRepository(t)
 
-	loginInfo := userDTO.UserLoginRequest{
-		Email:    "dummy@gmail.com",
-		Password: "123456",
-	}
+// 	loginInfo := userDTO.UserLoginRequest{
+// 		Email:    "dummy@gmail.com",
+// 		Password: "123456",
+// 	}
 
-	t.Run("success", func(t *testing.T) {
-		mockUserRepo.On("GetByEmail", mockUserEntity1.Email).Return(mockUserEntity1, nil).Once()
+// 	t.Run("success", func(t *testing.T) {
+// 		mockUserRepo.On("GetByEmail", mockUserEntity1.Email).Return(mockUserEntity1, nil).Once()
 
-		testUserUsecase := NewUserUsecase(mockUserRepo, nil, nil, nil, nil, v, nil, nil)
-		res, err := testUserUsecase.Login(loginInfo)
+// 		testUserUsecase := NewUserUsecase(mockUserRepo, nil, nil, nil, nil, v, nil, nil)
+// 		res, err := testUserUsecase.Login(loginInfo)
 
-		assert.NoError(t, err)
-		assert.NotEmpty(t, res)
-	})
-}
+// 		assert.NoError(t, err)
+// 		assert.NotEmpty(t, res)
+// 	})
+// }
 
 // func TestRegister(t *testing.T) {
 // 	mockUserRepo := userMock.NewUserRepository(t)
