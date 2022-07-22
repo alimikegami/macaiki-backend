@@ -5,6 +5,7 @@ import (
 	"macaiki/internal/thread/dto"
 	"macaiki/internal/thread/entity"
 	"macaiki/internal/thread/mocks"
+	userEntity "macaiki/internal/user/entity"
 	"macaiki/pkg/utils"
 	"testing"
 	"time"
@@ -33,10 +34,56 @@ var (
 		CommunityID: uint(1),
 	}
 
+	mockedCommentEntity = entity.Comment{
+		Model: gorm.Model{
+			ID:        uint(1),
+			CreatedAt: time.Now(),
+			UpdatedAt: time.Now(),
+		},
+		Body:      "this thread is so good",
+		UserID:    uint(2),
+		ThreadID:  uint(1),
+		CommentID: uint(0),
+	}
+
 	mockedEntityMappedFromDTO = entity.Thread{
 		Title:       "Title",
 		Body:        "Body",
 		CommunityID: uint(1),
+	}
+
+	mockedDetailedCommentEntity = []entity.CommentDetails{
+		{
+			Comment: entity.Comment{
+				Model: gorm.Model{
+					ID:        uint(1),
+					CreatedAt: time.Now(),
+					UpdatedAt: time.Now(),
+				},
+				Body:      "this thread is so good",
+				UserID:    uint(2),
+				ThreadID:  uint(1),
+				CommentID: uint(0),
+			},
+			User: userEntity.User{
+				Model: gorm.Model{
+					ID:        uint(1),
+					CreatedAt: time.Now(),
+					UpdatedAt: time.Now(),
+				},
+				Email:              "aasdfasfa",
+				Username:           "ASfsadf",
+				Password:           "asdfsdf",
+				Name:               "adsfasdf",
+				ProfileImageUrl:    "fdasfa",
+				BackgroundImageUrl: "sadfas",
+				Bio:                "sdfasdf",
+				Profession:         "sdfasf",
+				Role:               "User",
+			},
+			LikesCount: 1,
+			IsLiked:    1,
+		},
 	}
 
 	// mockedDTOResponse = dto.ThreadResponse{
@@ -51,8 +98,8 @@ var (
 	// }
 
 	mockedLikeCommentEntity = entity.CommentLikes{
-		UserID:    1,
-		CommentID: 1,
+		UserID:    uint(1),
+		CommentID: uint(1),
 	}
 
 	mockedCommentReportDTO = dto.CommentReportRequest{
@@ -81,6 +128,35 @@ var (
 		CommentID: 1,
 		UserID:    1,
 	}
+
+	mockedDetailedThread = []entity.ThreadWithDetails{{Thread: entity.Thread{
+		Model: gorm.Model{
+			ID:        1,
+			CreatedAt: time.Now(),
+			UpdatedAt: time.Now(),
+		},
+		Title:       "Title",
+		Body:        "Body",
+		ImageURL:    "ImageURL",
+		UserID:      uint(1),
+		CommunityID: uint(1),
+	},
+		User: userEntity.User{
+			Model: gorm.Model{
+				ID:        1,
+				CreatedAt: time.Now(),
+				UpdatedAt: time.Now(),
+			},
+			Email:              "alim1@gmail.com",
+			Username:           "alim1",
+			Password:           "123",
+			Name:               "alim1",
+			ProfileImageUrl:    "asdfas.jpg",
+			BackgroundImageUrl: "asfds.jpg",
+			Bio:                "asdfa",
+			Profession:         "asfasf",
+			Role:               "User",
+		}}}
 )
 
 func TestCreateThreadReport(t *testing.T) {
@@ -295,6 +371,7 @@ func TestLikeComment(t *testing.T) {
 	mockNotifRepo := entityMocks.NewNotificationRepository(t)
 
 	t.Run("success", func(t *testing.T) {
+		mockThreadRepo.On("GetCommentByID", uint(1)).Return(mockedCommentEntity, nil).Once()
 		mockThreadRepo.On("LikeComment", mockedLikeCommentEntity).Return(nil).Once()
 
 		testThreadUseCase := CreateNewThreadUseCase(mockThreadRepo, mockNotifRepo, nil)
@@ -302,8 +379,17 @@ func TestLikeComment(t *testing.T) {
 		assert.NoError(t, err)
 	})
 
-	t.Run("internal-server-error", func(t *testing.T) {
+	t.Run("internal-server-error-like-comment", func(t *testing.T) {
+		mockThreadRepo.On("GetCommentByID", uint(1)).Return(mockedCommentEntity, nil).Once()
 		mockThreadRepo.On("LikeComment", mockedLikeCommentEntity).Return(utils.ErrInternalServerError).Once()
+
+		testThreadUseCase := CreateNewThreadUseCase(mockThreadRepo, mockNotifRepo, nil)
+		err := testThreadUseCase.LikeComment(uint(1), uint(1))
+		assert.Error(t, err)
+	})
+
+	t.Run("internal-server-error-like-comment", func(t *testing.T) {
+		mockThreadRepo.On("GetCommentByID", uint(1)).Return(entity.Comment{}, utils.ErrInternalServerError).Once()
 
 		testThreadUseCase := CreateNewThreadUseCase(mockThreadRepo, mockNotifRepo, nil)
 		err := testThreadUseCase.LikeComment(uint(1), uint(1))
@@ -339,6 +425,7 @@ func TestStoreSavedThread(t *testing.T) {
 	mockNotifRepo := entityMocks.NewNotificationRepository(t)
 
 	t.Run("success", func(t *testing.T) {
+		mockThreadRepo.On("GetThreadByID", uint(1)).Return(mockedEntity, nil).Once()
 		mockThreadRepo.On("StoreSavedThread", mockedSavedThreadEntity).Return(nil).Once()
 
 		testThreadUseCase := CreateNewThreadUseCase(mockThreadRepo, mockNotifRepo, nil)
@@ -347,7 +434,17 @@ func TestStoreSavedThread(t *testing.T) {
 		assert.NoError(t, err)
 	})
 
-	t.Run("internal-server-error", func(t *testing.T) {
+	t.Run("internal-server-error-get-thread-by-id", func(t *testing.T) {
+		mockThreadRepo.On("GetThreadByID", uint(1)).Return(entity.Thread{}, utils.ErrInternalServerError).Once()
+
+		testThreadUseCase := CreateNewThreadUseCase(mockThreadRepo, mockNotifRepo, nil)
+		err := testThreadUseCase.StoreSavedThread(mockedSavedThreadDTO)
+
+		assert.Error(t, err)
+	})
+
+	t.Run("internal-server-error-store-saved-thread", func(t *testing.T) {
+		mockThreadRepo.On("GetThreadByID", uint(1)).Return(mockedEntity, nil).Once()
 		mockThreadRepo.On("StoreSavedThread", mockedSavedThreadEntity).Return(utils.ErrInternalServerError).Once()
 
 		testThreadUseCase := CreateNewThreadUseCase(mockThreadRepo, mockNotifRepo, nil)
@@ -375,6 +472,192 @@ func TestUnlikeComment(t *testing.T) {
 
 		testThreadUseCase := CreateNewThreadUseCase(mockThreadRepo, mockNotifRepo, nil)
 		err := testThreadUseCase.UnlikeComment(uint(1), uint(1))
+
+		assert.Error(t, err)
+	})
+}
+
+func TestGetSavedThread(t *testing.T) {
+	mockThreadRepo := mocks.NewThreadRepository(t)
+	mockNotifRepo := entityMocks.NewNotificationRepository(t)
+
+	t.Run("success", func(t *testing.T) {
+		mockThreadRepo.On("GetSavedThread", uint(1)).Return(mockedDetailedThread, nil).Once()
+
+		testThreadUseCase := CreateNewThreadUseCase(mockThreadRepo, mockNotifRepo, nil)
+		thread, err := testThreadUseCase.GetSavedThread(uint(1))
+
+		assert.NoError(t, err)
+		assert.NotEmpty(t, thread)
+	})
+
+	t.Run("internal-server-error", func(t *testing.T) {
+		mockThreadRepo.On("GetSavedThread", uint(1)).Return([]entity.ThreadWithDetails{}, utils.ErrInternalServerError).Once()
+
+		testThreadUseCase := CreateNewThreadUseCase(mockThreadRepo, mockNotifRepo, nil)
+		thread, err := testThreadUseCase.GetSavedThread(uint(1))
+
+		assert.Error(t, err)
+		assert.Empty(t, thread)
+	})
+}
+
+func TestGetTrendingThreads(t *testing.T) {
+	mockThreadRepo := mocks.NewThreadRepository(t)
+	mockNotifRepo := entityMocks.NewNotificationRepository(t)
+
+	t.Run("success", func(t *testing.T) {
+		mockThreadRepo.On("GetTrendingThreads", uint(1)).Return(mockedDetailedThread, nil).Once()
+
+		testThreadUseCase := CreateNewThreadUseCase(mockThreadRepo, mockNotifRepo, nil)
+		thread, err := testThreadUseCase.GetTrendingThreads(uint(1), -1)
+
+		assert.NoError(t, err)
+		assert.NotEmpty(t, thread)
+	})
+
+	t.Run("success-with-limit", func(t *testing.T) {
+		mockThreadRepo.On("GetTrendingThreadsWithLimit", uint(1), 3).Return(mockedDetailedThread, nil).Once()
+
+		testThreadUseCase := CreateNewThreadUseCase(mockThreadRepo, mockNotifRepo, nil)
+		thread, err := testThreadUseCase.GetTrendingThreads(uint(1), 3)
+
+		assert.NoError(t, err)
+		assert.NotEmpty(t, thread)
+	})
+
+	t.Run("internal-server-error-with-limit", func(t *testing.T) {
+		mockThreadRepo.On("GetTrendingThreadsWithLimit", uint(1), 3).Return([]entity.ThreadWithDetails{}, utils.ErrInternalServerError).Once()
+
+		testThreadUseCase := CreateNewThreadUseCase(mockThreadRepo, mockNotifRepo, nil)
+		thread, err := testThreadUseCase.GetTrendingThreads(uint(1), 3)
+
+		assert.Error(t, err)
+		assert.Empty(t, thread)
+	})
+}
+
+func TestGetThreadsFromFollowedCommunity(t *testing.T) {
+	mockThreadRepo := mocks.NewThreadRepository(t)
+	mockNotifRepo := entityMocks.NewNotificationRepository(t)
+
+	t.Run("success", func(t *testing.T) {
+		mockThreadRepo.On("GetThreadsFromFollowedCommunity", uint(1)).Return(mockedDetailedThread, nil).Once()
+
+		testThreadUseCase := CreateNewThreadUseCase(mockThreadRepo, mockNotifRepo, nil)
+		thread, err := testThreadUseCase.GetThreadsFromFollowedCommunity(uint(1))
+
+		assert.NoError(t, err)
+		assert.NotEmpty(t, thread)
+	})
+
+	t.Run("internal-server-error", func(t *testing.T) {
+		mockThreadRepo.On("GetThreadsFromFollowedCommunity", uint(1)).Return([]entity.ThreadWithDetails{}, utils.ErrInternalServerError).Once()
+
+		testThreadUseCase := CreateNewThreadUseCase(mockThreadRepo, mockNotifRepo, nil)
+		thread, err := testThreadUseCase.GetThreadsFromFollowedCommunity(uint(1))
+
+		assert.Error(t, err)
+		assert.Empty(t, thread)
+	})
+}
+
+func TestGetThreadsFromFollowedUsers(t *testing.T) {
+	mockThreadRepo := mocks.NewThreadRepository(t)
+	mockNotifRepo := entityMocks.NewNotificationRepository(t)
+
+	t.Run("success", func(t *testing.T) {
+		mockThreadRepo.On("GetThreadsFromFollowedUsers", uint(1)).Return(mockedDetailedThread, nil).Once()
+
+		testThreadUseCase := CreateNewThreadUseCase(mockThreadRepo, mockNotifRepo, nil)
+		thread, err := testThreadUseCase.GetThreadsFromFollowedUsers(uint(1))
+
+		assert.NoError(t, err)
+		assert.NotEmpty(t, thread)
+	})
+
+	t.Run("internal-server-error", func(t *testing.T) {
+		mockThreadRepo.On("GetThreadsFromFollowedUsers", uint(1)).Return([]entity.ThreadWithDetails{}, utils.ErrInternalServerError).Once()
+
+		testThreadUseCase := CreateNewThreadUseCase(mockThreadRepo, mockNotifRepo, nil)
+		thread, err := testThreadUseCase.GetThreadsFromFollowedUsers(uint(1))
+
+		assert.Error(t, err)
+		assert.Empty(t, thread)
+	})
+}
+
+func TestGetThreads(t *testing.T) {
+	mockThreadRepo := mocks.NewThreadRepository(t)
+	mockNotifRepo := entityMocks.NewNotificationRepository(t)
+
+	t.Run("success", func(t *testing.T) {
+		mockThreadRepo.On("GetThreads", "", uint(1)).Return(mockedDetailedThread, nil).Once()
+
+		testThreadUseCase := CreateNewThreadUseCase(mockThreadRepo, mockNotifRepo, nil)
+		thread, err := testThreadUseCase.GetThreads("", uint(1))
+
+		assert.NoError(t, err)
+		assert.NotEmpty(t, thread)
+	})
+
+	t.Run("internal-server-error", func(t *testing.T) {
+		mockThreadRepo.On("GetThreads", "", uint(1)).Return([]entity.ThreadWithDetails{}, utils.ErrInternalServerError).Once()
+
+		testThreadUseCase := CreateNewThreadUseCase(mockThreadRepo, mockNotifRepo, nil)
+		thread, err := testThreadUseCase.GetThreads("", uint(1))
+
+		assert.Error(t, err)
+		assert.Empty(t, thread)
+	})
+}
+
+func TestGetCommentsByThreadID(t *testing.T) {
+	mockThreadRepo := mocks.NewThreadRepository(t)
+	mockNotifRepo := entityMocks.NewNotificationRepository(t)
+
+	t.Run("success", func(t *testing.T) {
+		mockThreadRepo.On("GetCommentsByThreadID", uint(1)).Return(mockedDetailedCommentEntity, nil).Once()
+
+		testThreadUseCase := CreateNewThreadUseCase(mockThreadRepo, mockNotifRepo, nil)
+		thread, err := testThreadUseCase.GetCommentsByThreadID(uint(1))
+
+		assert.NoError(t, err)
+		assert.NotEmpty(t, thread)
+	})
+
+	t.Run("internal-server-error", func(t *testing.T) {
+		mockThreadRepo.On("GetCommentsByThreadID", uint(1)).Return([]entity.CommentDetails{}, utils.ErrInternalServerError).Once()
+
+		testThreadUseCase := CreateNewThreadUseCase(mockThreadRepo, mockNotifRepo, nil)
+		thread, err := testThreadUseCase.GetCommentsByThreadID(uint(1))
+
+		assert.Error(t, err)
+		assert.Empty(t, thread)
+	})
+}
+
+func TestDeleteComment(t *testing.T) {
+	mockThreadRepo := mocks.NewThreadRepository(t)
+	mockNotifRepo := entityMocks.NewNotificationRepository(t)
+
+	t.Run("success", func(t *testing.T) {
+		mockThreadRepo.On("GetThreadByID", uint(1)).Return(mockedEntity, nil).Once()
+		mockThreadRepo.On("GetCommentByID", uint(1)).Return(mockedCommentEntity, nil).Once()
+
+		mockThreadRepo.On("DeleteComment", uint(1)).Return(nil).Once()
+
+		testThreadUseCase := CreateNewThreadUseCase(mockThreadRepo, mockNotifRepo, nil)
+		err := testThreadUseCase.DeleteComment(uint(1), uint(1), uint(1), "User")
+
+		assert.NoError(t, err)
+	})
+
+	t.Run("internal-server-error", func(t *testing.T) {
+		mockThreadRepo.On("GetThreadByID", uint(1)).Return(entity.Thread{}, utils.ErrInternalServerError).Once()
+
+		testThreadUseCase := CreateNewThreadUseCase(mockThreadRepo, mockNotifRepo, nil)
+		err := testThreadUseCase.DeleteComment(uint(1), uint(1), uint(1), "User")
 
 		assert.Error(t, err)
 	})

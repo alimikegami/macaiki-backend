@@ -1,6 +1,7 @@
 package entity
 
 import (
+	communityentity "macaiki/internal/community/entity"
 	reportCategoryEntity "macaiki/internal/report_category/entity"
 	userEntity "macaiki/internal/user/entity"
 
@@ -14,6 +15,8 @@ type Thread struct {
 	ImageURL    string
 	UserID      uint
 	CommunityID uint
+	User        userEntity.User
+	Community   communityentity.Community
 }
 
 type ThreadUpvote struct {
@@ -45,6 +48,8 @@ type ThreadFollower struct {
 	gorm.Model
 	ThreadID uint
 	UserID   uint
+	Thread   Thread
+	User     userEntity.User
 }
 
 type Comment struct {
@@ -54,6 +59,7 @@ type Comment struct {
 	ThreadID  uint
 	CommentID uint
 	Thread    Thread
+	User      userEntity.User
 }
 
 type CommentDetails struct {
@@ -67,6 +73,8 @@ type CommentLikes struct {
 	gorm.Model
 	UserID    uint `gorm:"index:unique_likes,unique"`
 	CommentID uint `gorm:"index:unique_likes,unique"`
+	User      userEntity.User
+	Comment   Comment
 }
 
 type ThreadReport struct {

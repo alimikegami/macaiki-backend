@@ -181,6 +181,12 @@ func (tuc *ThreadUseCaseImpl) UpdateThread(thread dto.ThreadRequest, threadID ui
 }
 
 func (tuc *ThreadUseCaseImpl) UpvoteThread(threadID uint, userID uint) error {
+	_, err := tuc.tr.GetThreadByID(threadID)
+
+	if err != nil {
+		return err
+	}
+
 	downvote, err := tuc.tr.GetThreadDownvotes(threadID, userID)
 
 	if err != nil {
@@ -387,7 +393,13 @@ func (tuc *ThreadUseCaseImpl) GetThreads(keyword string, userID uint) ([]dto.Det
 }
 
 func (tuc *ThreadUseCaseImpl) LikeComment(commentID, userID uint) error {
-	err := tuc.tr.LikeComment(entity.CommentLikes{
+	_, err := tuc.tr.GetCommentByID(commentID)
+
+	if err != nil {
+		return err
+	}
+
+	err = tuc.tr.LikeComment(entity.CommentLikes{
 		UserID:    userID,
 		CommentID: commentID,
 	})
@@ -396,6 +408,12 @@ func (tuc *ThreadUseCaseImpl) LikeComment(commentID, userID uint) error {
 }
 
 func (tuc *ThreadUseCaseImpl) DownvoteThread(threadID uint, userID uint) error {
+	_, err := tuc.tr.GetThreadByID(threadID)
+
+	if err != nil {
+		return err
+	}
+
 	upvote, err := tuc.tr.GetThreadUpvotes(threadID, userID)
 
 	if err != nil {
@@ -486,7 +504,12 @@ func (tuc *ThreadUseCaseImpl) CreateCommentReport(commentReport dto.CommentRepor
 }
 
 func (tuc *ThreadUseCaseImpl) StoreSavedThread(savedThread dto.SavedThreadRequest) error {
-	err := tuc.tr.StoreSavedThread(entity.SavedThread{
+	_, err := tuc.tr.GetThreadByID(savedThread.ThreadID)
+
+	if err != nil {
+		return err
+	}
+	err = tuc.tr.StoreSavedThread(entity.SavedThread{
 		UserID:   savedThread.UserID,
 		ThreadID: savedThread.ThreadID,
 	})
@@ -499,7 +522,7 @@ func (tuc *ThreadUseCaseImpl) GetSavedThread(userID uint) ([]dto.DetailedThreadR
 	res, err := tuc.tr.GetSavedThread(userID)
 
 	if err != nil {
-		return []dto.DetailedThreadResponse{}, nil
+		return []dto.DetailedThreadResponse{}, err
 	}
 
 	for _, thread := range res {

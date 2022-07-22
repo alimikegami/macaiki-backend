@@ -321,7 +321,6 @@ func (th *ThreadHandler) UndoUpvoteThread(c echo.Context) error {
 }
 
 func (th *ThreadHandler) DeleteComment(c echo.Context) error {
-	// TODO: Allow admin to delete a thread
 	userID, role := _middL.ExtractTokenUser(c)
 
 	threadID := c.Param("threadID")

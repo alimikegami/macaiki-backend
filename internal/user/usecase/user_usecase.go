@@ -162,10 +162,6 @@ func (uu *userUsecase) Get(id, tokenUserID uint) (dto.UserDetailResponse, error)
 	return userResp, nil
 }
 func (uu *userUsecase) Update(user dto.UserUpdateRequest, id uint) (dto.UserUpdateResponse, error) {
-	if err := uu.validator.Struct(user); err != nil {
-		return dto.UserUpdateResponse{}, utils.ErrBadParamInput
-	}
-
 	// validation the user exist
 	userDB, err := uu.userRepo.Get(id)
 	if err != nil {
@@ -444,7 +440,7 @@ func (uu *userUsecase) Report(userID, userReportedID, reportCategoryID uint) err
 
 	reportCategory, err := uu.reportCategoryRepo.GetReportCategory(reportCategoryID)
 	if err != nil {
-		return utils.ErrBadParamInput
+		return utils.ErrInternalServerError
 	}
 	if reportCategory.ID == 0 {
 		return utils.ErrNotFound

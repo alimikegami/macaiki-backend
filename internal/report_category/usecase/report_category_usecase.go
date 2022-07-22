@@ -104,7 +104,7 @@ func (rcu *ReportCategoryUsecaseImpl) DeleteReportCategory(id uint, role string)
 		return utils.ErrNotFound
 	}
 
-	err = rcu.rcRepo.UpdateReportCategory(reportCategory)
+	err = rcu.rcRepo.DeleteReportCategory(reportCategory)
 	if err != nil {
 		return utils.ErrInternalServerError
 	}
