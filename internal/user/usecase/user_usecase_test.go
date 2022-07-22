@@ -18,6 +18,7 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"gorm.io/gorm"
 )
 
@@ -30,7 +31,7 @@ var (
 		},
 		Email:              "dummy@gmail.com",
 		Username:           "dummy",
-		Password:           "$2a$04$UP.ZNuepVAiEedwlZrvA3.ywqqNszceSuqnZQl4mozYOzO9ILY2kK",
+		Password:           hashAndSalt([]byte("123456")),
 		Name:               "dummy",
 		ProfileImageUrl:    "dummy",
 		BackgroundImageUrl: "dummy",
@@ -190,10 +191,19 @@ var (
 // func TestLogin(t *testing.T) {
 // 	mockUserRepo := userMock.NewUserRepository(t)
 
+// 	loginInfo := userDTO.UserLoginRequest{
+// 		Email:    "dummy@gmail.com",
+// 		Password: "123456",
+// 	}
+
 // 	t.Run("success", func(t *testing.T) {
-// 		mockUserRepo.On("GetByEmail", mockUserEntity1.Email).Return(userEntity.User{}, nil).Once()
+// 		mockUserRepo.On("GetByEmail", mockUserEntity1.Email).Return(mockUserEntity1, nil).Once()
 
 // 		testUserUsecase := NewUserUsecase(mockUserRepo, nil, nil, nil, nil, v, nil, nil)
+// 		res, err := testUserUsecase.Login(loginInfo)
+
+// 		assert.NoError(t, err)
+// 		assert.NotEmpty(t, res)
 // 	})
 // }
 
@@ -538,30 +548,72 @@ func TestChangeEmail(t *testing.T) {
 	})
 }
 
-// func TestChangePassword(t *testing.T) {
-// 	mockUserRepo := userMock.NewUserRepository(t)
+func TestChangePassword(t *testing.T) {
+	mockUserRepo := userMock.NewUserRepository(t)
 
-// 	mockUserUpdateEntity := userEntity.User{
-// 		Password: "1234567",
-// 	}
+	mockPasswordInfoDTOReqSuccess := userDTO.UserChangePasswordRequest{
+		NewPassword:          "1234567",
+		PasswordConfirmation: "1234567",
+	}
 
-// 	mockPasswordInfoDTOReqSuccess := userDTO.UserChangePasswordRequest{
-// 		NewPassword:          "1234567",
-// 		PasswordConfirmation: "1234567",
-// 	}
+	mockPasswordInfoDTOReqFail1 := userDTO.UserChangePasswordRequest{
+		NewPassword:          "123456",
+		PasswordConfirmation: "1234567",
+	}
 
-// 	t.Run("success", func(t *testing.T) {
-// 		mockUserRepo.On("Get", uint(1)).Return(mockUserEntity1, nil).Once()
-// 		mockUserRepo.On("Update", &mockUserEntity1, mockUserUpdateEntity).Return(mockUserEntity1, nil).Once()
+	mockPasswordInfoDTOReqFail2 := userDTO.UserChangePasswordRequest{
+		NewPassword:          "",
+		PasswordConfirmation: "",
+	}
 
-// 		testUserUsecase := NewUserUsecase(mockUserRepo, nil, nil, nil, nil, v, nil, nil)
+	t.Run("success", func(t *testing.T) {
+		mockUserRepo.On("Get", mock.Anything).Return(mockUserEntity1, nil).Once()
+		mockUserRepo.On("Update", mock.Anything, mock.Anything).Return(mockUserEntity1, nil).Once()
 
-// 		err := testUserUsecase.ChangePassword(uint(1), mockPasswordInfoDTOReqSuccess)
+		testUserUsecase := NewUserUsecase(mockUserRepo, nil, nil, nil, nil, v, nil, nil)
 
-// 		assert.NoError(t, err)
-// 	})
+		err := testUserUsecase.ChangePassword(uint(1), mockPasswordInfoDTOReqSuccess)
 
-// }
+		assert.NoError(t, err)
+	})
+
+	t.Run("bad-param-input", func(t *testing.T) {
+		testUserUsecase := NewUserUsecase(nil, nil, nil, nil, nil, v, nil, nil)
+
+		err := testUserUsecase.ChangePassword(uint(1), mockPasswordInfoDTOReqFail2)
+
+		assert.Error(t, err)
+	})
+
+	t.Run("password-dont-match", func(t *testing.T) {
+		testUserUsecase := NewUserUsecase(nil, nil, nil, nil, nil, v, nil, nil)
+
+		err := testUserUsecase.ChangePassword(uint(1), mockPasswordInfoDTOReqFail1)
+
+		assert.Error(t, err)
+	})
+
+	t.Run("internal-server-error", func(t *testing.T) {
+		mockUserRepo.On("Get", mock.Anything).Return(userEntity.User{}, utils.ErrInternalServerError).Once()
+
+		testUserUsecase := NewUserUsecase(mockUserRepo, nil, nil, nil, nil, v, nil, nil)
+
+		err := testUserUsecase.ChangePassword(uint(1), mockPasswordInfoDTOReqSuccess)
+
+		assert.Error(t, err)
+	})
+
+	t.Run("internal-server-error", func(t *testing.T) {
+		mockUserRepo.On("Get", mock.Anything).Return(mockUserEntity1, nil).Once()
+		mockUserRepo.On("Update", mock.Anything, mock.Anything).Return(userEntity.User{}, utils.ErrInternalServerError).Once()
+
+		testUserUsecase := NewUserUsecase(mockUserRepo, nil, nil, nil, nil, v, nil, nil)
+
+		err := testUserUsecase.ChangePassword(uint(1), mockPasswordInfoDTOReqSuccess)
+
+		assert.Error(t, err)
+	})
+}
 
 func TestGetUserFollowers(t *testing.T) {
 	mockUserRepo := userMock.NewUserRepository(t)
