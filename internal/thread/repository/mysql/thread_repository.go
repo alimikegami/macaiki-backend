@@ -48,7 +48,7 @@ func (tr *ThreadRepositoryImpl) GetThreadByID(threadID uint) (entity.Thread, err
 }
 
 func (tr *ThreadRepositoryImpl) CreateThread(thread entity.Thread) (entity.Thread, error) {
-	res := tr.db.Create(&thread)
+	res := tr.db.Debug().Create(&thread)
 	if res.Error != nil {
 		fmt.Println(res.Error)
 		return entity.Thread{}, utils.ErrInternalServerError
@@ -289,7 +289,7 @@ func (tr *ThreadRepositoryImpl) GetThreadUpvotes(threadID, userID uint) (entity.
 }
 
 func (tr *ThreadRepositoryImpl) DeleteComment(commentID uint) error {
-	res := tr.db.Delete(&entity.Comment{}, commentID)
+	res := tr.db.Debug().Delete(&entity.Comment{}, commentID)
 
 	if res.Error != nil {
 		return utils.ErrInternalServerError
