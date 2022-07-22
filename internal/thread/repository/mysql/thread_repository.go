@@ -48,7 +48,7 @@ func (tr *ThreadRepositoryImpl) GetThreadByID(threadID uint) (entity.Thread, err
 }
 
 func (tr *ThreadRepositoryImpl) CreateThread(thread entity.Thread) (entity.Thread, error) {
-	res := tr.db.Create(&thread)
+	res := tr.db.Debug().Create(&thread)
 	if res.Error != nil {
 		fmt.Println(res.Error)
 		return entity.Thread{}, utils.ErrInternalServerError
