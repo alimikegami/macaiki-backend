@@ -44,7 +44,7 @@ func main() {
 	)
 
 	_driver.CreateRedisConnection(config.RedisHost, config.RedisPassword)
-
+	_driver.CreateKafkaProducer(config.KafkaHost, config.KafkaTopic)
 	e := echo.New()
 	e.GET("/", func(c echo.Context) error {
 		return c.String(http.StatusOK, "Hello World!")
@@ -62,7 +62,7 @@ func main() {
 	notificationRepo := _notificationRepo.NewNotificaionRepository(_driver.DB)
 
 	// setup usecase
-	userUsecase := _userUsecase.NewUserUsecase(userRepo, reportCategoryRepo, communityRepo, notificationRepo, threadRepo, v, s3Instance, goMail, _driver.RDB)
+	userUsecase := _userUsecase.NewUserUsecase(userRepo, reportCategoryRepo, communityRepo, notificationRepo, threadRepo, v, s3Instance, goMail, _driver.RDB, _driver.KafkaConn)
 	reportCategoryUsecase := _reportCategoryUsecase.NewReportCategoryUsecase(reportCategoryRepo, v)
 	threadUseCase := _threadUsecase.CreateNewThreadUseCase(threadRepo, notificationRepo, s3Instance)
 	communityUsecase := _communityUsecase.NewCommunityUsecase(communityRepo, userRepo, reportCategoryRepo, threadRepo, v, s3Instance)

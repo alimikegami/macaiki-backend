@@ -26,6 +26,9 @@ type Config struct {
 
 	GomailEmail    string `mapstructure:"GOMAIL_EMAIL"`
 	GomailPassword string `mapstructure:"GOMAIL_PASSWORD"`
+
+	KafkaHost  string `mapstructure:"KAFKA_HOST"`
+	KafkaTopic string `mapstructure:"KAFKA_TOPIC"`
 }
 
 type JWTSecret struct {

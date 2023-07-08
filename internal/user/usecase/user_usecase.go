@@ -27,6 +27,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 	"github.com/redis/go-redis/v9"
+	"github.com/segmentio/kafka-go"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -40,6 +41,7 @@ type userUsecase struct {
 	awsS3              *cloudstorage.S3
 	goMail             *goMail.Gomail
 	rdb                *redis.Client
+	kafka              *kafka.Conn
 }
 
 var (
@@ -47,7 +49,7 @@ var (
 	DEFAULT_BACKGROUND = "https://macaiki.s3.ap-southeast-3.amazonaws.com/background/default-background.png"
 )
 
-func NewUserUsecase(userRepo user.UserRepository, reportCategoryRepo reportcategory.ReportCategoryRepository, communityRepo comRepo.CommunityRepository, notificationRepo notification.NotificationRepository, threadRepo thread.ThreadRepository, validator *validator.Validate, awsS3Instace *cloudstorage.S3, goMail *goMail.Gomail, rdb *redis.Client) user.UserUsecase {
+func NewUserUsecase(userRepo user.UserRepository, reportCategoryRepo reportcategory.ReportCategoryRepository, communityRepo comRepo.CommunityRepository, notificationRepo notification.NotificationRepository, threadRepo thread.ThreadRepository, validator *validator.Validate, awsS3Instace *cloudstorage.S3, goMail *goMail.Gomail, rdb *redis.Client, kafka *kafka.Conn) user.UserUsecase {
 	return &userUsecase{
 		userRepo:           userRepo,
 		reportCategoryRepo: reportCategoryRepo,
@@ -58,6 +60,7 @@ func NewUserUsecase(userRepo user.UserRepository, reportCategoryRepo reportcateg
 		awsS3:              awsS3Instace,
 		goMail:             goMail,
 		rdb:                rdb,
+		kafka:              kafka,
 	}
 }
 
@@ -545,9 +548,18 @@ func (uu *userUsecase) SendOTP(otpReq dto.SendOTPRequest) error {
 		return utils.ErrInternalServerError
 	}
 
-	err = uu.goMail.SendMail(user.Email, user.Username, fmt.Sprintf("Thank you for registering on the Macaiki application To verify your email, please use the following OTP : %s", OTPCode))
+	message := dto.EmailMessage{
+		EmailDest:    user.Email,
+		EmailBody:    fmt.Sprintf("Thank you for registering on the Macaiki application To verify your email, please use the following OTP : %s", OTPCode),
+		EmailSubject: "Macaiki Email Validation",
+	}
+	messageJSON, _ := json.Marshal(message)
+
+	_, err = uu.kafka.WriteMessages(
+		kafka.Message{Value: []byte(json.RawMessage(messageJSON))},
+	)
 	if err != nil {
-		fmt.Println(err)
+		log.Fatal("failed to write messages:", err)
 	}
 
 	return nil

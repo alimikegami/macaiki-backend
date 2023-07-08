@@ -31,3 +31,9 @@ type SendOTPRequest struct {
 	Email string `json:"email"`
 	Link  string `json:"link"`
 }
+
+type EmailMessage struct {
+	EmailDest    string `json:"email_destination"`
+	EmailBody    string `json:"email_body"`
+	EmailSubject string `json:"email_subject"`
+}
