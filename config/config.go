@@ -16,6 +16,9 @@ type Config struct {
 	DBPass string `mapstructure:"DB_PASSWORD"`
 	DBName string `mapstructure:"DB_NAME"`
 
+	RedisHost     string `mapstructure:"REDIS_HOST"`
+	RedisPassword string `mapstructure:"REDIS_PASSWORD"`
+
 	AWSRegion      string `mapstructure:"AWS_REGION"`
 	AWSAccessKeyId string `mapstructure:"AWS_ACCESS_KEY_ID"`
 	AWSSecretKey   string `mapstructure:"AWS_SECRET_ACCESS_KEY"`

@@ -1,6 +1,8 @@
 package usecase
 
 import (
+	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
@@ -24,6 +26,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
+	"github.com/redis/go-redis/v9"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -36,6 +39,7 @@ type userUsecase struct {
 	validator          *validator.Validate
 	awsS3              *cloudstorage.S3
 	goMail             *goMail.Gomail
+	rdb                *redis.Client
 }
 
 var (
@@ -43,7 +47,7 @@ var (
 	DEFAULT_BACKGROUND = "https://macaiki.s3.ap-southeast-3.amazonaws.com/background/default-background.png"
 )
 
-func NewUserUsecase(userRepo user.UserRepository, reportCategoryRepo reportcategory.ReportCategoryRepository, communityRepo comRepo.CommunityRepository, notificationRepo notification.NotificationRepository, threadRepo thread.ThreadRepository, validator *validator.Validate, awsS3Instace *cloudstorage.S3, goMail *goMail.Gomail) user.UserUsecase {
+func NewUserUsecase(userRepo user.UserRepository, reportCategoryRepo reportcategory.ReportCategoryRepository, communityRepo comRepo.CommunityRepository, notificationRepo notification.NotificationRepository, threadRepo thread.ThreadRepository, validator *validator.Validate, awsS3Instace *cloudstorage.S3, goMail *goMail.Gomail, rdb *redis.Client) user.UserUsecase {
 	return &userUsecase{
 		userRepo:           userRepo,
 		reportCategoryRepo: reportCategoryRepo,
@@ -53,6 +57,7 @@ func NewUserUsecase(userRepo user.UserRepository, reportCategoryRepo reportcateg
 		validator:          validator,
 		awsS3:              awsS3Instace,
 		goMail:             goMail,
+		rdb:                rdb,
 	}
 }
 
@@ -135,12 +140,37 @@ func (uu *userUsecase) GetAll(userID uint, search string) ([]dto.UserResponse, e
 }
 
 func (uu *userUsecase) Get(id, tokenUserID uint) (dto.UserDetailResponse, error) {
-	userEntity, err := uu.userRepo.GetWithDetail(id, tokenUserID)
-	if err != nil {
-		return dto.UserDetailResponse{}, utils.ErrInternalServerError
-	}
-	if userEntity.ID == 0 {
-		return dto.UserDetailResponse{}, utils.ErrNotFound
+	var userEntity entity.User
+	var err error
+	value, err := uu.rdb.Get(context.Background(), fmt.Sprintf("user:%d", tokenUserID)).Result()
+	if err == redis.Nil {
+		userEntity, err = uu.userRepo.GetWithDetail(id, tokenUserID)
+		if err != nil {
+			return dto.UserDetailResponse{}, utils.ErrInternalServerError
+		}
+		stringifiedThreads, err := json.Marshal(userEntity)
+		if err != nil {
+			log.Println(err)
+			return dto.UserDetailResponse{}, errors.New("Marshaling Errors")
+		}
+
+		if userEntity.ID == 0 {
+			return dto.UserDetailResponse{}, utils.ErrNotFound
+		}
+		err = uu.rdb.Set(context.Background(), fmt.Sprintf("user:%d", tokenUserID), stringifiedThreads, 0).Err()
+		if err != nil {
+			log.Println(err)
+			return dto.UserDetailResponse{}, errors.New("Errors setting redis keys")
+		}
+	} else if err != nil {
+		log.Println(err)
+		return dto.UserDetailResponse{}, err
+	} else {
+		err = json.Unmarshal([]byte(value), &userEntity)
+		if err != nil {
+			log.Println(err)
+			return dto.UserDetailResponse{}, errors.New("Unmarshaling Errors")
+		}
 	}
 
 	totalFollowing, err := uu.userRepo.GetFollowingNumber(id)
@@ -163,6 +193,12 @@ func (uu *userUsecase) Get(id, tokenUserID uint) (dto.UserDetailResponse, error)
 }
 func (uu *userUsecase) Update(user dto.UserUpdateRequest, id uint) (dto.UserUpdateResponse, error) {
 	// validation the user exist
+	statusCmd := uu.rdb.Del(context.Background(), fmt.Sprintf("user:%d", id))
+	if statusCmd.Err() != nil {
+		log.Println(statusCmd.Err())
+		return dto.UserUpdateResponse{}, utils.ErrInternalServerError
+	}
+
 	userDB, err := uu.userRepo.Get(id)
 	if err != nil {
 		return dto.UserUpdateResponse{}, utils.ErrInternalServerError
@@ -458,13 +494,14 @@ func (uu *userUsecase) Report(userID, userReportedID, reportCategoryID uint) err
 }
 
 func (uu *userUsecase) GetThreadByToken(userID, tokenUserID uint) ([]dtoThread.DetailedThreadResponse, error) {
+	dtoThreads := []dtoThread.DetailedThreadResponse{}
 
 	threads, err := uu.threadRepo.GetThreadsByUserID(userID, tokenUserID)
 	if err != nil {
+		log.Println(err)
 		return []dtoThread.DetailedThreadResponse{}, utils.ErrInternalServerError
 	}
 
-	dtoThreads := []dtoThread.DetailedThreadResponse{}
 	for _, val := range threads {
 		dtoThreads = append(dtoThreads, dtoThread.DetailedThreadResponse{
 			ID:                    val.Thread.ID,
